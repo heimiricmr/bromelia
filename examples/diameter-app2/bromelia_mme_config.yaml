@@ -1,0 +1,18 @@
+api_version: v1
+name: MME
+spec:
+  - applications:
+      - vendor_id: VENDOR_ID_3GPP
+        app_id: DIAMETER_APPLICATION_S6a_S6d
+    mode: Client
+    watchdog_timeout: 30
+    local:
+      ip_address: 127.0.0.1
+      hostname: mme.epc.mynetwork.com
+      realm: epc.mynetwork.com
+      port: 3868
+    peer:
+      ip_address: 127.0.0.1
+      hostname: hss.epc.mynetwork.com
+      realm: epc.mynetwork.com
+      port: 3870

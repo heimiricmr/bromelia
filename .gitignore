@@ -1,0 +1,28 @@
+# Byte-compiled / optimized
+__pycache__
+*.py[cod]
+
+# VS code
+.vscode
+
+# Virtual Environment
+venv
+
+# Debugging Logs
+dsa*.log
+
+# Internal Docs
+_annotations.txt
+docs/misc
+docs/data-types.txt
+
+# Python Packaging
+dist
+build
+bromelia.egg-info
+
+# Internals
+.key
+.key.pub
+followup
+messages

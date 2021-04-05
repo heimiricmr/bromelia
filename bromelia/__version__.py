@@ -1,0 +1,8 @@
+__title__ = "bromelia"
+__description__ = "A Python micro framework for Diameter applications"
+__url__ = "https://github.com/heimiricmr/bromelia"
+__version__ = "0.1"
+__author__ = "Henrique Marques Ribeiro"
+__author_email__ = "heimiricmr@gmail.com"
+__license__ = "MIT"
+__copyright__ = "Copyright 2020 Henrique Marques Ribeiro"
