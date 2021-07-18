@@ -6,7 +6,7 @@
     This module contains the finite state machine defined in Section 5.6 of
     IETF RFC 6733.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 

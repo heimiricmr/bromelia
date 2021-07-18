@@ -6,7 +6,7 @@
     This module contains the Diameter protocol messages for 3GPP S6a/S6d 
     Application Id.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -16,10 +16,10 @@ import socket
 from .avps import *
 
 from ..avps import *
-from ..etsi_3gpp_s6a_s6d.avps import *
 from ..base import DiameterAnswer
 from ..base import DiameterRequest 
 from ..constants import *
+from ..etsi_3gpp_s6a_s6d.avps import *
 
 
 class CancelLocationRequest(DiameterRequest):

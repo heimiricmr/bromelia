@@ -6,17 +6,12 @@
     This module contains the Diameter protocol AVP library that are used 
     to create Diameter messages for 3GPP S6b Application Id.
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
-import base64
-
-from .._internal_utils import convert_to_1_byte
-from .._internal_utils import convert_to_2_bytes
-from ..avps import *
+from ..base import *
 from ..constants import *
-from ..exceptions import AVPAttributeValueError
 from ..types import *
 
 
@@ -27,6 +22,7 @@ class Mip6FeatureVectorAVP(DiameterAVP, Unsigned64Type):
     The MIP6-Feature-Vector AVP (AVP Code 124) is of type Unsigned64.
     """
     code = MIP6_FEATURE_VECTOR_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, Mip6FeatureVectorAVP.code)

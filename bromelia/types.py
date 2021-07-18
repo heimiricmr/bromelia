@@ -8,14 +8,13 @@
 
     Defines the AVP library that are used to create Diameter messages.
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
 import abc
 import datetime
 import ipaddress
-import logging
 import re
 
 from ._internal_utils import avp_look_up
@@ -28,8 +27,6 @@ from .constants import *
 from .exceptions import AVPAttributeValueError
 from .exceptions import DataTypeError
 from .exceptions import DiameterAvpError
-from .exceptions import MissingAttributes
-from .exceptions import ParsingDataTypeError
 
 
 class BaseDataType(abc.ABC):
@@ -173,17 +170,53 @@ class GroupedType(BaseDataType):
 
     @abc.abstractmethod
     def __init__(self, data, vendor_id=None):
+        if isinstance(data, bytes):
+            self._data = data
+            self.avps = DiameterAVP.load(data)
+
+        elif isinstance(data, list):
+            self._data = b""
+            self.avps = data
+            for avp in data:
+                if not isinstance(avp, DiameterAVP):
+                    raise DataTypeError("GroupedType MUST have data "\
+                                        "argument of 'list' with "\
+                                        "DiameterAVP objects")
+                
+        else:
+            raise DataTypeError("GroupedType MUST have data argument "\
+                                "of 'list' with DiameterAVP objects")
+
+        if self.mandatory:
+            mandatory_avps_codes = [avp.code for avp in self.mandatory.values()]
+            data_avp_codes = [avp.code for avp in self.avps]
+            
+            if not set(mandatory_avps_codes).issubset(data_avp_codes):
+                raise AVPAttributeValueError("missing mandatory avp", 
+                                              DIAMETER_MISSING_AVP)
+        
+        #: TO-DO: maybe create a custom condtional method to check specific
+        #: rules for a given AVP. 
+
+        for avp in self.avps:
+            avp_name = loader._get_avp_class_name(avp)
+            self.__dict__.update({avp_name: avp})
+
         if isinstance(vendor_id, bytes):
             if len(vendor_id) != 4:
                 raise DataTypeError("GroupedType MUST have vendor_id "\
                                     "argument of 'bytes'")
 
-            self._length = convert_to_3_bytes(len(data) + 12)
             self._vendor_id = vendor_id
+    
+            if isinstance(data, bytes):
+                self._length = convert_to_3_bytes(len(data) + 12)
 
         elif vendor_id is None:
-            self._length = convert_to_3_bytes(len(data) + 8)
             self._vendor_id = None
+
+            if isinstance(data, bytes):
+                self._length = convert_to_3_bytes(len(data) + 8)
 
 
     @classmethod
@@ -201,7 +234,7 @@ class GroupedType(BaseDataType):
     def avps(self, value):
         if not isinstance(value, list):
             raise DiameterAvpError("only list allowed. Cannot append a "\
-                                   f"data type of '{type(avp)}'")
+                                   f"data type of '{type(value)}'")
     
         self.cleanup()
 
@@ -226,7 +259,7 @@ class GroupedType(BaseDataType):
 
         avp_name = avp_look_up(avp)
         if avp_name == "Unknown":
-            avp_name = loader.get_avp_class_name_by_avp_code(avp.code)
+            avp_name = loader.get_avp_class_name(avp)
 
         _name = avp_name.replace("-", "_").lower()
         avp_key = f"{_name}_avp"
@@ -310,6 +343,8 @@ class GroupedType(BaseDataType):
         else:
             avp_length = AVP_HEADER_LENGTH
 
+        real_length = 0
+
         for avp in self.avps:
             avp_length += len(avp)
             padding = avp.get_padding_length()
@@ -318,52 +353,6 @@ class GroupedType(BaseDataType):
 
         if real_length != self.get_length():
             self.header.length = convert_to_3_bytes(real_length)
-
-
-    def run(self, data, vendor_id=None):
-        if isinstance(data, bytes):
-            self._data = data
-            self.avps = DiameterAVP.load(data)
-
-        elif isinstance(data, list):
-            self._data = b""
-            self.avps = data
-            for avp in data:
-                if not isinstance(avp, DiameterAVP):
-                    raise DataTypeError("GroupedType MUST have data "\
-                                        "argument of 'list' with "\
-                                        "DiameterAVP objects")
-                
-        else:
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list' with DiameterAVP objects")
-
-        if self.mandatory:
-            mandatory_avps_codes = [avp.code for avp in self.mandatory.values()]
-            data_avp_codes = [avp.code for avp in self.avps]
-            
-            if not set(mandatory_avps_codes).issubset(data_avp_codes):
-                raise AVPAttributeValueError("missing mandatory avp", 
-                                              DIAMETER_MISSING_AVP)
-        
-        #: TO-DO: maybe create a custom condtional method to check specific
-        #: rules for a given AVP. 
-
-        if isinstance(vendor_id, bytes):
-            if len(vendor_id) != 4:
-                raise DataTypeError("GroupedType MUST have vendor_id "\
-                                    "argument of 'bytes'")
-
-            self._vendor_id = vendor_id
-    
-            if isinstance(data, bytes):
-                self._length = convert_to_3_bytes(len(data) + 12)
-
-        elif vendor_id is None:
-            self._vendor_id = None
-
-            if isinstance(data, bytes):
-                self._length = convert_to_3_bytes(len(data) + 8)
 
 
 class AddressType(OctetStringType):

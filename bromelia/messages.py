@@ -5,7 +5,7 @@
 
     This module contains the Diameter protocol base messages.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -13,7 +13,7 @@ import platform
 import socket
 
 from .avps import *
-from .base import DiameterAnswer, DiameterAVP, DiameterRequest
+from .base import DiameterAnswer, DiameterRequest
 from .constants import *
 from .exceptions import DiameterMessageError
 

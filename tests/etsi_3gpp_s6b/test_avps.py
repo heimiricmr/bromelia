@@ -19,6 +19,8 @@ base_dir = os.path.dirname(os.path.dirname(testing_dir))
 
 sys.path.insert(0, base_dir)
 
+from bromelia.avps import *
+from bromelia.base import *
 from bromelia.constants import *
 from bromelia.exceptions import *
 
@@ -39,7 +41,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].vendor_id)
         self.assertEqual(avps[0].data, bytes.fromhex("0000400000000000"))
         self.assertIsNone(avps[0].get_padding_length())
-        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 124 [MIP6-Feature-Vector] MANDATORY>")
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 124 [Mip6-Feature-Vector] MANDATORY>")
 
 
 class TestMip6FeatureVectorAVP(unittest.TestCase):
@@ -49,7 +51,7 @@ class TestMip6FeatureVectorAVP(unittest.TestCase):
     def test__mip6_feature_vector_avp__repr_dunder(self):
         value = bytes.fromhex("0000400000000000")
         avp = Mip6FeatureVectorAVP(value)
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 124 [MIP6-Feature-Vector] MANDATORY>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 124 [Mip6-Feature-Vector] MANDATORY>")
 
     def test__mip6_feature_vector_avp__1(self):
         value = bytes.fromhex("0000400000000000")

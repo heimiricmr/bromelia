@@ -19,7 +19,8 @@ base_dir = os.path.dirname(os.path.dirname(testing_dir))
 
 sys.path.insert(0, base_dir)
 
-from bromelia.base import DiameterAVP
+from bromelia.avps import *
+from bromelia.base import *
 from bromelia.constants import *
 from bromelia.exceptions import *
 

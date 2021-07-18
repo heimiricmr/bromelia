@@ -22,6 +22,7 @@ sys.path.insert(0, base_dir)
 from bromelia.etsi_3gpp_swm.avps import *
 from bromelia.etsi_3gpp_swm.definitions import *
 
+from bromelia.avps import *
 from bromelia.base import *
 from bromelia.constants import *
 from bromelia.exceptions import *
@@ -154,7 +155,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avp.get_length(), 8)
 
     def test_diameter_avp__custom_object_by_constructor(self):
-        avp = DiameterAVP(1, 2, 3, "srcrary")
+        avp = DiameterAVP(code=1, vendor_id=3, flags=2, data="srcrary")
 
         self.assertEqual(avp.code.hex(), "00000001")
         self.assertEqual(avp.flags.hex(), "02")
@@ -612,7 +613,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].vendor_id)
         self.assertEqual(avps[0].data, bytes.fromhex("00010a9f7824"))
         self.assertEqual(avps[0].get_padding_length(), 2)
-        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 257 [Host-IP-Address] MANDATORY>")
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 257 [Host-Ip-Address] MANDATORY>")
 
         self.assertTrue(avps[0].is_ipv4())
         self.assertFalse(avps[0].is_ipv6())
@@ -976,7 +977,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(failed_avp_avp.vendor_id)
         self.assertEqual(failed_avp_avp.data.hex(), "0000011a4000002f68656272612e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000011a4000002f656c64696e2e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f726700")
         self.assertIsNone(failed_avp_avp.get_padding_length())
-        self.assertEqual(failed_avp_avp.__repr__(), "<Diameter AVP: 279 [Failed-AVP] MANDATORY>")
+        self.assertEqual(failed_avp_avp.__repr__(), "<Diameter AVP: 279 [Failed-Avp] MANDATORY>")
 
         route_record_avp__1 = failed_avp_avp.avps[0]
         route_record_avp__2 = failed_avp_avp.avps[1]
@@ -1311,7 +1312,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 299 [Inband-Security-Id]>")
 
     def test_diameter_avp__load_staticmethod__parsing_mip_home_agent_host_avp_stream(self):
-        stream = bytes.fromhex("0000015c000000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
+        stream = bytes.fromhex("0000015c400000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
 
         avps = DiameterAVP.load(stream)
 
@@ -1319,13 +1320,13 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertTrue(isinstance(mip_home_agent_host_avp, MipHomeAgentHostAVP))
         self.assertEqual(mip_home_agent_host_avp.code, MIP_HOME_AGENT_HOST_AVP_CODE)
         self.assertFalse(mip_home_agent_host_avp.is_vendor_id())
-        self.assertFalse(mip_home_agent_host_avp.is_mandatory())
+        self.assertTrue(mip_home_agent_host_avp.is_mandatory())
         self.assertFalse(mip_home_agent_host_avp.is_protected())
         self.assertEqual(mip_home_agent_host_avp.get_length(), 112)
         self.assertIsNone(mip_home_agent_host_avp.vendor_id)
         self.assertEqual(mip_home_agent_host_avp.data.hex(), "0000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
         self.assertIsNone(mip_home_agent_host_avp.get_padding_length())
-        self.assertEqual(mip_home_agent_host_avp.__repr__(), "<Diameter AVP: 348 [MIP-Home-Agent-Host]>")
+        self.assertEqual(mip_home_agent_host_avp.__repr__(), "<Diameter AVP: 348 [Mip-Home-Agent-Host] MANDATORY>")
 
         destination_realm_avp = mip_home_agent_host_avp.destination_realm_avp
         destination_host_avp = mip_home_agent_host_avp.destination_host_avp
@@ -1440,7 +1441,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].vendor_id)
         self.assertEqual(avps[0].data, b"\x02\x00\x002\x01my-user@nai.epc.mncXXX.mccYYY.3gppnetwork.org")
         self.assertEqual(avps[0].get_padding_length(), 2)
-        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 462 [EAP-Payload] MANDATORY>")
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 462 [Eap-Payload] MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_eap_master_session_key_avp_stream(self):
         stream = bytes.fromhex("000001d000000048ec3208c43154f60862858afa650dd875e8a095dfcd364e73420fcc573388d4c207308ace020aa3e3f9ff76ed1821a044e8deed2470997fbfbf5197d724d51fa1")
@@ -1456,7 +1457,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].vendor_id)
         self.assertEqual(avps[0].data.hex(), "ec3208c43154f60862858afa650dd875e8a095dfcd364e73420fcc573388d4c207308ace020aa3e3f9ff76ed1821a044e8deed2470997fbfbf5197d724d51fa1")
         self.assertIsNone(avps[0].get_padding_length())
-        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 464 [EAP-Master-Session-Key]>")
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 464 [Eap-Master-Session-Key]>")
 
     def test_diameter_avp__load_staticmethod__parsing_accounting_record_type_avp_stream(self):
         stream = bytes.fromhex("000001e04000000c00000003")
@@ -1508,7 +1509,7 @@ class TestDiameterAVP(unittest.TestCase):
 
     def test_diameter_avp__load_staticmethod__parsing_mip6_agent_info_avp_stream(self):
         self.maxDiff = None
-        stream = bytes.fromhex("000001e6400000780000015c000000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
+        stream = bytes.fromhex("000001e6400000780000015c400000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
 
         avps = DiameterAVP.load(stream)
 
@@ -1519,22 +1520,22 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertFalse(avps[0].is_protected())
         self.assertEqual(avps[0].get_length(), 120)
         self.assertIsNone(avps[0].vendor_id)
-        self.assertEqual(avps[0].data.hex(), "0000015c000000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
+        self.assertEqual(avps[0].data.hex(), "0000015c400000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
         self.assertIsNone(avps[0].get_padding_length())
-        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 486 [MIP6-Agent-Info] MANDATORY>")
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 486 [Mip6-Agent-Info] MANDATORY>")
 
         mip_home_agent_host_avp = avps[0].mip_home_agent_host_avp
 
         self.assertTrue(isinstance(mip_home_agent_host_avp, MipHomeAgentHostAVP))
         self.assertEqual(mip_home_agent_host_avp.code, MIP_HOME_AGENT_HOST_AVP_CODE)
         self.assertFalse(mip_home_agent_host_avp.is_vendor_id())
-        self.assertFalse(mip_home_agent_host_avp.is_mandatory())
+        self.assertTrue(mip_home_agent_host_avp.is_mandatory())
         self.assertFalse(mip_home_agent_host_avp.is_protected())
         self.assertEqual(mip_home_agent_host_avp.get_length(), 112)
         self.assertIsNone(mip_home_agent_host_avp.vendor_id)
         self.assertEqual(mip_home_agent_host_avp.data.hex(), "0000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000")
         self.assertIsNone(mip_home_agent_host_avp.get_padding_length())
-        self.assertEqual(mip_home_agent_host_avp.__repr__(), "<Diameter AVP: 348 [MIP-Home-Agent-Host]>")
+        self.assertEqual(mip_home_agent_host_avp.__repr__(), "<Diameter AVP: 348 [Mip-Home-Agent-Host] MANDATORY>")
 
         destination_realm_avp = mip_home_agent_host_avp.destination_realm_avp
         destination_host_avp = mip_home_agent_host_avp.destination_host_avp
@@ -2260,7 +2261,7 @@ class TestHostIpAddressAVP(unittest.TestCase):
 
     def test_host_ip_address_avp__repr_dunder(self):
         avp = HostIpAddressAVP("10.129.241.235")
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 257 [Host-IP-Address] MANDATORY>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 257 [Host-Ip-Address] MANDATORY>")
 
     def test_host_ip_address_avp__diameter_avp_convert_classmethod(self):
         avp = HostIpAddressAVP("10.129.241.235")
@@ -2413,34 +2414,6 @@ class TestVendorSpecificApplicationIdAVP(unittest.TestCase):
 
         self.assertEqual(avp.dump().hex(), ref)
 
-
-    def test_vendor_specific_application_id_avp__only_vendor_id_avp(self):
-        vendor_id_avp = VendorIdAVP(VENDOR_ID_3GPP)
-        avps = [vendor_id_avp]
-
-        with self.assertRaises(AVPAttributeValueError) as cm: 
-            avp = VendorSpecificApplicationIdAVP(avps)
-        
-        self.assertEqual(cm.exception.args[1], DIAMETER_MISSING_AVP)
-
-    def test_vendor_specific_application_id_avp__only_auth_app_id_avp(self):
-        auth_app_id_avp = AuthApplicationIdAVP(DIAMETER_APPLICATION_SWm)
-        avps = [auth_app_id_avp]
-
-        with self.assertRaises(AVPAttributeValueError) as cm: 
-            avp = VendorSpecificApplicationIdAVP(avps)
-        
-        self.assertEqual(cm.exception.args[1], DIAMETER_MISSING_AVP)
-
-    def test_vendor_specific_application_id_avp__only_acct_app_id_avp(self):
-        acct_app_id_avp = AcctApplicationIdAVP(DIAMETER_APPLICATION_SWm)
-        avps = [acct_app_id_avp]
-
-        with self.assertRaises(AVPAttributeValueError) as cm: 
-            avp = VendorSpecificApplicationIdAVP(avps)
-        
-        self.assertEqual(cm.exception.args[1], DIAMETER_MISSING_AVP)
-
     def test_vendor_specific_application_id_avp__only_auth_and_acct_app_avps(self):
         auth_app_id_avp = AuthApplicationIdAVP(DIAMETER_APPLICATION_SWm)
         acct_app_id_avp = AcctApplicationIdAVP(DIAMETER_APPLICATION_SWm)
@@ -2451,19 +2424,6 @@ class TestVendorSpecificApplicationIdAVP(unittest.TestCase):
             avp = VendorSpecificApplicationIdAVP(avps)
         
         self.assertEqual(cm.exception.args[1], DIAMETER_MISSING_AVP)
-
-    def test_vendor_specific_application_id_avp__avp_occurs_too_many_times(self):
-        vendor_id_avp = VendorIdAVP(VENDOR_ID_3GPP)
-        auth_app_id_avp = AuthApplicationIdAVP(DIAMETER_APPLICATION_SWm)
-        acct_app_id_avp = AcctApplicationIdAVP(DIAMETER_APPLICATION_SWm)
-
-        avps = [vendor_id_avp, auth_app_id_avp, acct_app_id_avp]
-
-        with self.assertRaises(AVPAttributeValueError) as cm: 
-            avp = VendorSpecificApplicationIdAVP(avps)
-        
-        self.assertEqual(cm.exception.args[1], 
-                         DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
 
 
 class TestRedirectHostUsageAVP(unittest.TestCase):
@@ -2875,7 +2835,7 @@ class TestResultCodeAVP(unittest.TestCase):
 class TestProductNameAVP(unittest.TestCase):
     def test_product_name_avp__default(self):
         avp = ProductNameAVP()
-        ref = "0000010d0000001e507974686f6e2062726f6d656c69612076312e302e300000"
+        ref = "0000010d0000001c507974686f6e2062726f6d656c69612076302e31"
         self.assertEqual(avp.dump().hex(), ref)
 
     def test_product_name_avp__repr_dunder(self):
@@ -3184,7 +3144,7 @@ class TestFailedAvpAVP(unittest.TestCase):
         avps = [route_record1, route_record2]
         avp = FailedAvpAVP(avps)
 
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 279 [Failed-AVP] MANDATORY>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 279 [Failed-Avp] MANDATORY>")
 
     def test_failed_avp_avp__diameter_avp_convert_classmethod(self):
         route_record1 = RouteRecordAVP("hssrj1.epc.mncXXX.mccYYY.3gppnetwork.org")
@@ -3985,7 +3945,7 @@ class TestMipHomeAgentHostAVP(unittest.TestCase):
 
         avps = [destination_realm_avp, destination_host_avp]
         avp = MipHomeAgentHostAVP(avps)
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 348 [MIP-Home-Agent-Host]>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 348 [Mip-Home-Agent-Host] MANDATORY>")
 
     def test_mip_home_agent_host_avp__diameter_avp_convert_classmethod(self):
         destination_realm_avp = DestinationRealmAVP("epc.mncXXX.mccYYY.3gppnetwork.org")
@@ -4004,7 +3964,7 @@ class TestMipHomeAgentHostAVP(unittest.TestCase):
 
     def test_mip_home_agent_host_avp__1(self):
         self.maxDiff = None
-        ref = "0000015c000000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000"
+        ref = "0000015c400000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000"
       
         destination_realm_avp = DestinationRealmAVP("epc.mncXXX.mccYYY.3gppnetwork.org")
         destination_host_avp = DestinationHostAVP("topon.s5pgw.node.epc.mncXXX.mccYYY.3gppnetwork.org")
@@ -4159,7 +4119,7 @@ class TestEapPayloadAVP(unittest.TestCase):
         eap_payload = EapPayload(eap_code=EAP_CODE_RESPONSE, eap_id=0, eap_type=EAP_TYPE_IDENTITY, content=content)
 
         avp = EapPayloadAVP(eap_payload)
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 462 [EAP-Payload] MANDATORY>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 462 [Eap-Payload] MANDATORY>")
 
     def test_eap_payload_avp__diameter_avp_convert_classmethod(self):
         content = {"nai": self.nai, "payload": None}
@@ -4201,7 +4161,7 @@ class TestEapMasterSessionKeyAVP(unittest.TestCase):
 
     def test_eap_master_session_key_avp__repr_dunder(self):
         avp = EapMasterSessionKeyAVP(self.EAP_MASTER_SESSION_KEY)
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 464 [EAP-Master-Session-Key]>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 464 [Eap-Master-Session-Key]>")
 
     def test_eap_master_session_key_avp__diameter_avp_convert_classmethod(self):
         avp = EapMasterSessionKeyAVP(self.EAP_MASTER_SESSION_KEY)
@@ -4334,10 +4294,10 @@ class TestMip6AgentInfoAVP(unittest.TestCase):
                                     ])
         ])
         
-        self.assertEqual(avp.__repr__(), "<Diameter AVP: 486 [MIP6-Agent-Info] MANDATORY>")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 486 [Mip6-Agent-Info] MANDATORY>")
 
     def test_mip6_agent_info_avp__mip_home_agent_host_only(self):
-        ref = "000001e6400000780000015c000000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000"
+        ref = "000001e6400000780000015c400000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000"
 
         destination_realm_avp = DestinationRealmAVP("epc.mncXXX.mccYYY.3gppnetwork.org")
         destination_host_avp = DestinationHostAVP("topon.s5pgw.node.epc.mncXXX.mccYYY.3gppnetwork.org")

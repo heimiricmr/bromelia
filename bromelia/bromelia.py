@@ -6,11 +6,10 @@
     This module contains the orchestrator to allow a seamless
     Diameter application implementation.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
-import datetime
 import logging
 import multiprocessing
 import sys

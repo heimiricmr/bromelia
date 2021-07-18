@@ -10,7 +10,7 @@
     https://www.iana.org/assignments/aaa-parameters/aaa-parameters.xhtml
     https://www.iana.org/assignments/radius-types/radius-types.xhtml
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 

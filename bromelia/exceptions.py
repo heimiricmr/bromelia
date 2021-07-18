@@ -7,7 +7,7 @@
     as per Peer State Machine defined in RFC 6733 in order to establish a 
     Diameter association with another Peer Node.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 

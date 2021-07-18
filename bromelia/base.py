@@ -6,7 +6,7 @@
     This module contains the base structures that power 
     bromelia.messages module.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -42,29 +42,52 @@ class DiameterAvpLoader:
         avps = DiameterAVP.__subclasses__()
         loaded_avps = dict()
         for avp in avps:
-            loaded_avps.update({avp.code: avp})
+            if avp.vendor_id is not None:
+                if avp.vendor_id in loaded_avps:
+                    loaded_avps[avp.vendor_id].update({avp.code: avp})
+                else:
+                    loaded_avps.update({avp.vendor_id: {avp.code: avp}})
+            else:
+                if VENDOR_ID_DEFAULT in loaded_avps:
+                    loaded_avps[VENDOR_ID_DEFAULT].update({avp.code: avp})
+                else:
+                    loaded_avps.update({VENDOR_ID_DEFAULT: {avp.code: avp}})
+
         return loaded_avps
 
 
-    def get_avp_class_by_avp_code(self, avp_code):
+    def get_avp_class(self, avp):
         if self.avps is not None:
             if self.has_updated():
                 self.avps = self._get_load_avps_dictionary()
         else:
             self.avps = self._get_load_avps_dictionary()
 
-        return self.avps[avp_code]
+        if avp.vendor_id is not None: 
+            return self.avps[avp.vendor_id][avp.code]
+        
+        return self.avps[VENDOR_ID_DEFAULT][avp.code]
 
 
-    def get_avp_class_name_by_avp_code(self, avp_code):
+    def get_avp_class_name(self, avp):
         try: 
-            avp_name = self.get_avp_class_by_avp_code(avp_code).__name__[:-3]
+            avp_name = self.get_avp_class(avp).__name__[:-3]
             if len(avp_name.split("-")) == 1:
                 return "-".join(re.findall("[A-Z][^A-Z]*", avp_name))
 
         except KeyError:
             return "Unknown"    
-            
+
+
+    def _get_avp_class_name(self, avp):
+        try: 
+            avp_name = self.get_avp_class(avp).__name__[:-3]
+            if len(avp_name.split("-")) == 1:
+                return "_".join(re.findall("[A-Z][^A-Z]*", avp_name)).lower() + "_avp"
+
+        except KeyError:
+            return "Unknown"    
+
 
 class DiameterAVP(object):
     """Implementation of a Diameter AVP. 
@@ -108,22 +131,21 @@ class DiameterAVP(object):
 
     def __init__(self, 
                  code=0, 
-                 flags=0, 
                  vendor_id=None, 
+                 flags=0, 
                  data=None, 
                  padding=None):
         self.code = code
-        self.flags = flags
         self.vendor_id = vendor_id
+        self.flags = flags
         self.data = data
         self._padding = padding
 
 
     def __repr__(self):
-        avp_name = avp_look_up(self)
+        avp_name = loader.get_avp_class_name(self)
         if avp_name == "Unknown":
-            avp_name = loader.get_avp_class_name_by_avp_code(self.code)
-
+            avp_name = avp_look_up(self)
 
         flag_representation = ""
 
@@ -163,13 +185,13 @@ class DiameterAVP(object):
     @classmethod
     def convert(cls, avp):
         if not isinstance(avp, DiameterAVP):
-            raise DiameterAVPError("invalid AVP. It MUST be a DiameterAVP "\
+            raise DiameterAvpError("invalid AVP. It MUST be a DiameterAVP "\
                                 "subclass object to be converted into "\
                                 "DiameterAVP object")
         
         return cls(code=avp.code,
-                   flags=avp.flags,
                    vendor_id=avp.vendor_id,
+                   flags=avp.flags,
                    data=avp.data,
                    padding=avp._padding)
 
@@ -379,7 +401,7 @@ class DiameterAVP(object):
             index += boundary + padding
 
             try:
-                _avp_class = loader.get_avp_class_by_avp_code(avp.code)
+                _avp_class = loader.get_avp_class(avp)
                 avp_object = _avp_class(avp.data)
                 avps.append(avp_object)
 
@@ -1044,7 +1066,7 @@ class DiameterMessage:
 
         avp_name = avp_look_up(avp)
         if avp_name == "Unknown":
-            avp_name = loader.get_avp_class_name_by_avp_code(avp.code)
+            avp_name = loader.get_avp_class_name(avp)
 
         _name = avp_name.replace("-", "_").lower()
         avp_key = f"{_name}_avp"

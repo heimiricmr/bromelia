@@ -51,7 +51,6 @@ class TeststatemachineStates(unittest.TestCase):
     def test_run_method_from_closed_state(self):
         self.closed = Closed(association)
         self.closed.run()
-        print(self.closed.next_state)
 
 
 if __name__ == "__main__":

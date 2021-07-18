@@ -6,23 +6,17 @@
     This module contains the Diameter protocol AVP library 
     that are used to create Diameter messages.
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
 import base64
 import datetime
-from copy import deepcopy
 
 from .__version__ import __version__
-from ._internal_utils import avp_look_up
 from ._internal_utils import convert_to_1_byte
-from ._internal_utils import convert_to_3_bytes
-from ._internal_utils import convert_to_4_bytes
-from .base import DiameterAVP, DiameterAvpLoader
+from .base import DiameterAVP
 from .constants import *
-from .exceptions import AVPAttributeValueError
-from .exceptions import AVPParsingError
 from .types import *
 
 PRODUCT_NAME = f"Python bromelia v{__version__}"
@@ -33,6 +27,7 @@ class UserNameAVP(DiameterAVP, UTF8StringType):
     The User-Name AVP (AVP Code 1) [RADIUS] is of type UTF8String.
     """
     code = USER_NAME_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, UserNameAVP.code)
@@ -46,6 +41,7 @@ class ClassAVP(DiameterAVP, OctetStringType):
     The Class AVP (AVP Code 25) is of type OctetString.
     """
     code = CLASS_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ClassAVP.code)
@@ -60,6 +56,7 @@ class SessionTimeoutAVP(DiameterAVP, Unsigned32Type):
     The Session-Timeout AVP (AVP Code 27) is of type Unsigned32.
     """
     code = SESSION_TIMEOUT_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, SessionTimeoutAVP.code)
@@ -73,6 +70,7 @@ class CallingStationIdAVP(DiameterAVP, UTF8StringType):
     The Calling-Station-Id AVP (AVP Code 31) is of type UTF8String.
     """
     code = CALLING_STATION_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, CallingStationIdAVP.code)
@@ -86,6 +84,7 @@ class ProxyStateAVP(DiameterAVP, OctetStringType):
     The Proxy-State AVP (AVP Code 33) is of type OctetString.
     """
     code = PROXY_STATE_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ProxyStateAVP.code)
@@ -99,6 +98,7 @@ class AcctSessionIdAVP(DiameterAVP, OctetStringType):
     The Acct-Session-Id AVP (AVP Code 44) is of type OctetString.
     """
     code = ACCT_SESSION_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AcctSessionIdAVP.code)
@@ -114,6 +114,7 @@ class AcctMultiSessionIdAVP(DiameterAVP, UTF8StringType):
     The Acct-Multi-Session-Id AVP (AVP Code 50) is of type UTF8String.
     """
     code = ACCT_MULTI_SESSION_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         if isinstance(data, str):
@@ -135,6 +136,7 @@ class EventTimestampAVP(DiameterAVP, TimeType):
     The Event-Timestamp AVP (AVP Code 55) is of type Time.
     """
     code = EVENT_TIMESTAMP_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data=datetime.datetime.utcnow()):
         DiameterAVP.__init__(self, EventTimestampAVP.code)
@@ -149,6 +151,7 @@ class AcctInterimIntervalAVP(DiameterAVP, Unsigned32Type):
     The Acct-Interim-Interval AVP (AVP Code 85) is of type Unsigned32.
     """
     code = ACCT_INTERIM_INTERVAL_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AcctInterimIntervalAVP.code)
@@ -162,6 +165,7 @@ class HostIpAddressAVP(DiameterAVP, AddressType):
     The Host-IP-Address AVP (AVP Code 257) is of type Address.
     """
     code = HOST_IP_ADDRESS_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, HostIpAddressAVP.code)
@@ -176,6 +180,7 @@ class AuthApplicationIdAVP(DiameterAVP, Unsigned32Type):
     The Auth-Application-Id AVP (AVP Code 258) is of type Unsigned32.
     """
     code = AUTH_APPLICATION_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AuthApplicationIdAVP.code)
@@ -190,9 +195,27 @@ class AcctApplicationIdAVP(DiameterAVP, Unsigned32Type):
     The Acct-Application-Id AVP (AVP Code 259) is of type Unsigned32.
     """
     code = ACCT_APPLICATION_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AcctApplicationIdAVP.code)
+        DiameterAVP.set_mandatory_bit(self, True)
+        Unsigned32Type.__init__(self, data=data)
+
+
+class VendorIdAVP(DiameterAVP, Unsigned32Type):
+    """Implementation of Vendor-Id AVP in Section 5.3.3 of IETF RFC 3588.
+
+    The Vendor-Id AVP (AVP Code 266) is of type Unsigned32.
+
+    A Vendor-Id value of zero in the CER or CEA messages is reserved and 
+    indicates that this field is ignored.
+    """
+    code = VENDOR_ID_AVP_CODE
+    vendor_id = None
+
+    def __init__(self, data=VENDOR_ID_DEFAULT):
+        DiameterAVP.__init__(self, VendorIdAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
         Unsigned32Type.__init__(self, data=data)
 
@@ -204,81 +227,20 @@ class VendorSpecificApplicationIdAVP(DiameterAVP, GroupedType):
     The Vendor-Specific-Application-Id AVP (AVP Code 260) is of type Grouped.
     """
     code = VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE
+    vendor_id = None
+
+    mandatory = {
+                    "vendor_id": VendorIdAVP,
+    }
+    optionals = {
+                    "auth_application_id": AuthApplicationIdAVP,
+                    "acct_application_id": AcctApplicationIdAVP,
+    }
 
     def __init__(self, data):
         DiameterAVP.__init__(self, VendorSpecificApplicationIdAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        mandatory_avps_count = 0
-        secondary_avps_count = 0
-        for avp in data:
-            self.data += avp.dump()
-            if isinstance(avp, VendorIdAVP):
-                self.vendor_id_avp = avp
-                mandatory_avps_count += 1
-
-            elif isinstance(avp, AuthApplicationIdAVP):
-                self.auth_application_id_avp = avp
-                secondary_avps_count += 1
-            
-            elif isinstance(avp, AcctApplicationIdAVP):
-                self.acct_application_id_avp = avp
-                secondary_avps_count += 1
-
-        if mandatory_avps_count == 0:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "VendorSpecificApplicationIdAVP. It "\
-                                    "MUST contain VendorIdAVP object",
-                                    DIAMETER_MISSING_AVP)
-
-        if secondary_avps_count == 0:
-                raise AVPAttributeValueError("invalid input argument for "\
-                                    "VendorSpecificApplicationIdAVP. It "\
-                                    "MUST contain AuthApplicationId or "\
-                                    "AcctApplicationId object",
-                                    DIAMETER_MISSING_AVP)
-
-        if mandatory_avps_count > 1 or secondary_avps_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "VendorSpecificApplicationIdAVP. It MUST "\
-                                    "contain only one VendorId and either "\
-                                    "AuthApplicationId or "\
-                                    "AcctApplicationId object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data)
-
-
-#class VendorSpecificApplicationIdAVP(DiameterAVP, GroupedType):
-#    """Implementation of Vendor-Specific-Application-Id AVP in Section 6.11 of
-#    IETF RFC 6733.
-#
-#    The Vendor-Specific-Application-Id AVP (AVP Code 260) is of type Grouped.
-#    """
-#    code = VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE
-#
-#    mandatory = {
-#                    "vendor_id": VendorIdAVP,
-#    }
-#    optionals = {
-#                    "auth_application_id": AuthApplicationIdAVP,
-#                    "acct_application_id": AcctApplicationIdAVP,
-#    }
-#
-#    def __init__(self, data):
-#        DiameterAVP.__init__(self, VendorSpecificApplicationIdAVP.code)
-#        DiameterAVP.set_mandatory_bit(self, True)
-#        GroupedType.doing_test(self, data=data)
+        GroupedType.__init__(self, data=data)
 
 
 class RedirectHostUsageAVP(DiameterAVP, EnumeratedType):
@@ -288,6 +250,8 @@ class RedirectHostUsageAVP(DiameterAVP, EnumeratedType):
     The Redirect-Host-Usage AVP (AVP Code 261) is of type Enumerated.
     """
     code = REDIRECT_HOST_USAGE_AVP_CODE
+    vendor_id = None
+
     values = [
                 REDIRECT_HOST_USAGE_DONT_CACHE,
                 REDIRECT_HOST_USAGE_ALL_SESSION,
@@ -311,6 +275,7 @@ class RedirectMaxCacheTimeAVP(DiameterAVP, Unsigned32Type):
     The Redirect-Max-Cache-Time AVP (AVP Code 262) is of type Unsigned32.
     """
     code = REDIRECT_MAX_CACHE_TIME_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, RedirectMaxCacheTimeAVP.code)
@@ -324,6 +289,8 @@ class SessionIdAVP(DiameterAVP, UTF8StringType):
     The Session-Id AVP (AVP Code 263) is of type UTF8String.
     """
     code = SESSION_ID_AVP_CODE
+    vendor_id = None
+
     diff = datetime.datetime.utcnow() - datetime.datetime(1900, 1, 1, 0, 0, 0)
     init = diff.days*24*60*60 + diff.seconds
     id = 0
@@ -357,6 +324,7 @@ class OriginHostAVP(DiameterAVP, DiameterIdentityType):
     The Origin-Host AVP (AVP Code 264) is of type DiameterIdentity.
     """
     code = ORIGIN_HOST_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, OriginHostAVP.code)
@@ -371,25 +339,10 @@ class SupportedVendorIdAVP(DiameterAVP, Unsigned32Type):
     The Supported-Vendor-Id AVP (AVP Code 265) is of type Unsigned32.
     """
     code = SUPPORTED_VENDOR_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, SupportedVendorIdAVP.code)
-        DiameterAVP.set_mandatory_bit(self, True)
-        Unsigned32Type.__init__(self, data=data)
-
-
-class VendorIdAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of Vendor-Id AVP in Section 5.3.3 of IETF RFC 3588.
-
-    The Vendor-Id AVP (AVP Code 266) is of type Unsigned32.
-
-    A Vendor-Id value of zero in the CER or CEA messages is reserved and 
-    indicates that this field is ignored.
-    """
-    code = VENDOR_ID_AVP_CODE
-
-    def __init__(self, data=VENDOR_ID_DEFAULT):
-        DiameterAVP.__init__(self, VendorIdAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
         Unsigned32Type.__init__(self, data=data)
 
@@ -401,6 +354,7 @@ class FirmwareRevisionAVP(DiameterAVP, Unsigned32Type):
     The Firmware-Revision AVP (AVP Code 267) is of type Unsigned32.
     """
     code = FIRMWARE_REVISION_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, FirmwareRevisionAVP.code)
@@ -413,6 +367,7 @@ class ResultCodeAVP(DiameterAVP, Unsigned32Type):
     The Result-Code AVP (AVP Code 268) is of type Unsigned32.
     """
     code = RESULT_CODE_AVP_CODE
+    vendor_id = None
 
     values = [
                 DIAMETER_MULTI_ROUND_AUTH,
@@ -462,6 +417,7 @@ class ProductNameAVP(DiameterAVP, UTF8StringType):
     The Product-Name AVP (AVP Code 269) is of type UTF8String.
     """
     code = PRODUCT_NAME_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data=PRODUCT_NAME):
         DiameterAVP.__init__(self, ProductNameAVP.code)
@@ -474,6 +430,7 @@ class SessionBindingAVP(DiameterAVP, Unsigned32Type):
     The Session-Binding AVP (AVP Code 270) is of type Unsigned32.
     """
     code = SESSION_BINDING_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, SessionBindingAVP.code)
@@ -488,6 +445,7 @@ class SessionServerFailoverAVP(DiameterAVP, EnumeratedType):
     The Session-Server-Failover AVP (AVP Code 271) is of type Enumerated.
     """
     code = SESSION_SERVER_FAILOVER_AVP_CODE
+    vendor_id = None
     
     values = [
                 SESSION_SERVER_FAILOVER_REFUSE_SERVICE,
@@ -509,6 +467,7 @@ class MultiRoundTimeOutAVP(DiameterAVP, Unsigned32Type):
     The Multi-Round-Time-Out AVP (AVP Code 272) is of type Unsigned32.
     """
     code = MULTI_ROUND_TIME_OUT_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, MultiRoundTimeOutAVP.code)
@@ -523,6 +482,7 @@ class DisconnectCauseAVP(DiameterAVP, EnumeratedType):
     The Disconnect-Cause AVP (AVP Code 273) is of type Enumerated.
     """
     code = DISCONNECT_CAUSE_AVP_CODE
+    vendor_id = None
     
     values = [
                 DISCONNECT_CAUSE_REBOOTING,
@@ -542,6 +502,7 @@ class AuthRequestTypeAVP(DiameterAVP, EnumeratedType):
     The Auth-Request-Type AVP (AVP Code 274) is of type Enumerated.
     """
     code = AUTH_REQUEST_TYPE_AVP_CODE
+    vendor_id = None
     
     values = [
                 AUTH_REQUEST_TYPE_AUTHENTICATE_ONLY,
@@ -562,6 +523,7 @@ class AuthGracePeriodAVP(DiameterAVP, Unsigned32Type):
     The Auth-Grace-Period AVP (AVP Code 276) is of type Unsigned32.
     """
     code = AUTH_GRACE_PERIOD_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AuthGracePeriodAVP.code)
@@ -576,6 +538,7 @@ class AuthSessionStateAVP(DiameterAVP, EnumeratedType):
     The Auth-Session-State AVP (AVP Code 277) is of type Enumerated.
     """
     code = AUTH_SESSION_STATE_AVP_CODE
+    vendor_id = None
 
     values = [
                 STATE_MAINTAINED,
@@ -594,6 +557,7 @@ class OriginStateIdAVP(DiameterAVP, Unsigned32Type):
     The Origin-State-Id AVP (AVP Code 278) is of type Unsigned32.
     """
     code = ORIGIN_STATE_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, OriginStateIdAVP.code)
@@ -607,24 +571,15 @@ class FailedAvpAVP(DiameterAVP, GroupedType):
     The Failed-AVP AVP (AVP Code 279) is of type Grouped.
     """
     code = FAILED_AVP_AVP_CODE
+    vendor_id = None
+
+    mandatory = {}
+    optionals = {}
 
     def __init__(self, data):
         DiameterAVP.__init__(self, FailedAvpAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-            
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-        for avp in data:
-            self.data += avp.dump()
-
-        GroupedType.__init__(self, data=self.data)
+        GroupedType.__init__(self, data=data)
 
 
 class ProxyHostAVP(DiameterAVP, DiameterIdentityType):
@@ -633,6 +588,7 @@ class ProxyHostAVP(DiameterAVP, DiameterIdentityType):
     The Proxy-Host AVP (AVP Code 280) is of type DiameterIdentity.
     """
     code = PROXY_HOST_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ProxyHostAVP.code)
@@ -646,6 +602,7 @@ class ErrorMessageAVP(DiameterAVP, UTF8StringType):
     The Error-Message AVP (AVP Code 281) is of type UTF8String.
     """
     code = ERROR_MESSAGE_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ErrorMessageAVP.code)
@@ -658,6 +615,7 @@ class RouteRecordAVP(DiameterAVP, DiameterIdentityType):
     The Route-Record AVP (AVP Code 282) is of type DiameterIdentity.
     """
     code = ROUTE_RECORD_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, RouteRecordAVP.code)
@@ -671,6 +629,7 @@ class DestinationRealmAVP(DiameterAVP, DiameterIdentityType):
     The Destination-Realm AVP (AVP Code 283) is of type DiameterIdentity.
     """
     code = DESTINATION_REALM_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, DestinationRealmAVP.code)
@@ -684,49 +643,18 @@ class ProxyInfoAVP(DiameterAVP, GroupedType):
     The Proxy-Info AVP (AVP Code 284) is of type Grouped.
     """
     code = PROXY_INFO_AVP_CODE
+    vendor_id = None
+
+    mandatory = {
+                    "proxy_host": ProxyHostAVP,
+                    "proxy_state": ProxyStateAVP,
+    }
+    optionals = {}
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ProxyInfoAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        proxy_host_avp_count = 0
-        proxy_state_avp_count = 0
-        for avp in data:
-            self.data += avp.dump()
-            if isinstance(avp, ProxyHostAVP):
-                self.proxy_host_avp = avp
-                proxy_host_avp_count += 1
-
-            elif isinstance(avp, ProxyStateAVP):
-                self.proxy_state_avp = avp
-                proxy_state_avp_count += 1
-            
-        if proxy_host_avp_count == 0 or proxy_state_avp_count == 0:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "ProxyInfoAVP. It MUST contain "\
-                                    "one ProxyHostAVP object and one "\
-                                    "ProxyStateAVP object",
-                                    DIAMETER_MISSING_AVP)
-
-        if proxy_host_avp_count > 1 or proxy_state_avp_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "ProxyInfoAVP. It MUST contain "\
-                                    "only one ProxyHostAVP object and "\
-                                    "only one ProxyStateAVP "\
-                                    "object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data)
+        GroupedType.__init__(self, data=data)
 
 
 class ReAuthRequestTypeAVP(DiameterAVP, EnumeratedType):
@@ -736,6 +664,7 @@ class ReAuthRequestTypeAVP(DiameterAVP, EnumeratedType):
     The Re-Auth-Request-Type AVP (AVP Code 285) is of type Enumerated.
     """
     code = RE_AUTH_REQUEST_TYPE_AVP_CODE
+    vendor_id = None
 
     values = [
                 RE_AUTH_REQUEST_TYPE_AUTHORIZE_ONLY,
@@ -755,6 +684,7 @@ class AccountingSubSessionIdAVP(DiameterAVP, Unsigned64Type):
     The Accounting-Sub-Session-Id AVP (AVP Code 287) is of type Unsigned64.
     """
     code = ACCOUNTING_SUB_SESSION_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AccountingSubSessionIdAVP.code)
@@ -769,6 +699,7 @@ class AuthorizationLifetimeAVP(DiameterAVP, Unsigned32Type):
     The Authorization-Lifetime AVP (AVP Code 291) is of type Unsigned32.
     """
     code = AUTHORIZATION_LIFETIME_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AuthorizationLifetimeAVP.code)
@@ -782,6 +713,7 @@ class RedirectHostAVP(DiameterAVP, DiameterURIType):
     The Redirect-Host AVP (AVP Code 292) is of type DiameterURI.
     """
     code = REDIRECT_HOST_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, RedirectHostAVP.code)
@@ -795,6 +727,7 @@ class DestinationHostAVP(DiameterAVP, DiameterIdentityType):
     The Destination-Host AVP (AVP Code 293) is of type DiameterIdentity.
     """
     code = DESTINATION_HOST_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, DestinationHostAVP.code)
@@ -809,6 +742,7 @@ class ErrorReportingHostAVP(DiameterAVP, DiameterIdentityType):
     The Error-Reporting-Host AVP (AVP Code 294) is of type DiameterIdentity.
     """
     code = ERROR_REPORTING_HOST_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ErrorReportingHostAVP.code)
@@ -822,6 +756,7 @@ class TerminationCauseAVP(DiameterAVP, EnumeratedType):
     The Termination-Cause AVP (AVP Code 295) is of type Enumerated.
     """
     code = TERMINATION_CAUSE_AVP_CODE
+    vendor_id = None
 
     values = [
                 DIAMETER_LOGOUT,
@@ -846,62 +781,12 @@ class OriginRealmAVP(DiameterAVP, DiameterIdentityType):
     The Origin-Realm AVP (AVP Code 296) is of type DiameterIdentity.
     """
     code = ORIGIN_REALM_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, OriginRealmAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterIdentityType.__init__(self, data=data)
-
-
-class ExperimentalResultAVP(DiameterAVP, GroupedType):
-    """Implementation of Experimental-Result AVP in Section 7.6 of 
-    IETF RFC 6733.
-
-    The Experimental-Result AVP (AVP Code 297) is of type Grouped.
-    """
-    code = EXPERIMENTAL_RESULT_AVP_CODE
-
-    def __init__(self, data):
-        DiameterAVP.__init__(self, ExperimentalResultAVP.code)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        vendor_id_avp_count = 0
-        experimental_result_code_avp_count = 0
-        for avp in data:
-            self.data += avp.dump()
-            if isinstance(avp, VendorIdAVP):
-                self.destination_host_avp = avp
-                vendor_id_avp_count += 1
-
-            elif isinstance(avp, ExperimentalResultCodeAVP):
-                self.destination_realm_avp = avp
-                experimental_result_code_avp_count += 1
-            
-        if vendor_id_avp_count == 0 or experimental_result_code_avp_count == 0:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "ExperimentalResultAVP. It MUST contain "\
-                                    "one VendorIdAVP object and one "\
-                                    "ExperimentalResultCodeAVP object",
-                                    DIAMETER_MISSING_AVP)
-
-        if vendor_id_avp_count > 1 or experimental_result_code_avp_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "ExperimentalResultAVP. It MUST contain "\
-                                    "only one VendorIdAVP object and "\
-                                    "only one ExperimentalResultCodeAVP "\
-                                    "object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data)
 
 
 class ExperimentalResultCodeAVP(DiameterAVP, Unsigned32Type):
@@ -911,11 +796,32 @@ class ExperimentalResultCodeAVP(DiameterAVP, Unsigned32Type):
     The Experimental-Result-Code AVP (AVP Code 298) is of type Unsigned32.
     """
     code = EXPERIMENTAL_RESULT_CODE_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, ExperimentalResultCodeAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
         Unsigned32Type.__init__(self, data=data)
+
+
+class ExperimentalResultAVP(DiameterAVP, GroupedType):
+    """Implementation of Experimental-Result AVP in Section 7.6 of 
+    IETF RFC 6733.
+
+    The Experimental-Result AVP (AVP Code 297) is of type Grouped.
+    """
+    code = EXPERIMENTAL_RESULT_AVP_CODE
+    vendor_id = None
+
+    mandatory = {
+                    "vendor_id": VendorIdAVP,
+                    "experimental_result_code": ExperimentalResultCodeAVP,
+    }
+    optionals = {}
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, ExperimentalResultAVP.code)
+        GroupedType.__init__(self, data=data)
 
 
 class InbandSecurityIdAVP(DiameterAVP, Unsigned32Type):
@@ -925,6 +831,7 @@ class InbandSecurityIdAVP(DiameterAVP, Unsigned32Type):
     The Inband-Security-Id AVP (AVP Code 299) is of type Unsigned32.
     """
     code = INBAND_SECURITY_ID_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):    
         DiameterAVP.__init__(self, InbandSecurityIdAVP.code)
@@ -938,99 +845,18 @@ class MipHomeAgentHostAVP(DiameterAVP, GroupedType):
     The MIP-Home-Agent-Host AVP (AVP Code 348) is of type Grouped.
     """
     code = MIP_HOME_AGENT_HOST_AVP_CODE
+    vendor_id = None
 
-    def __init__(self, data):        
+    mandatory = {
+                    "destination_host": DestinationHostAVP,
+                    "destination_realm": DestinationRealmAVP,
+    }
+    optionals = {}
+
+    def __init__(self, data):
         DiameterAVP.__init__(self, MipHomeAgentHostAVP.code)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        destination_host_avp_count = 0
-        destination_realm_avp_count = 0
-        for avp in data:
-            self.data += avp.dump()
-            if isinstance(avp, DestinationHostAVP):
-                self.destination_host_avp = avp
-                destination_host_avp_count += 1
-
-            elif isinstance(avp, DestinationRealmAVP):
-                self.destination_realm_avp = avp
-                destination_realm_avp_count += 1
-            
-        if destination_host_avp_count == 0 or destination_realm_avp_count == 0:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "MipHomeAgentHostAVP. It MUST contain "\
-                                    "one DestinationHostAVP object and one "\
-                                    "DestinationRealmAVP object",
-                                    DIAMETER_MISSING_AVP)
-
-        if destination_host_avp_count > 1 or destination_realm_avp_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "MipHomeAgentHostAVP. It MUST contain "\
-                                    "only one DestinationHostAVP object and "\
-                                    "only one DestinationRealmAVP object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data)
-
-
-class SubscriptionIdAVP(DiameterAVP, GroupedType):
-    """Implementation of Subscription-Id AVP in Section 8.46 of IETF RFC 4006.
-
-    The Subscription-Id AVP (AVP Code 443) is of type Grouped.
-    """
-    code = SUBSCRIPTION_ID_AVP_CODE
-
-    def __init__(self, data):        
-        DiameterAVP.__init__(self, SubscriptionIdAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        mandatory_avps_count = 0
-        secondary_avps_count = 0
-        for avp in data:
-            if isinstance(avp, SubscriptionIdDataAVP):
-                self.subscription_id_data_avp = avp
-                self.data += avp.dump()
-                mandatory_avps_count += 1
-
-            elif isinstance(avp, SubscriptionIdTypeAVP):
-                self.subscription_id_type_avp = avp
-                self.data += avp.dump()
-                mandatory_avps_count += 1
-        
-        if mandatory_avps_count == 0 or mandatory_avps_count == 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "SubscriptionIdAVP. It MUST contain one "\
-                                    "SubscriptionIdDataAVP object and "\
-                                    "one SubscriptionIdTypeAVP object",
-                                    DIAMETER_MISSING_AVP)
-
-        if mandatory_avps_count > 2:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "SubscriptionIdAVP. It MUST contain only "
-                                    "one SubscriptionIdDataAVP object and "\
-                                    "only one SubscriptionIdDataAVP "\
-                                    "object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data)
+        GroupedType.__init__(self, data=data)
 
 
 class SubscriptionIdDataAVP(DiameterAVP, UTF8StringType):
@@ -1040,6 +866,7 @@ class SubscriptionIdDataAVP(DiameterAVP, UTF8StringType):
     The Subscription-Id-Data AVP (AVP Code 444) is of type UTF8String.
     """
     code = SUBSCRIPTION_ID_DATA_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, SubscriptionIdDataAVP.code)
@@ -1054,6 +881,7 @@ class SubscriptionIdTypeAVP(DiameterAVP, EnumeratedType):
     The Subscription-Id-Type AVP (AVP Code 450) is of type Enumerated.
     """
     code = SUBSCRIPTION_ID_TYPE_AVP_CODE
+    vendor_id = None
 
     values = [
                 END_USER_E164,
@@ -1069,12 +897,33 @@ class SubscriptionIdTypeAVP(DiameterAVP, EnumeratedType):
         EnumeratedType.__init__(self, data=data)
 
 
+class SubscriptionIdAVP(DiameterAVP, GroupedType):
+    """Implementation of Subscription-Id AVP in Section 8.46 of IETF RFC 4006.
+
+    The Subscription-Id AVP (AVP Code 443) is of type Grouped.
+    """
+    code = SUBSCRIPTION_ID_AVP_CODE
+    vendor_id = None
+
+    mandatory = {
+                    "subscription_id_data": SubscriptionIdDataAVP,
+                    "subscription_id_type": SubscriptionIdTypeAVP,
+    }
+    optionals = {}
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, SubscriptionIdAVP.code)
+        DiameterAVP.set_mandatory_bit(self, True)
+        GroupedType.__init__(self, data=data)
+
+
 class EapPayloadAVP(DiameterAVP, OctetStringType):
     """Implementation of EAP-Payload AVP in Section 4.1.1 of IETF RFC 4072.
 
     The EAP-Payload AVP (AVP Code 462) is of type OctetString.
     """
     code = EAP_PAYLOAD_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, EapPayloadAVP.code)
@@ -1106,6 +955,7 @@ class EapMasterSessionKeyAVP(DiameterAVP, OctetStringType):
     The EAP-Master-Session-Key AVP (AVP Code 464) is of type OctetString.
     """
     code = EAP_MASTER_SESSION_KEY_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data): 
         DiameterAVP.__init__(self, EapMasterSessionKeyAVP.code)
@@ -1119,6 +969,7 @@ class AccountingRecordTypeAVP(DiameterAVP, EnumeratedType):
     The Accounting-Record-Type AVP (AVP Code 480) is of type Enumerated.
     """
     code = ACCOUNTING_RECORD_TYPE_AVP_CODE
+    vendor_id = None
     
     values = [
                 ACCOUNTING_RECORD_TYPE_EVENT_RECORD,
@@ -1140,6 +991,7 @@ class AccountingRealtimeRequiredAVP(DiameterAVP, EnumeratedType):
     The Accounting-Realtime-Required AVP (AVP Code 483) is of type Enumerated.
     """
     code = ACCOUNTING_REALTIME_REQUIRED_AVP_CODE
+    vendor_id = None
     
     values = [
                 ACCOUNTING_REALTIME_REQUIRED_DELIVER_AND_GRANT,
@@ -1160,6 +1012,7 @@ class AccountingRecordNumberAVP(DiameterAVP, Unsigned32Type):
     The Accounting-Record-Number AVP (AVP Code 485) is of type Unsigned32.
     """
     code = ACCOUNTING_RECORD_NUMBER_AVP_CODE
+    vendor_id = None
 
     def __init__(self, data):
         DiameterAVP.__init__(self, AccountingRecordNumberAVP.code)
@@ -1174,52 +1027,16 @@ class Mip6AgentInfoAVP(DiameterAVP, GroupedType):
     The MIP6-Agent-Info AVP (AVP Code 486) is of type Grouped.
     """
     code = MIP6_AGENT_INFO_AVP_CODE
+    vendor_id = None
 
-    def __init__(self, data):        
+    mandatory = {}
+    optionals = {
+                    # "mip_home_agent_address": MipHomeAgentAddressAVP,
+                    "mip_home_agent_host": MipHomeAgentHostAVP,
+                    # "mip_home_link_prefix": MipHomeLinkPrefixAVP,
+    }
+
+    def __init__(self, data):
         DiameterAVP.__init__(self, Mip6AgentInfoAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
-        GroupedType.run(self, data=data, vendor_id=VENDOR_ID_3GPP)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-            raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        mip_home_agent_address_count = 0
-        mip_home_agent_host_count = 0
-        mip6_home_link_prefix_count = 0
-        for avp in data:
-            self.data += avp.dump()
-            if isinstance(avp, MipHomeAgentHostAVP):
-                self.mip_home_agent_host_avp = avp
-                mip_home_agent_host_count += 1
-
-
-        if mip_home_agent_address_count == 0 and \
-                mip_home_agent_host_count == 0 and \
-                mip6_home_link_prefix_count == 0:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "Mip6AgentInfoAVP. It MUST contain "\
-                                    "until two MipHomeAgentAddressAVP "\
-                                    "objects, one MipHomeAgentHostAVP "\
-                                    "object or one Mip6HomeLinkPrefixAVP "\
-                                    "object",
-                                    DIAMETER_MISSING_AVP)
-
-        if mip_home_agent_address_count > 2 or \
-                mip_home_agent_host_count > 1 or \
-                mip6_home_link_prefix_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "Mip6AgentInfoAVP. It MUST contain "\
-                                    "until two MipHomeAgentAddressAVP "\
-                                    "objects, only one MipHomeAgentHostAVP "\
-                                    "object or only one "\
-                                    "Mip6HomeLinkPrefixAVP object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data)
+        GroupedType.__init__(self, data=data)

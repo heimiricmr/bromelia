@@ -8,7 +8,7 @@
     of Diameter protocol which will be used in a specific connection. Besides
     that, it allows to customize the base messages content as per RFC 6733.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -39,13 +39,12 @@ class DiameterBaseProxy:
 
 
     def get_default_messages(self):
-        return BaseMessages(
-                        cer=DiameterBaseProxy.load_cer(self.connection),
-                        cea=DiameterBaseProxy.load_cea(self.connection), 
-                        dwr=DiameterBaseProxy.load_dwr(self.connection), 
-                        dwa=DiameterBaseProxy.load_dwa(self.connection), 
-                        dpr=DiameterBaseProxy.load_dpr(self.connection), 
-                        dpa=DiameterBaseProxy.load_dpa(self.connection))
+        return BaseMessages(cer=DiameterBaseProxy.load_cer(self.connection),
+                            cea=DiameterBaseProxy.load_cea(self.connection), 
+                            dwr=DiameterBaseProxy.load_dwr(self.connection), 
+                            dwa=DiameterBaseProxy.load_dwa(self.connection), 
+                            dpr=DiameterBaseProxy.load_dpr(self.connection), 
+                            dpa=DiameterBaseProxy.load_dpa(self.connection))
 
 
     def get_custom_messages(self, msgs):
@@ -64,19 +63,19 @@ class DiameterBaseProxy:
             elif isinstance(msg, DisconnectPeerAnswer):
                 base.update({"dpa": msg})
 
-        for key in base.items():
-            if "cer" not in base:
-                base.update({"cer": DiameterBaseProxy.load_cer(connection)})
-            elif "cea" not in base:
-                base.update({"cea": DiameterBaseProxy.load_cea(connection)})
-            elif "dwr" not in base:
-                base.update({"dwr": DiameterBaseProxy.load_dwr(connection)})
-            elif "dwa" not in base:
-                base.update({"dwa": DiameterBaseProxy.load_dwa(connection)})
-            elif "dpr" not in base:
-                base.update({"dpr": DiameterBaseProxy.load_dpr(connection)})
-            elif "dpa" not in base:
-                base.update({"dpa": DiameterBaseProxy.load_dpa(connection)})
+        for key in base.keys():
+            if key == "cer":
+                base.update({"cer": DiameterBaseProxy.load_cer(self.connection)})
+            elif key == "cea":
+                base.update({"cea": DiameterBaseProxy.load_cea(self.connection)})
+            elif key == "dwr":
+                base.update({"dwr": DiameterBaseProxy.load_dwr(self.connection)})
+            elif key == "dwa":
+                base.update({"dwa": DiameterBaseProxy.load_dwa(self.connection)})
+            elif key == "dpr":
+                base.update({"dpr": DiameterBaseProxy.load_dpr(self.connection)})
+            elif key == "dpa":
+                base.update({"dpa": DiameterBaseProxy.load_dpa(self.connection)})
         
         return BaseMessages(**base)
 

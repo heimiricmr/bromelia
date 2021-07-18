@@ -6,85 +6,15 @@
     This module contains the Diameter protocol AVP library that are used 
     to create Diameter messages for 3GPP S6a/S6d Application Id.
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
-import base64
-
-from .._internal_utils import convert_to_1_byte
-from .._internal_utils import convert_to_2_bytes
-from ..avps import *
+from ..avps import VendorIdAVP
+from ..base import *
 from ..constants import *
 from ..exceptions import AVPAttributeValueError
 from ..types import *
-
-
-class SupportedFeaturesAVP(DiameterAVP, GroupedType):
-    """Implementation of Supported-Features AVP in Section 6.3.29 of 
-    ETSI TS 129 229 V14.3.0 (2019-10).
-
-    The Supported-Features AVP (AVP Code 628) is of type Grouped.
-    """
-    code = SUPPORTED_FEATURES_AVP_CODE
-
-    def __init__(self, data):
-        DiameterAVP.__init__(self, SupportedFeaturesAVP.code)
-        DiameterAVP.set_vendor_id_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-                raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        vendor_id_avp_count = 0
-        feature_list_id_avp_count = 0
-        feature_list_avp_count = 0
-        for avp in data:
-            if isinstance(avp, VendorIdAVP):
-                self.vendor_id_avp = avp
-                self.data += avp.dump()
-                vendor_id_avp_count += 1
-
-            elif isinstance(avp, FeatureListIdAVP):
-                self.feature_list_id_avp = avp
-                self.data += avp.dump()
-                feature_list_id_avp_count += 1
-
-            elif isinstance(avp, FeatureListAVP):
-                self.feature_list_id_avp = avp
-                self.data += avp.dump()
-                feature_list_avp_count += 1
-
-
-        if vendor_id_avp_count == 0 or \
-                feature_list_id_avp_count == 0 or \
-                feature_list_avp_count == 0:
-            
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "SupportedFeaturesAVP. It "\
-                                    "MUST contain one VendorIdAVP, "\
-                                    "one FeatureListIdAVP and one "\
-                                    "FeatureListAVP objects",
-                                    DIAMETER_MISSING_AVP)
-
-        if vendor_id_avp_count > 1 or \
-                feature_list_id_avp_count > 1 or \
-                feature_list_avp_count > 1:
-
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "SupportedFeaturesAVP. It "\
-                                    "MUST contain only one VendorIdAVP, "\
-                                    "only one FeatureListIdAVP and "\
-                                    "only one FeatureListAVP object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
-        GroupedType.__init__(self, data=self.data, vendor_id=VENDOR_ID_3GPP)
 
 
 class FeatureListIdAVP(DiameterAVP, Unsigned32Type):
@@ -94,9 +24,12 @@ class FeatureListIdAVP(DiameterAVP, Unsigned32Type):
     The Feature-List-ID AVP (AVP Code 629) is of type Unsigned32.
     """
     code = FEATURE_LIST_ID_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, FeatureListIdAVP.code)
+        DiameterAVP.__init__(self, 
+                             FeatureListIdAVP.code,
+                             FeatureListIdAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
@@ -108,57 +41,37 @@ class FeatureListAVP(DiameterAVP, Unsigned32Type):
     The Feature-List AVP (AVP Code 630) is of type Unsigned32.
     """
     code = FEATURE_LIST_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, FeatureListAVP.code)
+        DiameterAVP.__init__(self, 
+                             FeatureListAVP.code,
+                             FeatureListAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
-class TerminalInformationAVP(DiameterAVP, GroupedType):
-    """Implementation of Terminal-Information AVP in Section 5.3.14 of
-    ETSI TS 129 272 V15.10.0 (2020-01).
+class SupportedFeaturesAVP(DiameterAVP, GroupedType):
+    """Implementation of Supported-Features AVP in Section 6.3.29 of 
+    ETSI TS 129 229 V14.3.0 (2019-10).
 
-    The Terminal-Information AVP (AVP Code 1401) is of type Grouped.
+    The Supported-Features AVP (AVP Code 628) is of type Grouped.
     """
-    code = TERMINAL_INFORMATION_AVP_CODE
+    code = SUPPORTED_FEATURES_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    mandatory = {
+                    "vendor_id": VendorIdAVP,
+                    "feature_list_id": FeatureListIdAVP,
+                    "feature_list": FeatureListAVP
+    }
+    optionals = {}
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, TerminalInformationAVP.code)
-        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.__init__(self, 
+                             SupportedFeaturesAVP.code,
+                             SupportedFeaturesAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-                raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        imei_avp_count = 0
-        software_version_avp_count = 0
-        for avp in data:
-            if isinstance(avp, ImeiAVP):
-                self.imei_avp = avp
-                self.data += avp.dump()
-                imei_avp_count += 1
-
-            elif isinstance(avp, SoftwareVersionAVP):
-                self.software_version_avp = avp
-                self.data += avp.dump()
-                software_version_avp_count += 1
-
-
-        if imei_avp_count > 1 or software_version_avp_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    "TerminalInformationAVP. It "\
-                                    "MUST contain only one ImeiAVP, "\
-                                    "or only one SoftwareVersionAVP object",
-                                    DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
         GroupedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
@@ -169,12 +82,15 @@ class ImeiAVP(DiameterAVP, UTF8StringType):
     The IMEI AVP (AVP Code 1402) is of type UTF8String.
     """
     code = IMEI_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, ImeiAVP.code)
+        DiameterAVP.__init__(self, 
+                             ImeiAVP.code,
+                             ImeiAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
-        UTF8StringType.__init__(self,data=data, vendor_id=VENDOR_ID_3GPP)
+        UTF8StringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
 class SoftwareVersionAVP(DiameterAVP, UTF8StringType):
@@ -184,12 +100,40 @@ class SoftwareVersionAVP(DiameterAVP, UTF8StringType):
     The Software-Version AVP (AVP Code 1403) is of type UTF8String.
     """
     code = SOFTWARE_VERSION_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, SoftwareVersionAVP.code)
+        DiameterAVP.__init__(self, 
+                             SoftwareVersionAVP.code,
+                             SoftwareVersionAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
-        UTF8StringType.__init__(self,data=data, vendor_id=VENDOR_ID_3GPP)
+        UTF8StringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class TerminalInformationAVP(DiameterAVP, GroupedType):
+    """Implementation of Terminal-Information AVP in Section 5.3.14 of
+    ETSI TS 129 272 V15.10.0 (2020-01).
+
+    The Terminal-Information AVP (AVP Code 1401) is of type Grouped.
+    """
+    code = TERMINAL_INFORMATION_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    mandatory = {}
+    optionals = {
+                     "imei": ImeiAVP,
+                    # "x3gpp2_meid": x3gpp2MeidAVP,
+                    "software_version": SoftwareVersionAVP       
+    }
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             TerminalInformationAVP.code,
+                             TerminalInformationAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        GroupedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
 class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
@@ -199,9 +143,12 @@ class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
     The ULR-Flags AVP (AVP Code 1405) is of type Unsigned32.
     """
     code = ULR_FLAGS_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, UlrFlagsAVP.code)
+        DiameterAVP.__init__(self, 
+                             UlrFlagsAVP.code,
+                             UlrFlagsAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
@@ -214,9 +161,12 @@ class VisitedPlmnIdAVP(DiameterAVP, OctetStringType):
     The Visited-PLMN-Id AVP (AVP Code 1407) is of type OctetString.
     """
     code = VISITED_PLMN_ID_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, VisitedPlmnIdAVP.code)
+        DiameterAVP.__init__(self, 
+                             VisitedPlmnIdAVP.code,
+                             VisitedPlmnIdAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
         OctetStringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
@@ -229,6 +179,7 @@ class UeSrvccCapabilityAVP(DiameterAVP, EnumeratedType):
     The UE-SRVCC-Capability AVP (AVP Code 1615) is of type Enumerated.
     """
     code = UE_SRVCC_CAPABILITY_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     values = [
                 UE_SRVCC_NOT_SUPPORTED,
@@ -236,7 +187,9 @@ class UeSrvccCapabilityAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, UeSrvccCapabilityAVP.code)
+        DiameterAVP.__init__(self, 
+                             UeSrvccCapabilityAVP.code,
+                             UeSrvccCapabilityAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
@@ -248,9 +201,12 @@ class SupportedServicesAVP(DiameterAVP, GroupedType):
     The Supported-Services AVP (AVP Code 3143) is of type Grouped.
     """
     code = SUPPORTED_SERVICES_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, SupportedServicesAVP.code)
+        DiameterAVP.__init__(self, 
+                             SupportedServicesAVP.code,
+                             SupportedServicesAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
 
         if isinstance(data, bytes):
@@ -288,9 +244,12 @@ class SupportedMonitoringEventsAVP(DiameterAVP, Unsigned64Type):
     The Supported-Monitoring-Events AVP (AVP Code 3144) is of type Unsigned64.
     """
     code = SUPPORTED_MONITORING_EVENTS_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, SupportedMonitoringEventsAVP.code)
+        DiameterAVP.__init__(self, 
+                             SupportedMonitoringEventsAVP.code,
+                             SupportedMonitoringEventsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned64Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
@@ -302,6 +261,7 @@ class CancellationTypeAVP(DiameterAVP, EnumeratedType):
     The Cancellation-Type AVP (AVP Code 1420) is of type Enumerated.
     """
     code = CANCELLATION_TYPE_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     values = [
                 CANCELLATION_TYPE_MME_UPDATE_PROCEDURE,
@@ -312,7 +272,9 @@ class CancellationTypeAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, CancellationTypeAVP.code)
+        DiameterAVP.__init__(self, 
+                             CancellationTypeAVP.code,
+                             CancellationTypeAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
         EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
@@ -325,8 +287,11 @@ class ClrFlagsAVP(DiameterAVP, Unsigned32Type):
     The CLR-Flags AVP (AVP Code 1638) is of type Unsigned32.
     """
     code = CLR_FLAGS_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, ClrFlagsAVP.code)
+        DiameterAVP.__init__(self, 
+                             ClrFlagsAVP.code,
+                             ClrFlagsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)

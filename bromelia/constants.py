@@ -7,7 +7,7 @@
     Diameter standard documents (both ETSI and IETF specs), not 
     only the main Diameter protocol document (RFC 6733).
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
