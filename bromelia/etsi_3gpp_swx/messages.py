@@ -16,11 +16,11 @@ import socket
 from .avps import *
 
 from ..avps import *
+from ..base import DiameterRequest, DiameterAnswer
+from ..constants import *
 from ..etsi_3gpp_s6a_s6d.avps import *
 from ..etsi_3gpp_swm.avps import *
 from ..etsi_3gpp_swx.avps import *
-from ..base import DiameterRequest, DiameterAnswer
-from ..constants import *
 
 
 class MultimediaAuthRequest(DiameterRequest):

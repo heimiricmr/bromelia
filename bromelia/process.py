@@ -10,7 +10,6 @@
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
-
 import base64
 import logging
 
@@ -73,12 +72,15 @@ def process_request(association, message):
     """
 
     association.postprocess_recv_requests.put(message)
-    association.postprocess_recv_answers_lock.acquire()
+    association.postprocess_recv_requests_lock.acquire()
+    association.num_requests += 1
     association.postprocess_recv_requests_ready.set()
 
 
 def process_answer(association, message):
     logging.debug("Processing Diameter Answer.")
+
+    association.postprocess_recv_answers_lock.acquire()
 
     end_to_end_key = message.header.end_to_end.hex()
     hop_by_hop_key = message.header.hop_by_hop.hex()
@@ -88,9 +90,10 @@ def process_answer(association, message):
         if hop_by_hop_key in association.pending_requests:
 
             if message.header.end_to_end == association.pending_requests[hop_by_hop_key].header.end_to_end:
-                association.pending_requests.pop(hop_by_hop_key)
 
+                association.pending_requests.pop(hop_by_hop_key)
                 association.postprocess_recv_answers.update({hop_by_hop_key: message})
+                association.num_answers += 1
                 association.postprocess_recv_answers_ready.set()
 
             else:
@@ -104,6 +107,8 @@ def process_answer(association, message):
             pass the connection handler to another diameter association.
             """
     
+    association.postprocess_recv_answers_lock.release()
+
 
 class ProcessDiameterMessage:
     @staticmethod

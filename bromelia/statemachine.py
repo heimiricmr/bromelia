@@ -10,10 +10,11 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import threading
 import logging
+import threading
 import time
 
+from .config import *
 from .process import process_answer
 from .process import process_capability_exchange
 from .process import process_device_watchdog
@@ -29,7 +30,6 @@ from .utils import is_dpr_message as has_recv_dpr
 from .utils import is_cea_message as has_recv_cea
 from .utils import is_cer_message as has_recv_cer
 
-STATE_MACHINE_TICKER = 0.001
 
 """ 
     @ `state` column:
@@ -88,7 +88,7 @@ class State():
 
 class Closed(State):
     def run(self):
-        self.next_state = "closed"
+        self.next_state = CLOSED
         self.name = self.next_state
 
         if is_client_mode(self.association):
@@ -98,10 +98,10 @@ class Closed(State):
             if not self.association._recv_messages.empty():
                 self.msg = self.association._recv_messages.get()
 
-                closed_logger.debug("Got message from _recv_messages Queue. "\
-                                "Now there is/are "\
-                                f"{self.association._recv_messages.qsize()} "\
-                                "Diameter Message(s).")
+                closed_logger.debug(f"Got message from _recv_messages Queue. "\
+                                    f"Now there is/are "\
+                                    f"{self.association._recv_messages.qsize()} "\
+                                    f"Diameter Message(s).")
 
                 if has_recv_cer(self.msg):
                     self.event_responder_conn_cer()
@@ -110,7 +110,7 @@ class Closed(State):
     def event_start(self):
         closed_logger.debug("Event has been triggered.")
 
-        self.next_state = "wait_conn_ack"
+        self.next_state = WAIT_CONN_ACK
 
 
     def event_responder_conn_cer(self):
@@ -128,12 +128,12 @@ class Closed(State):
             self.association.send_message_from_queue()
 
             self.association.state_is_active = True
-            self.next_state = "open"
+            self.next_state = OPEN
 
 
 class WaitConnAck(State):
     def run(self):
-        self.next_state = "wait_conn_ack"
+        self.next_state = WAIT_CONN_ACK
         self.name = self.next_state
 
         if self.association.is_connected():
@@ -146,10 +146,10 @@ class WaitConnAck(State):
         if not self.association._recv_messages.empty():
             self.msg = self.association._recv_messages.get()
 
-            wait_initiator_cea_logger.debug("Got message from _recv_messages "\
-                                "Queue. Now there is/are "\
-                                f"{self.association._recv_messages.qsize()} "\
-                                "Diameter Message(s).")
+            wait_initiator_cea_logger.debug(f"Got message from _recv_messages "\
+                                            f"Queue. Now there is/are "\
+                                            f"{self.association._recv_messages.qsize()} "\
+                                            f"Diameter Message(s).")
 
             if has_recv_cer(self.msg):
                 self.event_responder_conn_cer()            
@@ -162,13 +162,13 @@ class WaitConnAck(State):
         self.association.put_message_into_send_queue(cer)
         self.association.send_message_from_queue()
 
-        self.next_state = "wait_initiator_cea"
+        self.next_state = WAIT_I_CEA
 
 
     def event_initiator_rcv_conn_nack(self):
         wait_conn_ack_logger.debug("Event has been triggered.")
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
 
     def event_responder_conn_cer(self):
@@ -179,29 +179,29 @@ class WaitConnAck(State):
 
         if process.is_valid:
             self.association.state_is_active = True
-            self.next_state = "wait_conn_ack_elect"
+            self.next_state = WAIT_CONN_ACK_ELECT
 
 
     def event_timeout(self):
         """ It needs to be coded """
         wait_conn_ack_logger.debug("Event has been triggered.")
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
 
 class WaitInitiatorCEA(State):
     def run(self):
-        self.next_state = "wait_initiator_cea"
+        self.next_state = WAIT_I_CEA
         self.name = self.next_state
 
         #: Processing the Diameter messages received.
         if not self.association._recv_messages.empty():
             self.msg = self.association._recv_messages.get()
 
-            wait_initiator_cea_logger.debug("Got message from _recv_messages "\
-                                "Queue. Now there is/are "
-                                f"{self.association._recv_messages.qsize()} "\
-                                "Diameter Message(s).")
+            wait_initiator_cea_logger.debug(f"Got message from _recv_messages "\
+                                            f"Queue. Now there is/are "
+                                            f"{self.association._recv_messages.qsize()} "\
+                                            f"Diameter Message(s).")
 
             if has_recv_cea(self.msg):
                 self.event_open_rcv_cea()            
@@ -221,7 +221,7 @@ class WaitInitiatorCEA(State):
 
         if process.is_valid:           
             self.association.state_is_active = True
-            self.next_state = "open"
+            self.next_state = OPEN
 
 
     def event_responder_conn_cer(self):
@@ -232,32 +232,32 @@ class WaitInitiatorCEA(State):
 
         if process.is_valid:
             self.association.state_is_active = True
-            self.next_state = "wait_returns"
+            self.next_state = WAIT_RETURNS
 
 
     def event_initiator_peer_disc(self):
         """ It needs to be coded """
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
     
     def event_initiator_rcv_non_cea(self):
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
 
     def event_timeout(self):
         """ It needs to be coded """
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
 
 class Open(State):
     def run(self):
-        self.next_state = "open"
+        self.next_state = OPEN
         self.name = self.next_state
 
         self.association.tracking_events()
@@ -269,10 +269,10 @@ class Open(State):
             self.event_stop()
 
         if not self.association._send_messages.empty():
-            open_logger.debug("Got message from _send_messages "\
-                        "Queue. Now there is/are "\
-                       f"{self.association._send_messages.qsize()} "\
-                        "Diameter Message(s).")
+            open_logger.debug(f"Got message from _send_messages "\
+                              f"Queue. Now there is/are "\
+                              f"{self.association._send_messages.qsize()} "\
+                              f"Diameter Message(s).")
 
             self.event_send_message()
 
@@ -280,10 +280,10 @@ class Open(State):
         elif not self.association._recv_messages.empty():
             self.msg = self.association._recv_messages.get()
 
-            open_logger.debug("Got message from _recv_messages Queue. Now "\
-                            "there is/are "\
-                            f"{self.association._recv_messages.qsize()} "\
-                            "Diameter Message(s).")
+            open_logger.debug(f"Got message from _recv_messages Queue. Now "\
+                              f"there is/are "\
+                              f"{self.association._recv_messages.qsize()} "\
+                              f"Diameter Message(s).")
 
             if has_recv_dwr(self.msg):
                 self.event_open_rcv_dwr()
@@ -311,7 +311,7 @@ class Open(State):
 
         self.association.send_message_from_queue()
 
-        self.next_state = "open"
+        self.next_state = OPEN
 
 
     def event_open_rcv_message(self):
@@ -323,7 +323,7 @@ class Open(State):
         elif is_request_message(self.msg):
             process_request(self.association, self.msg)
     
-        self.next_state = "open"
+        self.next_state = OPEN
 
 
     def event_open_rcv_dwr(self):
@@ -340,7 +340,7 @@ class Open(State):
             self.association.put_message_into_send_queue(dwa)
             self.association.send_message_from_queue()
 
-            self.next_state = "open"
+            self.next_state = OPEN
 
     
     def event_open_rcv_dwa(self):
@@ -350,15 +350,15 @@ class Open(State):
         process = process_device_watchdog(self.association, dwa)
 
         if process.is_valid:
-            self.next_state = "open"
+            self.next_state = OPEN
         else:
-            self.next_state = "closing"
+            self.next_state = CLOSING
 
     
     def event_responder_conn_cer(self):
         open_logger.debug("Event has been triggered.")
 
-        self.next_state = "open"
+        self.next_state = OPEN
 
 
     def event_stop(self):
@@ -368,7 +368,7 @@ class Open(State):
         self.association.put_message_into_send_queue(dpr)
         self.association.send_message_from_queue()
 
-        self.next_state = "closing"
+        self.next_state = CLOSING
 
 
     def event_open_rcv_dpr(self):
@@ -390,13 +390,13 @@ class Open(State):
         self.association._stop_threads = True
         self.association.postprocess_recv_requests_ready.set()
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
         
 
     def event_open_peer_disc(self):
         open_logger.debug("Event has been triggered.")
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
 
     def event_open_rcv_cer(self):
@@ -413,7 +413,7 @@ class Open(State):
             self.association.put_message_into_send_queue(cea)
             self.association.send_message_from_queue()
 
-        self.next_state = "open"
+        self.next_state = OPEN
 
 
     def event_open_rcv_cea(self):
@@ -423,41 +423,41 @@ class Open(State):
         process = process_capability_exchange(self.association, cea)
 
         if process.is_valid:
-            self.next_state = "open"
+            self.next_state = OPEN
 
 
 class WaitReturns(State):
     def run(self):
-        self.next_state = "wait_returns"
+        self.next_state = WAIT_RETURNS
         self.name = self.next_state
     
 
 class WaitConnAckElect(State):
     def run(self):
-        self.next_state = "wait_conn_ack_elect"
+        self.next_state = WAIT_CONN_ACK_ELECT
         self.name = self.next_state
 
 
 class Closing(State):   
     def run(self):
-        self.next_state = "closing"
+        self.next_state = CLOSING
         self.name = self.next_state
 
         if not self.association._recv_messages.empty():
             self.msg = self.association._recv_messages.get()
 
             if has_recv_dpa(self.msg):
-                closing_logger.debug("Got DPA message from _recv_messages "\
-                                "Queue. Now there is/are "\
-                                f"{self.association._recv_messages.qsize()} "\
-                                "Diameter Message(s).")
+                closing_logger.debug(f"Got DPA message from _recv_messages "\
+                                     f"Queue. Now there is/are "\
+                                     f"{self.association._recv_messages.qsize()} "\
+                                     f"Diameter Message(s).")
                 self.event_rcv_dpa()
            
             else:
-                closing_logger.debug("Got a non-DPA message from "\
-                                "_recv_messages Queue. Now there is/are "\
-                                f"{self.association._recv_messages.qsize()} "\
-                                "Diameter Message(s).")
+                closing_logger.debug(f"Got a non-DPA message from "\
+                                     f"_recv_messages Queue. Now there is/are "\
+                                     f"{self.association._recv_messages.qsize()} "\
+                                     f"Diameter Message(s).")
 
 
     def event_rcv_dpa(self):
@@ -466,7 +466,7 @@ class Closing(State):
         self.association.send_message_from_queue()
         self.association._stop_threads = True
 
-        self.next_state = "closed"
+        self.next_state = CLOSED
 
 
 class PeerStateMachine():
@@ -487,32 +487,32 @@ class PeerStateMachine():
         self.__closing = Closing(self.association)
 
         self.states = {
-            "closed": self.__closed,
-            "wait_conn_ack": self.__wait_conn_ack,
-            "wait_initiator_cea": self.__wait_initiator_cea,
-            "open": self.__open,
-            "wait_returns": self.__wait_returns,
-            "wait_conn_ack_elect": self.__wait_conn_ack_elect,
-            "closing": self.__closing,
+                        CLOSED: self.__closed,
+                        WAIT_CONN_ACK: self.__wait_conn_ack,
+                        WAIT_I_CEA: self.__wait_initiator_cea,
+                        OPEN: self.__open,
+                        WAIT_RETURNS: self.__wait_returns,
+                        WAIT_CONN_ACK_ELECT: self.__wait_conn_ack_elect,
+                        CLOSING: self.__closing,
         }
 
-        self.current_state = self.states["closed"]
+        self.current_state = self.states[CLOSED]
         self.is_running = False
 
 
     def get_next_state(self, next_state):
-        if next_state == "closed" and self.current_state.name == "closed":
-            return self.states["closed"]
+        if next_state == CLOSED and self.current_state.name == CLOSED:
+            return self.states[CLOSED]
 
-        elif next_state == "closed" and self.current_state.name != "closed":
+        elif next_state == CLOSED and self.current_state.name != CLOSED:
             self.is_running = False
             self.association.close()
 
         if next_state in self.states:
             if self.current_state.name != next_state:
-                statemachine_logger.info("Changing from "\
-                                        f"{self.current_state.name.upper()} "\
-                                        f"to {next_state.upper()} state.")
+                statemachine_logger.info(f"Changing from "\
+                                         f"{self.current_state.name.upper()} "\
+                                         f"to {next_state.upper()} state.")
 
             return self.states[next_state]
         else:
@@ -545,19 +545,19 @@ class PeerStateMachine():
 
     def get_current_state(self):
         if isinstance(self.current_state, Closed):
-            return "Closed"
+            return CLOSED
         elif isinstance(self.current_state, WaitConnAck):
-            return "Wait-Conn-Ack"
+            return WAIT_CONN_ACK
         elif isinstance(self.current_state, WaitInitiatorCEA):
-            return "Wait-I-CEA"
+            return WAIT_I_CEA
         elif isinstance(self.current_state, WaitConnAckElect):
-            return "Wait-Conn-Ack/Elect"
+            return WAIT_CONN_ACK_ELECT
         elif isinstance(self.current_state, WaitReturns):
-            return "Wait-Returns"
+            return WAIT_RETURNS
         elif isinstance(self.current_state, Open):
             if is_client_mode(self.association):
-                return "I-Open"
+                return I_OPEN
             elif is_server_mode(self.association):
-                return "R-Open"
+                return R_OPEN
         elif isinstance(self.current_state, Closing):
-            return "Closing"
+            return CLOSING

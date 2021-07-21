@@ -27,6 +27,10 @@ from ._internal_utils import get_app_ids
 from .base import DiameterMessage
 from .config import Config
 from .config import DiameterLogging
+from .config import LISTENING_TICKER
+from .config import SEND_BUFFER_MAXIMUM_SIZE
+from .config import SLEEP_TIMER
+from .config import WAITING_CONN_TIMER
 from .constants import DIAMETER_AGENT_CLIENT_MODE
 from .constants import DIAMETER_AGENT_SERVER_MODE
 from .exceptions import AVPParsingError
@@ -36,6 +40,7 @@ from .messages import DiameterAnswer
 from .messages import DiameterRequest
 from .proxy import DiameterBaseProxy
 from .statemachine import PeerStateMachine
+from .statemachine import CLOSED, I_OPEN, R_OPEN
 from .transport import TcpClient
 from .transport import TcpServer
 from .utils import is_base_request
@@ -43,8 +48,6 @@ from .utils import is_base_answer
 
 diameter_conn_logger = logging.getLogger("DiameterConnection")
 diameter_logger = logging.getLogger("Diameter")
-
-SEND_BUFFER_MAXIMUM_SIZE = 4096
 
 
 class DiameterAssociation(object):
@@ -57,11 +60,13 @@ class DiameterAssociation(object):
         self.error_has_raised = False
         self._stop_threads = False
 
+        self.num_answers = 0
+        self.num_requests = 0
+
         self.watchdog_timeout = self.connection.watchdog_timeout
         self.tracking_events_count = 0
 
         self.end_to_end_identifiers = list()
-
         self.pending_requests = dict()
 
         self._recv_messages = queue.Queue()
@@ -74,8 +79,9 @@ class DiameterAssociation(object):
         self.postprocess_recv_answers_ready = threading.Event()
         self.postprocess_recv_messages_ready = threading.Event()
 
+        self.postprocess_recv_requests_lock = threading.Lock()
         self.postprocess_recv_answers_lock = threading.Lock()
-        self.postprocess_recv_messages_lock = threading.Lock()
+        self.lock = threading.Lock()
 
 
     def is_connected(self):
@@ -96,11 +102,11 @@ class DiameterAssociation(object):
 
         if self.connection.mode == DIAMETER_AGENT_CLIENT_MODE:
                self.transport = TcpClient(self.connection.peer_node.ip_address, 
-                                        self.connection.peer_node.port)
+                                          self.connection.peer_node.port)
             
         elif self.connection.mode == DIAMETER_AGENT_SERVER_MODE:
             self.transport = TcpServer(self.connection.local_node.ip_address, 
-                                        self.connection.local_node.port)
+                                       self.connection.local_node.port)
 
         else:
             raise DiameterAssociationError("Invalid Diameter Agent mode.")
@@ -125,8 +131,11 @@ class DiameterAssociation(object):
         while not self._stop_threads and self.transport:
             self.transport._recv_data_available.wait()
 
+            self.lock.acquire()
+
             data_stream = copy.copy(self.transport._recv_data_stream) 
             self.transport._recv_data_stream = b""
+
             diameter_conn_logger.debug("Grabbing data stream from "\
                                        "Transport Layer to Diameter Layer.")
 
@@ -136,22 +145,27 @@ class DiameterAssociation(object):
                     self._recv_messages.put(msg)            
                 
                 diameter_conn_logger.debug(f"Found {len(msgs)} Diameter "\
-                                            "Message(s).")
+                                           f"Message(s).")
             except AVPParsingError:
                 diameter_conn_logger.exception(f"AVPParsingError has "\
-                                                "been raised due stream: "\
-                                                f"{self.transport._recv_data_stream.hex()}")
+                                               f"been raised due stream: "\
+                                               f"{self.transport._recv_data_stream.hex()}")
 
             self.transport._recv_data_available.clear()
 
+            self.lock.release()
+
 
     def put_message_into_send_queue(self, msg):
+        self.lock.acquire()
+
         self.__is_connected()
         self._send_messages.put(msg)
 
         if isinstance(msg, DiameterRequest):
             diameter_conn_logger.debug("Diameter Request have been put "\
                                        "into _send_messages Queue.")
+
             key = msg.header.end_to_end.hex()
             self.end_to_end_identifiers.append(key)
 
@@ -159,15 +173,31 @@ class DiameterAssociation(object):
             diameter_conn_logger.debug("Diameter Answer have been put "\
                                        "into _send_messages Queue.")
 
+        elif isinstance(msg, DiameterMessage):
+            if msg.header.is_request():
+                diameter_conn_logger.debug("Diameter Request have been put "\
+                                           "into _send_messages Queue.")
+
+                key = msg.header.end_to_end.hex()
+                self.end_to_end_identifiers.append(key)
+
+            else:
+                diameter_conn_logger.debug("Diameter Answer have been put "\
+                                           "into _send_messages Queue.")
+                
+        self.lock.release()
+
 
     def send_message_from_queue(self):
+        self.lock.acquire()
+
         self.__is_connected()
 
         diameter_conn_logger.debug(f"There is/are "\
                                    f"{self._send_messages.qsize()} Diameter "\
                                    f"Message(s) in the Sending Queue.")
-        stream = b""
 
+        stream = b""
         while not self._send_messages.empty() and \
                 len(stream) <= SEND_BUFFER_MAXIMUM_SIZE:
             msg = self._send_messages.get()
@@ -207,6 +237,8 @@ class DiameterAssociation(object):
                         self.transport._set_selector_events_mask("rw", stream)
                         break
 
+        self.lock.release()
+
 
     def get_request(self):
         while not self._stop_threads:
@@ -214,7 +246,7 @@ class DiameterAssociation(object):
     
             while not self.postprocess_recv_requests.empty():
                 self.postprocess_recv_requests_ready.clear()
-                self.postprocess_recv_answers_lock.release()
+                self.postprocess_recv_requests_lock.release()
 
                 return self.postprocess_recv_requests.get()
         return None
@@ -226,11 +258,13 @@ class DiameterAssociation(object):
 
         while not self._stop_threads:
             self.postprocess_recv_answers_ready.wait()
+            self.postprocess_recv_answers_lock.acquire()
             self.postprocess_recv_answers_ready.clear()
 
             if hop_by_hop_key in self.postprocess_recv_answers:
                 answer = self.postprocess_recv_answers.pop(hop_by_hop_key, None)
                 self.end_to_end_identifiers.remove(end_to_end_key)
+                self.postprocess_recv_answers_lock.release()
                 return answer
 
 
@@ -265,7 +299,7 @@ class Diameter:
         }
 
 
-    def __init__(self, base_messages=None, debug=False, is_logging=False, config=None):
+    def __init__(self, debug=False, is_logging=False, config=None):
         logging.info(f">> debug: {debug}")
         logging.info(f">> is_logging: {is_logging}")
         logging.info(f">> config: {config}")
@@ -294,16 +328,16 @@ class Diameter:
     def get_current_state(self):
         if self._peer_state_machine:
             return self._peer_state_machine.get_current_state()
-        return "Closed"
+        return CLOSED
 
 
     def start(self):
         current_state = self.get_current_state()
 
-        if current_state != "Closed":
+        if current_state != CLOSED:
             raise DiameterApplicationError("Cannot start the application. "\
-                                        "Peer State Machine is already "\
-                                        "running")
+                                           "Peer State Machine is already "\
+                                           "running")
 
         self._connection = _convert_config_to_connection_obj(self.config)
         self._base = self.get_base_messages()
@@ -318,20 +352,20 @@ class Diameter:
     def reset(self):
         current_state = self.get_current_state()
 
-        if current_state == "Closed":
+        if current_state == CLOSED:
             raise DiameterApplicationError("Cannot reset the application. "\
                                            "Peer State Machine is already "\
                                            "closed")
 
         self.close()
-        time.sleep(4)
+        time.sleep(SLEEP_TIMER)
         self.start()
 
 
     def close(self):
         current_state = self.get_current_state()
         
-        if current_state == "Closed":
+        if current_state == CLOSED:
             raise DiameterApplicationError("Cannot stop the application. "\
                                            "Peer State Machine is already "\
                                            "closed")
@@ -339,27 +373,51 @@ class Diameter:
         self._peer_state_machine.close()
 
 
-    def send_message(self, msg):
+    def send_messages(self, msgs):
+        for msg in msgs:
+            self._association.put_message_into_send_queue(msg)
+
+
+    def send_message(self, msg, avoid=True):    
         if isinstance(msg, DiameterRequest):
-            diameter_logger.debug("External app wants to send a Diameter "\
-                                 f"Request Message: {msg}")
+            diameter_logger.debug(f"External app wants to send a Diameter "\
+                                  f"Request Message: {msg}")
 
             if is_base_request(msg):
                 raise DiameterApplicationError("Cannot send a Base protocol "\
                                                "request")
 
             self._association.put_message_into_send_queue(msg)
-            return self._association.get_answer_from_request(msg)
+            if not avoid:
+                return self._association.get_answer_from_request(msg)
 
         elif isinstance(msg, DiameterAnswer):
-            diameter_logger.debug("External app wants to send a Diameter "\
-                                 f"Answer Message: {msg}")
+            diameter_logger.debug(f"External app wants to send a Diameter "\
+                                  f"Answer Message: {msg}")
 
             if is_base_answer(msg):
                 raise DiameterApplicationError("Cannot send a Base protocol "\
                                                "answer")
 
             self._association.put_message_into_send_queue(msg)
+
+        elif isinstance(msg, DiameterMessage):
+            if msg.header.is_request():
+                if is_base_request(msg):
+                    raise DiameterApplicationError("Cannot send a Base protocol "\
+                                                   "request")
+
+                self._association.put_message_into_send_queue(msg)
+                if not avoid:
+                    return self._association.get_answer_from_request(msg)
+
+            else:
+                if is_base_answer(msg):
+                    raise DiameterApplicationError("Cannot send a Base protocol "\
+                                                   "answer")
+                
+                self._association.put_message_into_send_queue(msg)
+
 
         else:
             raise DiameterApplicationError("Either Diameter Request or "\
@@ -369,16 +427,6 @@ class Diameter:
 
     def get_message(self):
         return self._association.get_request()
-
-
-    def send_messages(self, msgs):
-        keys = list()
-
-        for index, msg in enumerate(msgs, 1):
-            if isinstance(msg, DiameterRequest):
-                keys.append(msg.header.hop_by_hop.hex())
-
-            self._association.put_message_into_send_queue(msg)
 
 
     @contextmanager
@@ -394,8 +442,9 @@ class Diameter:
 
             start = datetime.datetime.utcnow()
             while True:
-                time.sleep(0.01)
+                time.sleep(LISTENING_TICKER)
                 stop = datetime.datetime.utcnow()
+
                 if self.is_open():
                     break
                 
@@ -404,14 +453,15 @@ class Diameter:
                     self.start()
 
             print(f"  * Diameter connection on "\
-                f"{self.config['LOCAL_NODE_IP_ADDRESS']}:"\
-                f"{self.config['LOCAL_NODE_PORT']} is now up")
+                  f"{self.config['LOCAL_NODE_IP_ADDRESS']}:"\
+                  f"{self.config['LOCAL_NODE_PORT']} is now up")
 
-            time.sleep(2)
+            time.sleep(WAITING_CONN_TIMER)
             yield self
 
             if self.is_open():
                 self.close()
+
         except KeyboardInterrupt:
             sys.exit(0)
 
@@ -422,7 +472,8 @@ class Diameter:
 
     def is_open(self):
         try:
-            if self.get_current_state()[2:] == "Open":
+            if self.get_current_state() == I_OPEN or \
+               self.get_current_state() == R_OPEN:
                 return True
             return False
         except TypeError:
@@ -432,7 +483,7 @@ class Diameter:
 
     def is_closed(self):
         try:
-            if self.get_current_state() == "Closed":
+            if self.get_current_state() == CLOSED:
                 return True
             return False
         except TypeError:

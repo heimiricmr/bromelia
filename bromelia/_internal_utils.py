@@ -274,17 +274,17 @@ def _convert_file_to_config(filepath=None, variables_dictionary=globals()):
             application["app_id"] = variables_dictionary[app_id]
 
         configs.append({
-            "MODE": spec["mode"].upper(),
-            "APPLICATIONS": spec["applications"],
-            "LOCAL_NODE_HOSTNAME": spec["local"]["hostname"],
-            "LOCAL_NODE_REALM": spec["local"]["realm"],
-            "LOCAL_NODE_IP_ADDRESS": spec["local"]["ip_address"],
-            "LOCAL_NODE_PORT": spec["local"]["port"],
-            "PEER_NODE_HOSTNAME": spec["peer"]["hostname"],
-            "PEER_NODE_REALM": spec["peer"]["realm"],
-            "PEER_NODE_IP_ADDRESS": spec["peer"]["ip_address"],
-            "PEER_NODE_PORT": spec["peer"]["port"],
-            "WATCHDOG_TIMEOUT": 60
+                            "MODE": spec["mode"].upper(),
+                            "APPLICATIONS": spec["applications"],
+                            "LOCAL_NODE_HOSTNAME": spec["local"]["hostname"],
+                            "LOCAL_NODE_REALM": spec["local"]["realm"],
+                            "LOCAL_NODE_IP_ADDRESS": spec["local"]["ip_address"],
+                            "LOCAL_NODE_PORT": spec["local"]["port"],
+                            "PEER_NODE_HOSTNAME": spec["peer"]["hostname"],
+                            "PEER_NODE_REALM": spec["peer"]["realm"],
+                            "PEER_NODE_IP_ADDRESS": spec["peer"]["ip_address"],
+                            "PEER_NODE_PORT": spec["peer"]["port"],
+                            "WATCHDOG_TIMEOUT": 60
         })
 
     return configs

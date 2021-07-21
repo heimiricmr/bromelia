@@ -14,6 +14,38 @@ import os
 
 BASEDIR = os.getcwd()
 
+#: Configs for statemachine.py module
+STATE_MACHINE_TICKER = 0.0001
+
+CLOSED = "Closed"
+WAIT_CONN_ACK = "Wait-Conn-Ack"
+WAIT_I_CEA = "Wait-I-CEA"
+WAIT_CONN_ACK_ELECT = "Wait-Conn-Ack/Elect"
+WAIT_RETURNS = "Wait-Returns"
+I_OPEN = "I-Open"
+R_OPEN = "R-Open"
+OPEN = "Open"
+CLOSING = "Closing"
+
+#: Configs for setup.py module
+SEND_BUFFER_MAXIMUM_SIZE = 4096*64
+LISTENING_TICKER = 0.01
+WAITING_CONN_TIMER = 2
+SLEEP_TIMER = 4
+
+#: Configs for bromelia.py module
+BROMELIA_TICKER = STATE_MACHINE_TICKER
+BROMELIA_LOADING_TICKER = 0.1
+SEND_THRESHOLD_TICKER = 0.05
+PROCESS_TIMER = 0.001
+
+REQUEST_THRESHOLD = 10
+ANSWER_THRESHOLD = 10
+SEND_THRESHOLD = 30
+
+#: Configs for transport.py module
+TRACKING_SOCKET_EVENTS_TIMEOUT = 1
+
 class Config(dict):
     def __init__(self, defaults=None):
         dict.__init__(self, defaults or {})

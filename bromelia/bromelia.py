@@ -23,6 +23,7 @@ from ._internal_utils import application_id_look_up
 from .avps import *
 from .base import DiameterAnswer
 from .base import DiameterRequest
+from .config import *
 from .constants import *
 from .exceptions import BromeliaException
 from .setup import Diameter
@@ -30,9 +31,6 @@ from .utils import is_3xxx_failure
 from .utils import is_4xxx_failure
 from .utils import is_5xxx_failure
 
-BROMELIA_TICKER = 0.01
-PROCESS_TIMER = 0.2
-BROMELIA_LOADING_TICKER = 0.1
 
 worker_logger = logging.getLogger("Worker")
 bromelia_logger = logging.getLogger("Bromelia")
@@ -45,11 +43,29 @@ def get_application_string_by_id(application_id):
             return _string.split("DIAMETER_APPLICATION_")[1].lower()
 
 
+def get_formatted_answer_as_per_request(answer, request):
+    answer.header.application_id = request.header.application_id
+    answer.header.hop_by_hop = request.header.hop_by_hop
+    answer.header.end_to_end = request.header.end_to_end
+
+    if request.has_avp("session_id_avp"):
+        answer.session_id_avp.data = request.session_id_avp.data
+        answer.refresh()
+    return answer
+
+
 class Global(object):
+    """Helper class to allow the creation of Bromelia attributes on the go. It
+    works as a namespace.
+    """
     pass
 
 
 class PendingAnswer:
+    """Helper class to allow the pending answer tracking of expected Diameter
+    Answers for a set of Diameter Requests. It supports the Bromelia class inner 
+    workings.
+    """
     def __init__(self):
         self.recv_event = threading.Event()
         self.stop_event = threading.Event()
@@ -119,19 +135,10 @@ class Worker(multiprocessing.Process):
                     worker_logger.debug(f"[{self}][{session_id}] Sending to "\
                                         f"endpoint")
 
-                    message = self.app.send_message(outgoing_message)
+                    self.app.send_message(outgoing_message)
 
                     self.send_event.clear()
                     self.send_lock.release()
-
-                    if message:
-                        worker_logger.debug(f"[{self}][{session_id}] Got an "\
-                                            f"answer")
-
-                        self.recv_queue.put(message)
-
-                        worker_logger.debug(f"[{self}][{session_id}] Putting "\
-                                            f"answer into `recv_queue`")
 
                 elif self.send_queue.qsize() > 1:
                     outgoing_messages = list()
@@ -175,12 +182,12 @@ class Worker(multiprocessing.Process):
                     self.is_open.set()
 
                     recv_thrd = threading.Thread(name="recv_handler", 
-                                                target=self.recv_handler, 
-                                                daemon=True)
+                                                 target=self.recv_handler, 
+                                                 daemon=True)
 
                     send_thrd = threading.Thread(name="send_handler", 
-                                                target=self.send_handler, 
-                                                daemon=True)
+                                                 target=self.send_handler, 
+                                                 daemon=True)
 
                     recv_thrd.start()
                     send_thrd.start()
@@ -198,18 +205,32 @@ class Worker(multiprocessing.Process):
         return self.is_open.is_set()
 
 
-def get_formatted_answer_as_per_request(answer, request):
-    answer.header.application_id = request.header.application_id
-    answer.header.hop_by_hop = request.header.hop_by_hop
-    answer.header.end_to_end = request.header.end_to_end
-
-    if request.has_avp("session_id_avp"):
-        answer.session_id_avp.data = request.session_id_avp.data
-        answer.refresh()
-    return answer
-
-
 class Bromelia:
+    """The Bromelia object implements a WSGI-like application but for Diameter 
+    protocol and acts as the central object. It will spin up one or more 
+    processes by using the Worker class. The number of processes depends on the 
+    number of Diameter interfaces needed for a given Diameter application. 
+    
+    Each process created by running Worker objects will represent a single 
+    Diameter interface sending to / receiving byte stream from a Peer Node. Such
+    traffic will be proxied to the centralized process which holds the Bromelia 
+    object. The Bromelia object is responsible for process either Diameter 
+    requests or Diameter answers according to the Diameter interface and 
+    properly forward it to the expected Diameter interface.
+
+    It is strongly recommended to define initially right after the Bromelia
+    instantiation the set of Diameter messages to be used in each Diameter
+    interface.
+    
+    Usually you create a :class:`Bromelia` instance in your main module.
+
+    Usage::
+
+        >>> from bromelia import Bromelia
+        >>> app = Bromelia()
+        >>> app.run()
+    """
+
     def __init__(self, config_file=None):
         bromelia_logger.debug(f"Initializing Bromelia application")
         self.config_file = config_file
@@ -221,11 +242,13 @@ class Bromelia:
         self.recv_queues = None
         self.associations = None
 
-        self.request_threshold = threading.Barrier(parties=10)
+        self.request_threshold = threading.Barrier(parties=REQUEST_THRESHOLD)
         self.request_id = 0
 
-        self.answer_threshold = threading.Barrier(parties=10)
+        self.answer_threshold = threading.Barrier(parties=ANSWER_THRESHOLD)
         self.answer_id = 0
+
+        self.send_threshold = threading.Barrier(parties=SEND_THRESHOLD)
 
 
     def is_valid_session_key(self, session_key):
@@ -275,7 +298,7 @@ class Bromelia:
 
         #: Wait spinning up Diameter objects in the connection layer processes
         while True:
-            time.sleep(0.1)
+            time.sleep(BROMELIA_LOADING_TICKER)
             if self.associations is not None and self.recv_queues is not None:
                 break
 
@@ -306,9 +329,16 @@ class Bromelia:
                     message = recv_queue.get()
 
                     if message.header.is_request():
-                        thrd = self.process_request(message)
+                        thrd = threading.Thread(name=f"recv_request_{self.request_id}", 
+                                                target=self.callback_route, 
+                                                args=(message,))
+                        self.request_id += 1
+
                     else:
-                        thrd = self.process_answer(message)
+                        thrd = threading.Thread(name=f"recv_answer_{self.answer_id}", 
+                                                target=self.handler_pending_answers, 
+                                                args=(message,))
+                        self.answer_id += 1
 
                     thrd.start()
                     thrds.append(thrd)
@@ -317,32 +347,6 @@ class Bromelia:
                 if not thrd.is_alive():
                     thrd.join()
                     thrds.remove(thrd)
-
-
-    def process_request(self, message):
-        try:
-            r = self.request_threshold.wait(timeout=PROCESS_TIMER)
-        except threading.BrokenBarrierError:
-            r = 0
-        
-        thrd = threading.Thread(name=f"recv_request_{self.request_id}", 
-                                target=self.callback_route, 
-                                args=(message,))
-        self.request_id += 1
-        return thrd
-
-
-    def process_answer(self, message):
-        try:
-            a = self.answer_threshold.wait(timeout=PROCESS_TIMER)
-        except threading.BrokenBarrierError:
-            a = 0
-        
-        thrd = threading.Thread(name=f"recv_answer_{self.answer_id}", 
-                                target=self.handler_pending_answers, 
-                                args=(message,))
-        self.answer_id += 1
-        return thrd
 
 
     def route(self, application_id, command_code):
@@ -360,6 +364,11 @@ class Bromelia:
 
 
     def handler_pending_answers(self, message):
+        try:
+            self.answer_threshold.wait(timeout=PROCESS_TIMER)
+        except threading.BrokenBarrierError:
+            self.answer_threshold.reset()
+
         application_id = message.header.application_id
         hop_by_hop = message.header.hop_by_hop
         session_id = message.session_id_avp.data
@@ -403,6 +412,11 @@ class Bromelia:
 
 
     def callback_route(self, request):
+        try:
+            self.request_threshold.wait(timeout=PROCESS_TIMER)
+        except threading.BrokenBarrierError:
+            self.request_threshold.reset()
+
         application_id = request.header.application_id
         command_code = request.header.command_code
         session_id = request.session_id_avp.data
@@ -429,7 +443,7 @@ class Bromelia:
 
             raise BromeliaException("Route function must return "\
                                     "DiameterAnswer object")
-            return
+
 
         answer = get_formatted_answer_as_per_request(answer, request)
 
@@ -466,6 +480,11 @@ class Bromelia:
 
         bromelia_logger.debug(f"{logging_info} Putting message into "\
                               f"`send_queue`")
+
+        try:
+            self.send_threshold.wait(timeout=SEND_THRESHOLD_TICKER)
+        except threading.BrokenBarrierError:
+            self.send_threshold.reset()
 
         worker.send_lock.acquire()
         worker.send_queue.put(message)

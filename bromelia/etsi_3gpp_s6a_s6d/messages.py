@@ -16,8 +16,7 @@ import socket
 from .avps import *
 
 from ..avps import *
-from ..base import DiameterAnswer
-from ..base import DiameterRequest 
+from ..base import DiameterAnswer, DiameterRequest 
 from ..constants import *
 from ..etsi_3gpp_s6a_s6d.avps import *
 

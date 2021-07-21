@@ -16,13 +16,11 @@ import random
 import selectors
 import socket
 import threading
-
+from .config import TRACKING_SOCKET_EVENTS_TIMEOUT
 
 tcp_connection = logging.getLogger("TcpConnection")
 tcp_client = logging.getLogger("TcpClient")
 tcp_server = logging.getLogger("TcpServer")
-
-TRACKING_SOCKET_EVENTS_TIMEOUT = 1
 
 
 class TcpConnection():
@@ -43,7 +41,7 @@ class TcpConnection():
 
         self.sock = None
         self.is_connected = False
-        self.sock_id = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
+        self.sock_id = "".join(random.choice('0123456789ABCDEF') for i in range(16))
 
         tcp_connection.debug(f"Creating Socket with ID {self.sock_id}")
 
@@ -219,10 +217,10 @@ class TcpConnection():
         self._read()
 
         if self._recv_buffer:
-            self._recv_data_stream = copy.copy(self._recv_buffer)
+            self._recv_data_stream += copy.copy(self._recv_buffer)
             self._recv_data_available.set()
 
-        self._recv_buffer = b''
+        self._recv_buffer = b""
         tcp_connection.debug(f"[Socket-{self.sock_id}] _recv_buffer has "\
                              f"been cleaned up")
 
