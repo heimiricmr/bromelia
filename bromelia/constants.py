@@ -505,9 +505,9 @@ IP_CAN_TYPE_XDSL = convert_to_4_bytes(2)
 IP_CAN_TYPE_WIMAX = convert_to_4_bytes(3)
 IP_CAN_TYPE_3GPP2 = convert_to_4_bytes(4)
 IP_CAN_TYPE_3GPP_EPS = convert_to_4_bytes(5)
-IP_CAN_TYPE_NON_3GPP_EPS = convert_to_4_bytes(5)
-IP_CAN_TYPE_FBA = convert_to_4_bytes(6)
-IP_CAN_TYPE_3GPP_5GS = convert_to_4_bytes(7)
+IP_CAN_TYPE_NON_3GPP_EPS = convert_to_4_bytes(6)
+IP_CAN_TYPE_FBA = convert_to_4_bytes(7)
+IP_CAN_TYPE_3GPP_5GS = convert_to_4_bytes(8)
 IP_CAN_TYPE_NON_3GPP_5GS = convert_to_4_bytes(9)
 
 #: List of Media-Type AVP values.
