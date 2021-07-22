@@ -116,6 +116,8 @@ QOS_CLASS_IDENTIFIER_AVP_CODE = convert_to_4_bytes(1028)
 RAT_TYPE_AVP_CODE = convert_to_4_bytes(1032)
 ALLOCATION_RETENTION_PRIORITY_AVP_CODE = convert_to_4_bytes(1034)
 PRIORITY_LEVEL_AVP_CODE = convert_to_4_bytes(1046)
+PRE_EMPTION_CAPABILITY_AVP_CODE = convert_to_4_bytes(1047)              # TBT
+PRE_EMPTION_VULNERABILITY_AVP_CODE = convert_to_4_bytes(1048)           # TBT
 TERMINAL_INFORMATION_AVP_CODE = convert_to_4_bytes(1401)
 IMEI_AVP_CODE = convert_to_4_bytes(1402)
 SOFTWARE_VERSION_AVP_CODE = convert_to_4_bytes(1403)
@@ -386,31 +388,31 @@ ACCOUNTING_REALTIME_REQUIRED_DELIVER_AND_GRANT = convert_to_4_bytes(1)
 ACCOUNTING_REALTIME_REQUIRED_GRANT_AND_STORE = convert_to_4_bytes(2)
 ACCOUNTING_REALTIME_REQUIRED_GRAND_AND_LOSE = convert_to_4_bytes(3)
 
-#: List of UE-SRVCC-Capability.
+#: List of UE-SRVCC-Capability AVP values.
 #: For more information, please refer to Section Section 7.3.130 of 
 #: ETSI TS 129 272 V15.10.0 (2020-01).
 UE_SRVCC_NOT_SUPPORTED = convert_to_4_bytes(0)
 UE_SRVCC_SUPPORTED = convert_to_4_bytes(1)
 
-#: List of UE-SRVCC-Capability.
+#: List of UE-SRVCC-Capability AVP values.
 #: For more information, please refer to Section Section 6.3.30 of 
 #: ETSI TS 129 229 V14.3.0 (2019-10).
 FEATURE_LIST_ID_1 = convert_to_4_bytes(1)
 FEATURE_LIST_ID_2 = convert_to_4_bytes(2)
 
-#: List of Non-3GPP-IP-Access.
+#: List of Non-3GPP-IP-Access AVP values.
 #: For more information, please refer to Section Section 8.2.3.3 of 
 #: ETSI TS 129 273 V14.3.0 (2017-07).
 NON_3GPP_SUBSCRIPTION_ALLOWED = convert_to_4_bytes(0)
 NON_3GPP_SUBSCRIPTION_BARRED = convert_to_4_bytes(1)
 
-#: List of Non-3GPP-IP-Access-APN.
+#: List of Non-3GPP-IP-Access-APN AVP values.
 #: For more information, please refer to Section Section 8.2.3.4 of 
 #: ETSI TS 129 273 V14.3.0 (2017-07).
 NON_3GPP_APNS_ENABLE = convert_to_4_bytes(0)
 NON_3GPP_APNS_DISABLE = convert_to_4_bytes(1)
 
-#: List of Server-Assignment-Type.
+#: List of Server-Assignment-Type AVP values.
 #: For more information, please refer to Section Section 8.2.3.4 of 
 #: ETSI TS 129 273 V14.3.0 (2017-07).
 SERVER_ASSIGNMENT_TYPE_NO_ASSIGNMENT = convert_to_4_bytes(0)
@@ -429,7 +431,7 @@ SERVER_ASSIGNMENT_TYPE_AAA_USER_DATA_REQUEST = convert_to_4_bytes(12)
 SERVER_ASSIGNMENT_TYPE_PGW_UPDATE = convert_to_4_bytes(13)
 SERVER_ASSIGNMENT_TYPE_RESTORATION = convert_to_4_bytes(14)
 
-#: List of Cancellation-Type.
+#: List of Cancellation-Type AVP values.
 #: For more information, please refer to Section Section 7.3.24 of 
 #: ETSI TS 129 272 V15.4.0 (2018-07).
 CANCELLATION_TYPE_MME_UPDATE_PROCEDURE = convert_to_4_bytes(0)
@@ -438,7 +440,7 @@ CANCELLATION_TYPE_SUBSCRIPTION_WITHDRAWAL = convert_to_4_bytes(2)
 CANCELLATION_TYPE_UPDATE_PROCEDURE_IWF = convert_to_4_bytes(3)
 CANCELLATION_TYPE_INITIAL_ATTACH_PROCEDURE = convert_to_4_bytes(4)
 
-#: List of Reason-Code.
+#: List of Reason-Code AVP values.
 #: For more information, please refer to Section Section 6.3.17 of 
 #: ETSI TS 129 229 V11.3.0 (2013-04).
 REASON_CODE_PERMANENT_TERMINATION = convert_to_4_bytes(0)
@@ -446,6 +448,17 @@ REASON_CODE_NEW_SERVER_ASSIGNED = convert_to_4_bytes(1)
 REASON_CODE_SERVER_CHANGE = convert_to_4_bytes(2)
 REASON_CODE_REMOVE_CHANGE = convert_to_4_bytes(3)
 
+#: List of Pre-emption-Capability AVP values.
+#: For more information, please refer to Section Section 5.3.46 of 
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+PRE_EMPTION_CAPABILITY_ENABLED = convert_to_4_bytes(0)
+PRE_EMPTION_CAPABILITY_DISABLED = convert_to_4_bytes(1)
+
+#: List of Pre-emption-Vulnerability AVP values.
+#: For more information, please refer to Section Section 5.3.47 of 
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+PRE_EMPTION_VULNERABILITY_ENABLED = convert_to_4_bytes(0)
+PRE_EMPTION_VULNERABILITY_DISABLED = convert_to_4_bytes(1)
 
 #: *************************************************************************************************
 

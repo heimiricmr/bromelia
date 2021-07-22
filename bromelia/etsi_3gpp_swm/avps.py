@@ -226,10 +226,10 @@ class PreEmptionCapabilityAVP(DiameterAVP, EnumeratedType):
 
 
 class PreEmptionVulnerabilityAVP(DiameterAVP, EnumeratedType):
-    """Implementation of Pre-emption-Capability AVP in Section 5.3.47 of 
+    """Implementation of Pre-emption-Vulnerability AVP in Section 5.3.47 of 
     ETSI TS 129 212 V15.3.0 (2018-07).
 
-    The Pre-emption-Capability AVP (AVP code 1048) is of type Enumerated.
+    The Pre-emption-Vulnerability AVP (AVP code 1048) is of type Enumerated.
     """
     code = PRE_EMPTION_VULNERABILITY_AVP_CODE
     vendor_id = VENDOR_ID_3GPP
