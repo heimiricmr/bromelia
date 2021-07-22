@@ -147,7 +147,7 @@ class ReservationPriorityAVP(DiameterAVP, EnumeratedType):
                 PRIORITY_SEVEN
     ]
 
-    def __init__(self, data):
+    def __init__(self, data=PRIORITY_DEFAULT):
         DiameterAVP.__init__(self, 
                              ReservationPriorityAVP.code,
                              ReservationPriorityAVP.vendor_id)
