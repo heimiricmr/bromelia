@@ -88,6 +88,38 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].get_padding_length())
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 291 [Authorization-Lifetime] MANDATORY>")
 
+    def test_diameter_avp__load_staticmethod__parsing_subscription_id_data_avp_stream(self):
+        stream = bytes.fromhex("000001bc4000001535353131313233343536373839000000")
+
+        avps = DiameterAVP.load(stream)
+
+        self.assertTrue(isinstance(avps[0], SubscriptionIdDataAVP))
+        self.assertEqual(avps[0].code, SUBSCRIPTION_ID_DATA_AVP_CODE)
+        self.assertFalse(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 21)
+        self.assertIsNone(avps[0].vendor_id)
+        self.assertEqual(avps[0].data, b"5511123456789")
+        self.assertEqual(avps[0].get_padding_length(), 3)
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 444 [Subscription-Id-Data] MANDATORY>")
+
+    def test_diameter_avp__load_staticmethod__parsing_subscription_id_type_avp_stream(self):
+        stream = bytes.fromhex("000001c24000000c00000001")
+
+        avps = DiameterAVP.load(stream)
+
+        self.assertTrue(isinstance(avps[0], SubscriptionIdTypeAVP))
+        self.assertEqual(avps[0].code, SUBSCRIPTION_ID_TYPE_AVP_CODE)
+        self.assertFalse(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 12)
+        self.assertIsNone(avps[0].vendor_id)
+        self.assertEqual(avps[0].data, END_USER_IMSI)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 450 [Subscription-Id-Type] MANDATORY>")
+
     def test_diameter_avp__load_staticmethod__parsing_reservation_priority_avp_stream(self):
         stream = bytes.fromhex("000001ca80000010000032db00000005")
 
@@ -269,6 +301,9 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].get_padding_length())
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 516 [Max-Requested-Bandwidth-Ul] VENDOR, MANDATORY>")
 
+    def test_diameter_avp__load_staticmethod__parsing_media_component_description_avp_stream(self):
+        pass
+
     def test_diameter_avp__load_staticmethod__parsing_media_component_number_avp_stream(self):
         stream = bytes.fromhex("00000206c0000010000028af00000002")
 
@@ -283,6 +318,9 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avps[0].data, bytes.fromhex("00000002"))
         self.assertIsNone(avps[0].get_padding_length())
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 518 [Media-Component-Number] VENDOR, MANDATORY>")
+
+    def test_diameter_avp__load_staticmethod__parsing_media_sub_component_avp_stream(self):
+        pass
 
     def test_diameter_avp__load_staticmethod__parsing_media_type_avp_stream(self):
         stream = bytes.fromhex("00000208c0000010000028af00000007")
@@ -313,6 +351,9 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avps[0].data, SERVICE_INFO_STATUS_PRELIMINARY_SERVICE_INFORMATION)
         self.assertIsNone(avps[0].get_padding_length())
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 527 [Service-Info-Status] VENDOR, MANDATORY>")
+
+    def test_diameter_avp__load_staticmethod__parsing_supported_features_avp_stream(self):
+        pass
 
     def test_diameter_avp__load_staticmethod__parsing_precedence_avp_stream(self):
         stream = bytes.fromhex("000003f2c0000010000028af00000400")
@@ -545,6 +586,81 @@ class TestAuthorizationLifetimeAVP(unittest.TestCase):
     def test__authorization_life_time_avp__1(self):
         avp = AuthorizationLifetimeAVP(7200)
         ref = "000001234000000c00001c20"
+        self.assertEqual(avp.dump().hex(), ref)
+
+
+class TestSubscriptionIdDataAVP(unittest.TestCase):
+    def test_subscription_id_data_avp__no_value(self):
+        self.assertRaises(TypeError, SubscriptionIdDataAVP)
+
+    def test_subscription_id_data_avp__repr_dunder(self):
+        avp = SubscriptionIdDataAVP("5522123456789")
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 444 [Subscription-Id-Data] MANDATORY>")
+
+    def test_subscription_id_data_avp__diameter_avp_convert_classmethod(self):
+        avp = SubscriptionIdDataAVP("5511123456789")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_subscription_id_data_avp__1(self):
+        avp = SubscriptionIdDataAVP("5511123456789")
+        ref = "000001bc4000001535353131313233343536373839000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_subscription_id_data_avp__2(self):
+        avp = SubscriptionIdDataAVP("5522123456789")
+        ref = "000001bc4000001535353232313233343536373839000000"
+        self.assertEqual(avp.dump().hex(), ref)
+      
+
+class TestSubscriptionIdTypeAVP(unittest.TestCase):
+    def test_subscription_id_type_avp__no_value(self):
+        self.assertRaises(TypeError, SubscriptionIdTypeAVP)
+
+    def test_subscription_id_type_avp__repr_dunder(self):
+        avp = SubscriptionIdTypeAVP(END_USER_E164)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 450 [Subscription-Id-Type] MANDATORY>")
+
+    def test_subscription_id_type_avp__diameter_avp_convert_classmethod(self):
+        avp = SubscriptionIdTypeAVP(END_USER_PRIVATE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_subscription_id_type_avp__end_user_e164(self):
+        avp = SubscriptionIdTypeAVP(END_USER_E164)
+        ref = "000001c24000000c00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_subscription_id_type_avp__end_user_imsi(self):
+        avp = SubscriptionIdTypeAVP(END_USER_IMSI)
+        ref = "000001c24000000c00000001"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_subscription_id_type_avp__end_user_sip_uri(self):
+        avp = SubscriptionIdTypeAVP(END_USER_SIP_URI)
+        ref = "000001c24000000c00000002"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_subscription_id_type_avp__end_user_nai(self):
+        avp = SubscriptionIdTypeAVP(END_USER_NAI)
+        ref = "000001c24000000c00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_subscription_id_type_avp__end_user_private(self):
+        avp = SubscriptionIdTypeAVP(END_USER_PRIVATE)
+        ref = "000001c24000000c00000004"
         self.assertEqual(avp.dump().hex(), ref)
 
 
@@ -1013,6 +1129,10 @@ class TestMaxRequestedBandwidthUlAVPAVP(unittest.TestCase):
         self.assertEqual(avp.dump().hex(), ref)
 
 
+class TestMediaComponentDescriptionAVP(unittest.TestCase):
+    pass
+
+
 class TestMediaComponentNumberAVPAVP(unittest.TestCase):
     def test__media_component_number_avp__no_value(self):
         self.assertRaises(TypeError, MediaComponentNumberAVP)
@@ -1041,6 +1161,10 @@ class TestMediaComponentNumberAVPAVP(unittest.TestCase):
         avp = MediaComponentNumberAVP(2)
         ref = "00000206c0000010000028af00000002"
         self.assertEqual(avp.dump().hex(), ref)
+
+
+class TestMediaSubComponentAVP(unittest.TestCase):
+    pass
 
 
 class TestMediaTypeAVPAVP(unittest.TestCase):
@@ -1131,6 +1255,10 @@ class TestServiceInfoStatusAVPAVP(unittest.TestCase):
         avp = ServiceInfoStatusAVP(SERVICE_INFO_STATUS_PRELIMINARY_SERVICE_INFORMATION)
         ref = "0000020fc0000010000028af00000001"
         self.assertEqual(avp.dump().hex(), ref)
+
+
+class TestSupportedFeaturesAVP(unittest.TestCase):
+    pass
 
 
 class TestPrecedenceAVPAVP(unittest.TestCase):
