@@ -33,15 +33,18 @@ DIAMETER_AGENT_SERVER_MODE = "SERVER"
 
 #: DIAMETER AVPS.
 USER_NAME_AVP_CODE = convert_to_4_bytes(1)                              # OK
+FRAMED_IP_ADDRESS_AVP_CODE = convert_to_4_bytes(8)                      # TBT Rx
 X_3GPP_CHARGING_CHARACTERISTICS_AVP_CODE = convert_to_4_bytes(13)
 CLASS_AVP_CODE = convert_to_4_bytes(25)
 SESSION_TIMEOUT_AVP_CODE = convert_to_4_bytes(27)                       # OK
+CALLED_STATION_ID_AVP_CODE = convert_to_4_bytes(30)                     # TBT Rx
 CALLING_STATION_ID_AVP_CODE = convert_to_4_bytes(31)                    # OK
 PROXY_STATE_AVP_CODE = convert_to_4_bytes(33)                           # OK
 ACCT_SESSION_ID_AVP_CODE = convert_to_4_bytes(44)                       # OK
 ACCT_MULTI_SESSION_ID_AVP_CODE = convert_to_4_bytes(50)                 # OK
 EVENT_TIMESTAMP_AVP_CODE = convert_to_4_bytes(55)                       # OK
 ACCT_INTERIM_INTERVAL_AVP_CODE = convert_to_4_bytes(85)                 # OK
+FRAMED_IPV6_PREFIX_AVP_CODE = convert_to_4_bytes(97)                    # TBT Rx
 MIP6_FEATURE_VECTOR_AVP_CODE = convert_to_4_bytes(124)
 HOST_IP_ADDRESS_AVP_CODE = convert_to_4_bytes(257)                      # OK
 AUTH_APPLICATION_ID_AVP_CODE = convert_to_4_bytes(258)                  # OK
@@ -85,6 +88,7 @@ MIP_HOME_AGENT_HOST_AVP_CODE = convert_to_4_bytes(348)
 SUBSCRIPTION_ID_AVP_CODE = convert_to_4_bytes(443)
 SUBSCRIPTION_ID_DATA_AVP_CODE = convert_to_4_bytes(444)
 SUBSCRIPTION_ID_TYPE_AVP_CODE = convert_to_4_bytes(450)
+RESERVATION_PRIORITY_AVP_CODE = convert_to_4_bytes(458)                 # TBT Rx
 EAP_PAYLOAD_AVP_CODE = convert_to_4_bytes(462)
 EAP_MASTER_SESSION_KEY_AVP_CODE = convert_to_4_bytes(464)
 ACCOUNTING_RECORD_TYPE_AVP_CODE = convert_to_4_bytes(480)               # OK
@@ -92,9 +96,23 @@ ACCOUNTING_REALTIME_REQUIRED_AVP_CODE = convert_to_4_bytes(483)   		# OK
 ACCOUNTING_RECORD_NUMBER_AVP_CODE = convert_to_4_bytes(485)             # OK
 MIP6_AGENT_INFO_AVP_CODE = convert_to_4_bytes(486)
 SERVICE_SELECTION_AVP_CODE = convert_to_4_bytes(493)
+ABORT_CAUSE_AVP_CODE = convert_to_4_bytes(500)                          # TBT Rx
+ACCESS_NETWORK_CHARGING_ADDRESS_AVP_CODE = convert_to_4_bytes(501)
+AF_APPLICATION_IDENTIFIER_AVP_CODE = convert_to_4_bytes(504)            # TBT Rx
+AF_CHARGING_IDENTIFIER_AVP_CODE = convert_to_4_bytes(505)               # TBT Rx
 MOBILE_NODE_IDENTIFIER_AVP_CODE = convert_to_4_bytes(506)
+FLOW_DESCRIPTION_AVP_CODE = convert_to_4_bytes(507)                     # TBT Rx
+FLOW_NUMBER_AVP_CODE = convert_to_4_bytes(509)                          # TBT Rx
+FLOW_STATUS_AVP_CODE = convert_to_4_bytes(511)                          # TBT Rx
+FLOW_USAGE_AVP_CODE = convert_to_4_bytes(512)                           # TBT Rx
+SPECIFIC_ACTION_AVP_CODE = convert_to_4_bytes(513)                      # TBT Rx
 MAX_REQUESTED_BANDWIDTH_DL_AVP_CODE = convert_to_4_bytes(515)
 MAX_REQUESTED_BANDWIDTH_UL_AVP_CODE = convert_to_4_bytes(516)
+MEDIA_COMPONENT_DESCRIPTION_AVP_CODE = convert_to_4_bytes(517)          # TBT Rx
+MEDIA_COMPONENT_NUMBER_AVP_CODE = convert_to_4_bytes(518)               # TBT Rx
+MEDIA_SUB_COMPONENT_AVP_CODE = convert_to_4_bytes(519)                  # TBT Rx
+MEDIA_TYPE_AVP_CODE = convert_to_4_bytes(520)                           # TBT Rx
+SERVICE_INFO_STATUS_AVP_CODE = convert_to_4_bytes(527)                  # TBT Rx
 VISITED_NETWORK_IDENTIFIER_AVP_CODE = convert_to_4_bytes(600)
 
 SIP_NUMBER_AUTH_ITEMS_AVP_CODE = convert_to_4_bytes(607)				# OK
@@ -112,12 +130,17 @@ INTEGRITY_KEY_AVP_CODE = convert_to_4_bytes(626)						# OK
 SUPPORTED_FEATURES_AVP_CODE = convert_to_4_bytes(628)
 FEATURE_LIST_ID_AVP_CODE = convert_to_4_bytes(629)
 FEATURE_LIST_AVP_CODE = convert_to_4_bytes(630)
+PRECEDENCE_AVP_CODE = convert_to_4_bytes(1010)                          # TBT Rx
+REPORTING_LEVEL_AVP_CODE = convert_to_4_bytes(1011)                     # TBT Rx
+IP_CAN_TYPE_AVP_CODE = convert_to_4_bytes(1027)                         # TBT Rx
 QOS_CLASS_IDENTIFIER_AVP_CODE = convert_to_4_bytes(1028)
 RAT_TYPE_AVP_CODE = convert_to_4_bytes(1032)
 ALLOCATION_RETENTION_PRIORITY_AVP_CODE = convert_to_4_bytes(1034)
 PRIORITY_LEVEL_AVP_CODE = convert_to_4_bytes(1046)
 PRE_EMPTION_CAPABILITY_AVP_CODE = convert_to_4_bytes(1047)              # TBT
 PRE_EMPTION_VULNERABILITY_AVP_CODE = convert_to_4_bytes(1048)           # TBT
+AN_GW_ADDRESS_AVP_CODE = convert_to_4_bytes(1050)                       # TBT Rx
+CHARGING_CORRELATION_INDICATOR_AVP_CODE = convert_to_4_bytes(1073)      # TBT Rx
 TERMINAL_INFORMATION_AVP_CODE = convert_to_4_bytes(1401)
 IMEI_AVP_CODE = convert_to_4_bytes(1402)
 SOFTWARE_VERSION_AVP_CODE = convert_to_4_bytes(1403)
@@ -134,6 +157,7 @@ PDN_TYPE_AVP_CODE = convert_to_4_bytes(1456)
 NON_3GPP_USER_DATA_AVP_CODE = convert_to_4_bytes(1500)
 NON_3GPP_IP_ACCESS_AVP_CODE = convert_to_4_bytes(1501)
 NON_3GPP_IP_ACCESS_APN_AVP_CODE = convert_to_4_bytes(1502)
+AN_TRUSTED_AVP_CODE = convert_to_4_bytes(1503)                          # TBT Rx
 UE_SRVCC_CAPABILITY_AVP_CODE = convert_to_4_bytes(1615)
 CLR_FLAGS_AVP_CODE = convert_to_4_bytes(1638)
 UE_LOCAL_IP_ADDRESS_AVP_CODE = convert_to_4_bytes(2805)
@@ -329,6 +353,7 @@ HOST_IP_ADDRESS_FAMILY_CODE_IPV6 = convert_to_2_bytes(2)
 VENDOR_ID_DEFAULT = convert_to_4_bytes(0)
 VENDOR_ID_TEKELEC = convert_to_4_bytes(323)
 VENDOR_ID_3GPP = convert_to_4_bytes(10415)
+VENDOR_ID_ETSI = convert_to_4_bytes(13019)
 
 #: List of Subscription-Id-Type values.
 #: For more information, please refer to Section 8.47 of IETF RFC 4006.
@@ -389,31 +414,31 @@ ACCOUNTING_REALTIME_REQUIRED_GRANT_AND_STORE = convert_to_4_bytes(2)
 ACCOUNTING_REALTIME_REQUIRED_GRAND_AND_LOSE = convert_to_4_bytes(3)
 
 #: List of UE-SRVCC-Capability AVP values.
-#: For more information, please refer to Section Section 7.3.130 of 
+#: For more information, please refer to Section 7.3.130 of 
 #: ETSI TS 129 272 V15.10.0 (2020-01).
 UE_SRVCC_NOT_SUPPORTED = convert_to_4_bytes(0)
 UE_SRVCC_SUPPORTED = convert_to_4_bytes(1)
 
-#: List of UE-SRVCC-Capability AVP values.
-#: For more information, please refer to Section Section 6.3.30 of 
+#: List of Feature-List-ID AVP values.
+#: For more information, please refer to Section 6.3.30 of 
 #: ETSI TS 129 229 V14.3.0 (2019-10).
 FEATURE_LIST_ID_1 = convert_to_4_bytes(1)
 FEATURE_LIST_ID_2 = convert_to_4_bytes(2)
 
 #: List of Non-3GPP-IP-Access AVP values.
-#: For more information, please refer to Section Section 8.2.3.3 of 
+#: For more information, please refer to Section 8.2.3.3 of 
 #: ETSI TS 129 273 V14.3.0 (2017-07).
 NON_3GPP_SUBSCRIPTION_ALLOWED = convert_to_4_bytes(0)
 NON_3GPP_SUBSCRIPTION_BARRED = convert_to_4_bytes(1)
 
 #: List of Non-3GPP-IP-Access-APN AVP values.
-#: For more information, please refer to Section Section 8.2.3.4 of 
+#: For more information, please refer to Section 8.2.3.4 of 
 #: ETSI TS 129 273 V14.3.0 (2017-07).
 NON_3GPP_APNS_ENABLE = convert_to_4_bytes(0)
 NON_3GPP_APNS_DISABLE = convert_to_4_bytes(1)
 
 #: List of Server-Assignment-Type AVP values.
-#: For more information, please refer to Section Section 8.2.3.4 of 
+#: For more information, please refer to Section 8.2.3.4 of 
 #: ETSI TS 129 273 V14.3.0 (2017-07).
 SERVER_ASSIGNMENT_TYPE_NO_ASSIGNMENT = convert_to_4_bytes(0)
 SERVER_ASSIGNMENT_TYPE_REGISTRATION = convert_to_4_bytes(1)
@@ -432,7 +457,7 @@ SERVER_ASSIGNMENT_TYPE_PGW_UPDATE = convert_to_4_bytes(13)
 SERVER_ASSIGNMENT_TYPE_RESTORATION = convert_to_4_bytes(14)
 
 #: List of Cancellation-Type AVP values.
-#: For more information, please refer to Section Section 7.3.24 of 
+#: For more information, please refer to Section 7.3.24 of 
 #: ETSI TS 129 272 V15.4.0 (2018-07).
 CANCELLATION_TYPE_MME_UPDATE_PROCEDURE = convert_to_4_bytes(0)
 CANCELLATION_TYPE_SGSN_UPDATE_PROCEDURE = convert_to_4_bytes(1)
@@ -441,7 +466,7 @@ CANCELLATION_TYPE_UPDATE_PROCEDURE_IWF = convert_to_4_bytes(3)
 CANCELLATION_TYPE_INITIAL_ATTACH_PROCEDURE = convert_to_4_bytes(4)
 
 #: List of Reason-Code AVP values.
-#: For more information, please refer to Section Section 6.3.17 of 
+#: For more information, please refer to Section 6.3.17 of 
 #: ETSI TS 129 229 V11.3.0 (2013-04).
 REASON_CODE_PERMANENT_TERMINATION = convert_to_4_bytes(0)
 REASON_CODE_NEW_SERVER_ASSIGNED = convert_to_4_bytes(1)
@@ -459,6 +484,119 @@ PRE_EMPTION_CAPABILITY_DISABLED = convert_to_4_bytes(1)
 #: ETSI TS 129 212 V15.3.0 (2018-07).
 PRE_EMPTION_VULNERABILITY_ENABLED = convert_to_4_bytes(0)
 PRE_EMPTION_VULNERABILITY_DISABLED = convert_to_4_bytes(1)
+
+#: List of Equipment-Status AVP values.
+#: For more information, please refer to Section 7.3.51 of 
+#: ETSI TS 129 272 V15.4.0 (2018-07).
+EQUIPMENT_STATUS_WHITELISTED = convert_to_4_bytes(0)
+EQUIPMENT_STATUS_BLACKLISTED = convert_to_4_bytes(1)
+EQUIPMENT_STATUS_GREYLISTED = convert_to_4_bytes(2)
+
+#: List of Reservation-Priority AVP values.
+#: For more information, please refer to Section 7.3.9 of 
+#: ETSI TS 183 017 V2.3.1 (2008-09).
+PRIORITY_DEFAULT = convert_to_4_bytes(0)
+PRIORITY_ONE = convert_to_4_bytes(1)
+PRIORITY_TWO = convert_to_4_bytes(2)
+PRIORITY_THREE = convert_to_4_bytes(3)
+PRIORITY_FOUR = convert_to_4_bytes(4)
+PRIORITY_FIVE = convert_to_4_bytes(5)
+PRIORITY_SIX = convert_to_4_bytes(6)
+PRIORITY_SEVEN = convert_to_4_bytes(7)
+
+#: List of AN-Trusted AVP values.
+#: For more information, please refer to Section 5.2.3.9 of 
+#: ETSI TS 129 273 V12.5.0 (2014-10).
+AN_TRUSTED_TRUSTED = convert_to_4_bytes(0)
+AN_TRUSTED_UNTRUSTED = convert_to_4_bytes(1)
+
+#: List of IP-CAN-Type AVP values.
+#: For more information, please refer to Section 5.3.27 of 
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+IP_CAN_TYPE_3GPP_GPRS = convert_to_4_bytes(0)
+IP_CAN_TYPE_DOCSIS = convert_to_4_bytes(1)
+IP_CAN_TYPE_XDSL = convert_to_4_bytes(2)
+IP_CAN_TYPE_WIMAX = convert_to_4_bytes(3)
+IP_CAN_TYPE_3GPP2 = convert_to_4_bytes(4)
+IP_CAN_TYPE_3GPP_EPS = convert_to_4_bytes(5)
+IP_CAN_TYPE_NON_3GPP_EPS = convert_to_4_bytes(6)
+IP_CAN_TYPE_FBA = convert_to_4_bytes(7)
+IP_CAN_TYPE_3GPP_5GS = convert_to_4_bytes(8)
+IP_CAN_TYPE_NON_3GPP_5GS = convert_to_4_bytes(9)
+
+#: List of Media-Type AVP values.
+#: For more information, please refer to Section 5.3.19 of 
+#: ETSI TS 129 214 V15.4.0 (2018-07).
+MEDIA_TYPE_AUDIO = convert_to_4_bytes(0)
+MEDIA_TYPE_VIDEO = convert_to_4_bytes(1)
+MEDIA_TYPE_DATA = convert_to_4_bytes(2)
+MEDIA_TYPE_APPLICATION = convert_to_4_bytes(3)
+MEDIA_TYPE_CONTROL = convert_to_4_bytes(4)
+MEDIA_TYPE_TEXT = convert_to_4_bytes(5)
+MEDIA_TYPE_MESSAGE = convert_to_4_bytes(6)
+MEDIA_TYPE_OTHER = convert_to_4_bytes(7)
+
+#: List of Flow-Status AVP values.
+#: For more information, please refer to Section 5.3.11 of 
+#: ETSI TS 129 214 V15.4.0 (2018-07).
+FLOW_STATUS_ENABLED_UPLINK = convert_to_4_bytes(0)
+FLOW_STATUS_ENABLED_DOWNLINK = convert_to_4_bytes(1)
+FLOW_STATUS_ENABLED = convert_to_4_bytes(2)
+FLOW_STATUS_DISABLED = convert_to_4_bytes(3)
+FLOW_STATUS_REMOVED = convert_to_4_bytes(4)
+
+#: List of Flow-Usage AVP values.
+#: For more information, please refer to Section 5.3.12 of 
+#: ETSI TS 129 214 V15.4.0 (2018-07).
+FLOW_USAGE_NO_INFORMATION = convert_to_4_bytes(0)
+FLOW_USAGE_RTCP = convert_to_4_bytes(1)
+FLOW_USAGE_AF_SIGNALLING = convert_to_4_bytes(2)
+
+#: List of Specific-Action AVP values.
+#: For more information, please refer to Section 5.3.13 of 
+#: ETSI TS 129 214 V15.4.0 (2018-07).
+SPECIFIC_ACTION_CHARGING_CORRELATION_EXCHANGE = convert_to_4_bytes(1)
+SPECIFIC_ACTION_INDICATION_OF_LOSS_OF_BEARER = convert_to_4_bytes(2)
+SPECIFIC_ACTION_INDICATION_OF_RECOVERY_OF_BEARER = convert_to_4_bytes(3)
+SPECIFIC_ACTION_INDICATION_OF_RELEASE_OF_BEARER = convert_to_4_bytes(4)
+SPECIFIC_ACTION_IP_CAN_CHANGE = convert_to_4_bytes(6)
+SPECIFIC_ACTION_INDICATION_OF_OUT_OF_CREDIT = convert_to_4_bytes(7)
+SPECIFIC_ACTION_INDICATION_OF_SUCCESSFUL_RESOURCES_ALLOCATION = convert_to_4_bytes(8)
+SPECIFIC_ACTION_INDICATION_OF_FAILED_RESOURCES_ALLOCATION = convert_to_4_bytes(9)
+SPECIFIC_ACTION_INDICATION_OF_LIMITED_PCC_DEPLOYMENT = convert_to_4_bytes(10)
+SPECIFIC_ACTION_USAGE_REPORT = convert_to_4_bytes(11)
+SPECIFIC_ACTION_ACCESS_NETWORK_INFO_REPORT = convert_to_4_bytes(12)
+SPECIFIC_ACTION_INDICATION_OF_RECOVERY_FROM_LIMITED_PCC_DEPLOYMENT = convert_to_4_bytes(13)
+SPECIFIC_ACTION_INDICATION_OF_ACCESS_NETWORK_INFO_REPORTING_FAILURE = convert_to_4_bytes(14)
+SPECIFIC_ACTION_INDICATION_OF_TRANSFER_POLICY_EXPIRED = convert_to_4_bytes(15)
+SPECIFIC_ACTION_PLMN_CHANGE = convert_to_4_bytes(16)
+
+#: List of Service-Info-Status AVP values.
+#: For more information, please refer to Section 5.3.25 of 
+#: ETSI TS 129 214 V15.4.0 (2018-07).
+SERVICE_INFO_STATUS_FINAL_SERVICE_INFORMATION = convert_to_4_bytes(0)
+SERVICE_INFO_STATUS_PRELIMINARY_SERVICE_INFORMATION = convert_to_4_bytes(1)
+
+#: List of Reporting-Level AVP values.
+#: For more information, please refer to Section 5.3.12 of 
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+REPORTING_LEVEL_SERVICE_IDENTIFIER_LEVEL = convert_to_4_bytes(0)
+REPORTING_LEVEL_RATING_GROUP_LEVEL = convert_to_4_bytes(1)
+REPORTING_LEVEL_SPONSORED_CONNECTIVITY_LEVEL = convert_to_4_bytes(2)
+
+#: List of Charging-Correlation-Indicator AVP values.
+#: For more information, please refer to Section 5.3.67 of 
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+CHARGING_CORRELATION_INDICATOR_CHARGING_IDENTIFIER_REQUIRED = convert_to_4_bytes(0)
+
+#: List of Abort-Cause AVP values.
+#: For more information, please refer to Section 5.3.1 of 
+#: ETSI TS 129 214 V15.4.0 (2018-07).
+ABORT_CAUSE_BEARER_RELEASED = convert_to_4_bytes(0)
+ABORT_CAUSE_INSUFFICIENT_SERVER_RESOURCES = convert_to_4_bytes(1)
+ABORT_CAUSE_INSUFFICIENT_BEARER_RESOURCES = convert_to_4_bytes(2)
+ABORT_CAUSE_PS_TO_CS_HANDOVER = convert_to_4_bytes(3)
+ABORT_CAUSE_SPONSORED_DATA_CONNECTIVITY_DISALLOWED = convert_to_4_bytes(4)
 
 #: *************************************************************************************************
 
