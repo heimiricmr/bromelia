@@ -153,6 +153,7 @@ EPS_SUBSCRIBED_QOS_PROFILE_AVP_CODE = convert_to_4_bytes(1431)
 VPLMN_DYNAMIC_ADDRESS_ALLOWED_AVP_CODE = convert_to_4_bytes(1432)
 AMBR_AVP_CODE = convert_to_4_bytes(1435)
 PDN_GW_ALLOCATION_TYPE_AVP_CODE = convert_to_4_bytes(1438)
+EQUIPMENT_STATUS_AVP_CODE = convert_to_4_bytes(1445)
 PDN_TYPE_AVP_CODE = convert_to_4_bytes(1456)
 NON_3GPP_USER_DATA_AVP_CODE = convert_to_4_bytes(1500)
 NON_3GPP_IP_ACCESS_AVP_CODE = convert_to_4_bytes(1501)
@@ -180,6 +181,7 @@ MULTIMEDIA_AUTH_MESSAGE = convert_to_3_bytes(303)
 REGISTRATION_TERMINATION_MESSAGE = convert_to_3_bytes(304)
 PUSH_PROFILE_MESSAGE = convert_to_3_bytes(305)
 CANCEL_LOCATION_MESSAGE = convert_to_3_bytes(317)
+EC_MESSAGE = convert_to_3_bytes(324)
 
 #: *************************************************************************************************
 
