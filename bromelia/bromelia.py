@@ -20,6 +20,7 @@ from types import SimpleNamespace
 
 from ._internal_utils import _convert_file_to_config
 from ._internal_utils import application_id_look_up
+from ._internal_utils import get_app_name
 from .avps import *
 from .base import DiameterAnswer
 from .base import DiameterRequest
@@ -90,6 +91,7 @@ class Worker(multiprocessing.Process):
 
         self.send_event = manager.Event()
         self.send_lock = manager.Lock()
+        self.recv_lock = manager.Lock()
 
         self.pending_answers = dict()
 
@@ -115,63 +117,78 @@ class Worker(multiprocessing.Process):
 
 
     def update_recv_queues(self):
-        Worker.recv_queues.append(self.recv_queue)
+        Worker.recv_queues.append([self.recv_queue, self.recv_lock])
 
 
     def send_handler(self):
         while True:
-            worker_logger.debug(f"[{self}] Awaiting someone sending a message")
-            self.send_event.wait()
+            if self.send_queue.empty():
+                worker_logger.debug("The send_queue is empty and there is no "\
+                                    "notification to go ahead")
 
-            if not self.send_queue.empty():
-                worker_logger.debug(f"[{self}] There is/are "\
-                                    f"{self.send_queue.qsize()} message(s) "\
-                                    f"available to be sent")
+                self.send_event.wait(timeout=1)
 
-                if self.send_queue.qsize() == 1:
+                worker_logger.debug("Got go ahead for send_event Event")
+
+
+            worker_logger.debug(f"[{self.name}] There is/are "\
+                                f"{self.send_queue.qsize()} message(s) "\
+                                f"available to be sent")
+
+            if self.send_queue.qsize() == 1:
+                outgoing_message = self.send_queue.get()
+                hop_by_hop = outgoing_message.header.hop_by_hop
+
+                worker_logger.debug(f"[{self.name}][{hop_by_hop.hex()}] "\
+                                    f"Sending to endpoint")
+
+                self.app.send_message(outgoing_message)
+
+                self.send_event.clear()
+                self.send_lock.release()
+
+            elif self.send_queue.qsize() > 1:
+                outgoing_messages = list()
+
+                while not self.send_queue.empty():
                     outgoing_message = self.send_queue.get()
-                    session_id = outgoing_message.session_id_avp.data
+                    hop_by_hop = outgoing_message.header.hop_by_hop
 
-                    worker_logger.debug(f"[{self}][{session_id}] Sending to "\
-                                        f"endpoint")
+                    outgoing_messages.append(outgoing_message)
+                
+                    worker_logger.debug(f"[{self.name}][{hop_by_hop.hex()}] "\
+                                        f"Sending to endpoint")
 
-                    self.app.send_message(outgoing_message)
+                self.app.send_messages(outgoing_messages)
 
-                    self.send_event.clear()
-                    self.send_lock.release()
-
-                elif self.send_queue.qsize() > 1:
-                    outgoing_messages = list()
-
-                    while not self.send_queue.empty():
-                        outgoing_message = self.send_queue.get()
-                        outgoing_messages.append(outgoing_message)
-                    
-                        session_id = outgoing_message.session_id_avp.data
-                        worker_logger.debug(f"[{self}][{session_id}] Sending "\
-                                            f"to endpoint")
-
-                    self.app.send_messages(outgoing_messages)
-
-                    self.send_event.clear()
-                    self.send_lock.release()
+                self.send_event.clear()
+                self.send_lock.release()
 
 
     def recv_handler(self):
         while True:
-            worker_logger.debug(f"[{self}] Awaiting requests from "\
-                                f"someone else")
-
             incoming_message = self.app.get_message()
 
             if incoming_message:
-                session_id = incoming_message.session_id_avp.data
-                worker_logger.debug(f"[{self}][{session_id}] Received "\
-                                    f"request")
+                user_name = None
+                if incoming_message.has_avp("user_name_avp"):
+                    user_name = incoming_message.user_name_avp.data
 
+                worker_logger.debug(f"Message from Diameter Layer Process: "\
+                                    f"{application_id_look_up(incoming_message.header.application_id)[0]}, "\
+                                    f"{incoming_message.header.get_command_code()}, "\
+                                    f"{incoming_message.header.hop_by_hop.hex()}, "\
+                                    f"DATA LENGTH: {len(incoming_message)}, "\
+                                    f"USERNAME: {user_name}")
+    
+                hop_by_hop = incoming_message.header.hop_by_hop
+
+                self.recv_lock.acquire()
                 self.recv_queue.put(incoming_message)
-                worker_logger.debug(f"[{self}][{session_id}] Putting request "\
-                                    f"into `recv_queue`")
+                self.recv_lock.release()
+    
+                worker_logger.debug(f"[{self.name}][{hop_by_hop.hex()}] "\
+                                    f"Putting into recv_queue Queue")
 
 
     #: it starts under worker.start() call
@@ -235,6 +252,7 @@ class Bromelia:
         bromelia_logger.debug(f"Initializing Bromelia application")
         self.config_file = config_file
         self.configs = _convert_file_to_config(self.config_file, globals())
+        self.app_name = get_app_name(self.config_file)
         self.routes = {}
         self.sessions = {}
         self.g = Global()
@@ -324,10 +342,12 @@ class Bromelia:
         while True:
             time.sleep(BROMELIA_TICKER)
 
-            for recv_queue in self.recv_queues:
+            for recv_queue, recv_lock in self.recv_queues:
                 if not recv_queue.empty():
+                    recv_lock.acquire()
                     message = recv_queue.get()
-
+                    recv_lock.release()
+                    
                     if message.header.is_request():
                         thrd = threading.Thread(name=f"recv_request_{self.request_id}", 
                                                 target=self.callback_route, 
@@ -371,10 +391,10 @@ class Bromelia:
 
         application_id = message.header.application_id
         hop_by_hop = message.header.hop_by_hop
-        session_id = message.session_id_avp.data
         
         worker = self.associations[application_id]
-        logging_info = f"[{worker}][{session_id}][HbH:{hop_by_hop.hex()}]"
+        logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"\
+                       f"[PENDING:{len(worker.pending_answers)}]"
 
         bromelia_logger.debug(f"{logging_info} Check if it is an expected "\
                               f"answer")
@@ -419,22 +439,24 @@ class Bromelia:
 
         application_id = request.header.application_id
         command_code = request.header.command_code
-        session_id = request.session_id_avp.data
+        hop_by_hop = request.header.hop_by_hop
+
+        worker = self.associations[application_id]
+        logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"
 
         callback_function = self.routes[application_id][command_code]
-        bromelia_logger.debug(f"[{session_id}] Callback function has "\
-                              f"been triggered: {callback_function}")
+        bromelia_logger.debug(f"[{logging_info}] {callback_function}")
 
         try:
             answer = callback_function(request)
 
         except Exception as e:
-            bromelia_logger.exception(f"[{session_id}] Error has been "\
+            bromelia_logger.exception(f"[{logging_info}] Error has been "\
                                       f"raised in callback_function: {e.args}")
             answer = None
 
         if not isinstance(answer, DiameterAnswer):
-            bromelia_logger.exception(f"[{session_id}] There is no answer "\
+            bromelia_logger.exception(f"[{logging_info}] There is no answer "\
                                       f"processed to be sent. We are sending "\
                                       f"UNABLE_TO_COMPLY")
 
@@ -458,18 +480,17 @@ class Bromelia:
                 answer.pop("result_code_avp")
 
 
-        bromelia_logger.debug(f"[{session_id}] Sending answer")
+        bromelia_logger.debug(f"[{logging_info}] Sending answer")
         self.send_message(answer)
 
 
     def send_message(self, message):
         application_id = message.header.application_id
         hop_by_hop = message.header.hop_by_hop
-        session_id = message.session_id_avp.data
 
         worker = self.associations[application_id]
+        logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"
 
-        logging_info = f"[{worker}][{session_id}][HbH:{hop_by_hop.hex()}]"
         bromelia_logger.debug(f"{logging_info} Application needs to send a "\
                               f"message")
         
@@ -479,7 +500,7 @@ class Bromelia:
             return None
 
         bromelia_logger.debug(f"{logging_info} Putting message into "\
-                              f"`send_queue`")
+                              f"send_queue Queue")
 
         try:
             self.send_threshold.wait(timeout=SEND_THRESHOLD_TICKER)
@@ -489,6 +510,9 @@ class Bromelia:
         worker.send_lock.acquire()
         worker.send_queue.put(message)
         worker.send_event.set()
+
+        bromelia_logger.debug(f"{logging_info} Just put message into "\
+                              f"send_queue Queue and notified send_event Event")
 
         if message.header.is_request():
             pending_answer = PendingAnswer()

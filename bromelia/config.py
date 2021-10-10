@@ -38,35 +38,37 @@ BROMELIA_TICKER = STATE_MACHINE_TICKER
 BROMELIA_LOADING_TICKER = 0.1
 SEND_THRESHOLD_TICKER = 0.05
 PROCESS_TIMER = 0.001
+SEND_EVENT_THRESHOLD_TICKER = 0.1
 
-REQUEST_THRESHOLD = 10
-ANSWER_THRESHOLD = 10
-SEND_THRESHOLD = 30
+REQUEST_THRESHOLD = 40 #25 #10
+ANSWER_THRESHOLD = 40 #25 #10
+SEND_THRESHOLD = 50 #40 #30
 
 #: Configs for transport.py module
 TRACKING_SOCKET_EVENTS_TIMEOUT = 1
+
 
 class Config(dict):
     def __init__(self, defaults=None):
         dict.__init__(self, defaults or {})
 
-
 class DiameterLogging(object):
-    LOGGING_FORMAT = "%(asctime)s [%(levelname)s] [%(process)d] "\
-                    "[%(thread)d:%(threadName)s] %(module)s [%(name)s] "\
-                    "[%(funcName)s]: %(message)s"
-
-    LOGGING_DATE_FMT = "%Y-%m-%d %H:%M:%S,uuu"
-    LOGGING_PATH = os.path.join(BASEDIR, f"dsa_{os.getpid()}.log")
-
     def __init__(self, debug=False, is_logging=False):
         if debug:
-            DiameterLogging.LOGGING_LEVEL = logging.DEBUG
+            LOGGING_LEVEL = logging.DEBUG
         else:
-            DiameterLogging.LOGGING_LEVEL = logging.INFO
+            LOGGING_LEVEL = logging.INFO
+
+        LOGGING_FORMAT = "%(asctime)s [%(levelname)s] [%(process)d] "\
+                        "[%(thread)d:%(threadName)s] %(module)s [%(name)s] "\
+                        "[%(funcName)s]: %(message)s"
+
+        LOGGING_PATH = os.path.join(BASEDIR, "dsa.log")
+        LOGGING_DATE_FMT = "%Y-%m-%d %H:%M:%S,uuu"
 
         if is_logging:
-            logging.basicConfig(level=DiameterLogging.LOGGING_LEVEL,
-                                format=DiameterLogging.LOGGING_FORMAT,
-                                filename=DiameterLogging.LOGGING_PATH,
+            logging.basicConfig(level=LOGGING_LEVEL,
+                                format=LOGGING_FORMAT,
+                                filename=LOGGING_PATH,
+                                datefmt=LOGGING_DATE_FMT,
                                 filemode="a")

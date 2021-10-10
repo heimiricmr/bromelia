@@ -28,11 +28,14 @@ class TcpConnection():
         self._recv_buffer = b""
         self._send_buffer = b""
         self.send_data_stream_queued = False
+        self.data_stream = b""
         self._recv_data_stream = b""
 
         self._recv_data_available = threading.Event()
         self.write_mode_on = threading.Event()
         self.read_mode_on = threading.Event()
+
+        self.lock = threading.Lock()
 
         self.recv_data_consumed = False
         
@@ -109,16 +112,20 @@ class TcpConnection():
             self.tracking_events_count += TRACKING_SOCKET_EVENTS_TIMEOUT
 
             for key, mask in self.events:
-                self.data_stream = key.data
+                if key.data is not None:
+                    self.data_stream += key.data
+
+                if mask & selectors.EVENT_WRITE:
+                    tcp_connection.debug(f"Selector notified EVENT_WRITE")
+                    self.write()
 
                 if mask & selectors.EVENT_READ:
+                    tcp_connection.debug(f"Selector notified EVENT_READ")
                     self.read()
-                    
-                if mask & selectors.EVENT_WRITE:
-                    self.write()
 
 
     def _set_selector_events_mask(self, mode, msg=None):
+        self.lock.acquire()
         if mode == "r":
             tcp_connection.debug(f"[Socket-{self.sock_id}] Updating "\
                                  f"selector events mask [READ]")
@@ -150,6 +157,7 @@ class TcpConnection():
         else:
             tcp_connection.debug(f"[Socket-{self.sock_id}] Updating "\
                                  f"selector events mask: Invalid entry")
+        self.lock.release()
 
 
     def _write(self):
@@ -175,6 +183,7 @@ class TcpConnection():
     def write(self):
         if not self.send_data_stream_queued and self.data_stream:
             self._send_buffer += self.data_stream
+            self.data_stream = b""
             self.send_data_stream_queued = True
             tcp_connection.debug(f"[Socket-{self.sock_id}] Stream data has "\
                                  f"been queued into _send_buffer: "\
@@ -219,8 +228,8 @@ class TcpConnection():
         if self._recv_buffer:
             self._recv_data_stream += copy.copy(self._recv_buffer)
             self._recv_data_available.set()
+            self._recv_buffer = b""
 
-        self._recv_buffer = b""
         tcp_connection.debug(f"[Socket-{self.sock_id}] _recv_buffer has "\
                              f"been cleaned up")
 

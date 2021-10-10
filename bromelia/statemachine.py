@@ -14,6 +14,7 @@ import logging
 import threading
 import time
 
+from ._internal_utils import application_id_look_up
 from .config import *
 from .process import process_answer
 from .process import process_capability_exchange
@@ -96,7 +97,9 @@ class Closed(State):
         
         elif is_server_mode(self.association):
             if not self.association._recv_messages.empty():
+                self.association.lock.acquire()
                 self.msg = self.association._recv_messages.get()
+                self.association.lock.release()
 
                 closed_logger.debug(f"Got message from _recv_messages Queue. "\
                                     f"Now there is/are "\
@@ -144,7 +147,9 @@ class WaitConnAck(State):
 
         #: Processing the Diameter messages received.
         if not self.association._recv_messages.empty():
+            self.association.lock.acquire()
             self.msg = self.association._recv_messages.get()
+            self.association.lock.release()
 
             wait_initiator_cea_logger.debug(f"Got message from _recv_messages "\
                                             f"Queue. Now there is/are "\
@@ -196,7 +201,9 @@ class WaitInitiatorCEA(State):
 
         #: Processing the Diameter messages received.
         if not self.association._recv_messages.empty():
+            self.association.lock.acquire()
             self.msg = self.association._recv_messages.get()
+            self.association.lock.release()
 
             wait_initiator_cea_logger.debug(f"Got message from _recv_messages "\
                                             f"Queue. Now there is/are "
@@ -278,7 +285,9 @@ class Open(State):
 
         #: Processing the Diameter messages received.
         elif not self.association._recv_messages.empty():
+            self.association.lock.acquire()
             self.msg = self.association._recv_messages.get()
+            self.association.lock.release()
 
             open_logger.debug(f"Got message from _recv_messages Queue. Now "\
                               f"there is/are "\
@@ -322,6 +331,32 @@ class Open(State):
             
         elif is_request_message(self.msg):
             process_request(self.association, self.msg)
+
+        if self.msg.has_avp("user_name_avp"):
+            open_logger.debug(f"Message from _recv_messages: "\
+                              f"{application_id_look_up(self.msg.header.application_id)[0]}, "\
+                              f"{self.msg.header.get_command_code()}, "\
+                              f"{self.msg.header.is_request()}, "\
+                              f"{self.msg.header.hop_by_hop.hex()}, "\
+                              f"LEN: {len(self.msg)}, "\
+                              f"USERNAME: {self.msg.user_name_avp.data}")
+        else:
+            open_logger.debug(f"Message from _recv_messages: "\
+                              f"{application_id_look_up(self.msg.header.application_id)[0]}, "\
+                              f"{self.msg.header.get_command_code()}, "\
+                              f"{self.msg.header.is_request()}, "\
+                              f"{self.msg.header.hop_by_hop.hex()}, "\
+                              f"LEN: {len(self.msg)}")
+
+        open_logger.debug("Putting into postprocess_recv_messages Queue")
+
+        self.association.postprocess_recv_messages_lock.acquire()
+        self.association.postprocess_recv_messages.put(self.msg)
+        self.association.postprocess_recv_messages_lock.release()
+
+        self.association.postprocess_recv_messages_ready.set()
+
+        open_logger.debug("Just notified postprocess_recv_messages_ready")
     
         self.next_state = OPEN
 
@@ -385,10 +420,10 @@ class Open(State):
             self.association.put_message_into_send_queue(dpa)
             self.association.send_message_from_queue()
 
-        time.sleep(3)
+        time.sleep(SLEEP_TIMER)
 
         self.association._stop_threads = True
-        self.association.postprocess_recv_requests_ready.set()
+        self.association.postprocess_recv_messages_ready.set()
 
         self.next_state = CLOSED
         
@@ -444,7 +479,9 @@ class Closing(State):
         self.name = self.next_state
 
         if not self.association._recv_messages.empty():
+            self.association.lock.acquire()
             self.msg = self.association._recv_messages.get()
+            self.association.lock.release()
 
             if has_recv_dpa(self.msg):
                 closing_logger.debug(f"Got DPA message from _recv_messages "\

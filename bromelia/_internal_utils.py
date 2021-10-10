@@ -297,3 +297,21 @@ def get_app_ids(apps):
         text += f"{app_name};"
         if index == (len(apps) - 1):
             return text[:-1]
+
+
+def get_app_name(filepath=None):
+    if not filepath:
+        filepath = os.path.join(os.getcwd(), "config.yaml")
+
+    try:
+        if os.path.exists(filepath):
+            config_file = open(filepath, "r")
+            from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
+
+    except Exception as e:
+        logging.exception(f"_convert_file_to_config - exception: {e}")
+
+    if from_config_file["api_version"] != "v1":
+        raise
+
+    return from_config_file["name"]
