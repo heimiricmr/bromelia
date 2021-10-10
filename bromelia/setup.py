@@ -24,6 +24,7 @@ from contextlib import contextmanager
 
 from ._internal_utils import _convert_config_to_connection_obj
 from ._internal_utils import get_app_ids
+from ._internal_utils import application_id_look_up
 from .base import DiameterMessage
 from .config import Config
 from .config import DiameterLogging
@@ -71,16 +72,10 @@ class DiameterAssociation(object):
 
         self._recv_messages = queue.Queue()
         self._send_messages = queue.Queue()
-        self.postprocess_recv_requests = queue.Queue() 
-        self.postprocess_recv_answers = dict() 
+
         self.postprocess_recv_messages = queue.Queue() 
-
-        self.postprocess_recv_requests_ready = threading.Event()
-        self.postprocess_recv_answers_ready = threading.Event()
         self.postprocess_recv_messages_ready = threading.Event()
-
-        self.postprocess_recv_requests_lock = threading.Lock()
-        self.postprocess_recv_answers_lock = threading.Lock()
+        self.postprocess_recv_messages_lock = threading.Lock()
         self.lock = threading.Lock()
 
 
@@ -133,8 +128,9 @@ class DiameterAssociation(object):
 
             self.lock.acquire()
 
-            data_stream = copy.copy(self.transport._recv_data_stream) 
+            data_stream = copy.copy(self.transport._recv_data_stream)
             self.transport._recv_data_stream = b""
+            self.transport._recv_data_available.clear()
 
             diameter_conn_logger.debug("Grabbing data stream from "\
                                        "Transport Layer to Diameter Layer.")
@@ -142,7 +138,15 @@ class DiameterAssociation(object):
             try:
                 msgs = DiameterMessage.load(data_stream)
                 for msg in msgs:
-                    self._recv_messages.put(msg)            
+                    if msg.has_avp("user_name_avp"):
+                        diameter_conn_logger.debug(f"Message from Transport Layer: "\
+                                                   f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                                                   f"{msg.header.get_command_code()}, "\
+                                                   f"{msg.header.hop_by_hop.hex()}, "\
+                                                   f"LEN: {len(msgs)}, "\
+                                                   f"DATA_LENGTH: {len(data_stream)}, "\
+                                                   f"USERNAME: {msg.user_name_avp.data}")
+                    self._recv_messages.put(msg)
                 
                 diameter_conn_logger.debug(f"Found {len(msgs)} Diameter "\
                                            f"Message(s).")
@@ -150,8 +154,6 @@ class DiameterAssociation(object):
                 diameter_conn_logger.exception(f"AVPParsingError has "\
                                                f"been raised due stream: "\
                                                f"{self.transport._recv_data_stream.hex()}")
-
-            self.transport._recv_data_available.clear()
 
             self.lock.release()
 
@@ -162,35 +164,40 @@ class DiameterAssociation(object):
         self.__is_connected()
         self._send_messages.put(msg)
 
+        hop_by_hop = msg.header.hop_by_hop
+
         if isinstance(msg, DiameterRequest):
-            diameter_conn_logger.debug("Diameter Request have been put "\
-                                       "into _send_messages Queue.")
+            diameter_conn_logger.debug(f"[{hop_by_hop.hex()}] Diameter "\
+                                       f"Request have been put into "\
+                                       f"_send_messages Queue.")
 
             key = msg.header.end_to_end.hex()
             self.end_to_end_identifiers.append(key)
 
         elif isinstance(msg, DiameterAnswer):
-            diameter_conn_logger.debug("Diameter Answer have been put "\
-                                       "into _send_messages Queue.")
+            diameter_conn_logger.debug(f"[{hop_by_hop.hex()}] Diameter "\
+                                       f"Answer have been put into "\
+                                       f"_send_messages Queue.")
 
         elif isinstance(msg, DiameterMessage):
             if msg.header.is_request():
-                diameter_conn_logger.debug("Diameter Request have been put "\
-                                           "into _send_messages Queue.")
+                diameter_conn_logger.debug(f"[{hop_by_hop.hex()}] Diameter "\
+                                           f"Message (Request) have been put "\
+                                           f"into _send_messages Queue.")
 
                 key = msg.header.end_to_end.hex()
                 self.end_to_end_identifiers.append(key)
 
             else:
-                diameter_conn_logger.debug("Diameter Answer have been put "\
-                                           "into _send_messages Queue.")
+                diameter_conn_logger.debug(f"[{hop_by_hop.hex()}] Diameter "\
+                                           f"Message (Answer) have been put "\
+                                           f"into _send_messages Queue.")
                 
         self.lock.release()
 
 
     def send_message_from_queue(self):
         self.lock.acquire()
-
         self.__is_connected()
 
         diameter_conn_logger.debug(f"There is/are "\
@@ -201,6 +208,8 @@ class DiameterAssociation(object):
         while not self._send_messages.empty() and \
                 len(stream) <= SEND_BUFFER_MAXIMUM_SIZE:
             msg = self._send_messages.get()
+            diameter_conn_logger.debug(f"[{msg.header.hop_by_hop.hex()}] "\
+                                       f"Preparing message to be sent.")
 
             MESSAGE_LENGTH = len(msg.dump())
 
@@ -211,8 +220,9 @@ class DiameterAssociation(object):
             if isinstance(msg, DiameterRequest):
                 key = msg.header.hop_by_hop.hex()
                 self.pending_requests.update({key: msg})
-                diameter_conn_logger.debug("Diameter Request have been "\
-                                           "put into Pending Request Queue.")
+                diameter_conn_logger.debug(f"[{msg.header.hop_by_hop.hex()}] "\
+                                           f"Diameter Request have been "\
+                                           f"put into Pending Request Queue.")
     
             stream += msg.dump()
 
@@ -230,48 +240,68 @@ class DiameterAssociation(object):
                 while not self._stop_threads and self.transport:
                     self.transport.write_mode_on.wait()
                     if not self.transport.is_write_mode():
-                        diameter_conn_logger.debug("Transport Layer is back "\
-                                                   "in WRITE mode, so we can "\
-                                                   "send data stream.")
+                        diameter_conn_logger.debug("Transport Layer is not in "\
+                                                   "WRITE mode again, so we "\
+                                                   "can send data stream.")
     
                         self.transport._set_selector_events_mask("rw", stream)
+                        
+                        # maybe include a verification here before the "break" if a given message has been sent from transport layer.
                         break
+
 
         self.lock.release()
 
 
-    def get_request(self):
+    def get_message(self):
         while not self._stop_threads:
-            self.postprocess_recv_requests_ready.wait()
+            if self.postprocess_recv_messages.empty():
+                self.postprocess_recv_messages_ready.wait()
+                diameter_conn_logger.debug("Got go ahead for "\
+                                           "postprocess_recv_messages_ready")
+            else:
+                diameter_conn_logger.debug("No need to wait for go ahead for "\
+                                           "postprocess_recv_messages_ready")
     
-            while not self.postprocess_recv_requests.empty():
-                self.postprocess_recv_requests_ready.clear()
-                self.postprocess_recv_requests_lock.release()
+            self.lock.acquire()
+            diameter_conn_logger.debug("Acquired DiameterAssociation lock")
 
-                return self.postprocess_recv_requests.get()
-        return None
+            self.postprocess_recv_messages_lock.acquire()
+            message = self.postprocess_recv_messages.get()
+            self.postprocess_recv_messages_lock.release()
 
+            if message.has_avp("user_name_avp"):
+                diameter_conn_logger.debug(f"Message from "\
+                                           f"postprocess_recv_messages Queue: "\
+                                           f"{application_id_look_up(message.header.application_id)[0]}, "\
+                                           f"{message.header.get_command_code()}, "\
+                                           f"{message.header.is_request()}, "\
+                                           f"{message.header.hop_by_hop.hex()}, "\
+                                           f"{len(message)}, "\
+                                           f"{message.user_name_avp.data}")
+            else:
+                diameter_conn_logger.debug(f"Message from "\
+                                           f"postprocess_recv_messages Queue: "\
+                                           f"{application_id_look_up(message.header.application_id)[0]}, "\
+                                           f"{message.header.get_command_code()}, "\
+                                           f"{message.header.is_request()}, "\
+                                           f"{message.header.hop_by_hop.hex()}, "\
+                                           f"{len(message)}")
 
-    def get_answer_from_request(self, msg):
-        end_to_end_key = msg.header.end_to_end.hex()
-        hop_by_hop_key = msg.header.hop_by_hop.hex()
+            self.postprocess_recv_messages_ready.clear()
+            diameter_conn_logger.debug("Cleared go ahead for "\
+                                       "postprocess_recv_messages_ready")
 
-        while not self._stop_threads:
-            self.postprocess_recv_answers_ready.wait()
-            self.postprocess_recv_answers_lock.acquire()
-            self.postprocess_recv_answers_ready.clear()
+            self.lock.release()
+            diameter_conn_logger.debug("Released DiameterAssociation lock")
 
-            if hop_by_hop_key in self.postprocess_recv_answers:
-                answer = self.postprocess_recv_answers.pop(hop_by_hop_key, None)
-                self.end_to_end_identifiers.remove(end_to_end_key)
-                self.postprocess_recv_answers_lock.release()
-                return answer
+            return message
 
 
     def tracking_events(self):
         try:
             if (not self.transport.events) and (self.transport.tracking_events_count >= self.watchdog_timeout):
-                self._association.put_message_into_send_queue(self.base.dwr)
+                self.put_message_into_send_queue(self.base.dwr)
                 diameter_conn_logger.debug("Generating a DWR message.")
 
                 self.transport.tracking_events_count = 0
@@ -299,14 +329,15 @@ class Diameter:
         }
 
 
-    def __init__(self, debug=False, is_logging=False, config=None):
-        logging.info(f">> debug: {debug}")
-        logging.info(f">> is_logging: {is_logging}")
-        logging.info(f">> config: {config}")
+    def __init__(self,
+                 config=None,
+                 debug=False,
+                 is_logging=False,
+                 app_name=None):
         
-        self.__logging = DiameterLogging(debug, is_logging)
+        self.logging = DiameterLogging(debug, is_logging, app_name)
+        
         self.config = self.make_config(config)
-
         self._association = None
         self._peer_state_machine = None
 
@@ -381,7 +412,11 @@ class Diameter:
     def send_message(self, msg, avoid=True):    
         if isinstance(msg, DiameterRequest):
             diameter_logger.debug(f"External app wants to send a Diameter "\
-                                  f"Request Message: {msg}")
+                                  f"Request: "\
+                                  f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                                  f"{msg.header.get_command_code()}, "\
+                                  f"{msg.header.hop_by_hop.hex()}, "\
+                                  f"LEN: {len(msg)}")
 
             if is_base_request(msg):
                 raise DiameterApplicationError("Cannot send a Base protocol "\
@@ -389,11 +424,15 @@ class Diameter:
 
             self._association.put_message_into_send_queue(msg)
             if not avoid:
-                return self._association.get_answer_from_request(msg)
+                return self._association.get_message(msg)
 
         elif isinstance(msg, DiameterAnswer):
             diameter_logger.debug(f"External app wants to send a Diameter "\
-                                  f"Answer Message: {msg}")
+                                  f"Answer: "\
+                                  f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                                  f"{msg.header.get_command_code()}, "\
+                                  f"{msg.header.hop_by_hop.hex()}, "\
+                                  f"LEN: {len(msg)}")
 
             if is_base_answer(msg):
                 raise DiameterApplicationError("Cannot send a Base protocol "\
@@ -426,7 +465,7 @@ class Diameter:
 
 
     def get_message(self):
-        return self._association.get_request()
+        return self._association.get_message()
 
 
     @contextmanager

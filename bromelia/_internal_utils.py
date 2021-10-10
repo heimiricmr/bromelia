@@ -9,6 +9,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import datetime
 import ipaddress
 import logging
 import os
@@ -297,3 +298,45 @@ def get_app_ids(apps):
         text += f"{app_name};"
         if index == (len(apps) - 1):
             return text[:-1]
+
+
+def get_app_name(filepath=None):
+    if not filepath:
+        filepath = os.path.join(os.getcwd(), "config.yaml")
+
+    try:
+        if os.path.exists(filepath):
+            config_file = open(filepath, "r")
+            from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
+
+    except Exception as e:
+        logging.exception(f"_convert_file_to_config - exception: {e}")
+
+    if from_config_file["api_version"] != "v1":
+        raise
+
+    return from_config_file["name"]
+
+
+def get_logging_filename(app_name=None):
+    if app_name is None:
+        name = "dsa"
+    else:
+        if not isinstance(app_name, str):
+            name = "dsa"
+        else:
+            name = app_name.lower()
+
+    now = datetime.datetime.now()
+
+    year = str(now.year).zfill(2)
+    month = str(now.month).zfill(2)
+    day = str(now.day).zfill(2)
+
+    hour = str(now.hour).zfill(2)
+    minute = str(now.minute).zfill(2)
+    second = str(now.second).zfill(2)
+
+    return f"log-{name}-"\
+           f"{year}-{month}-{day}-{hour}-"\
+           f"{minute}-{second}-UTC3-pid_{os.getpid()}.log"
