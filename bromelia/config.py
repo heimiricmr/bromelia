@@ -66,17 +66,11 @@ class DiameterLogging(object):
                         "[%(thread)d:%(threadName)s] %(module)s [%(name)s] "\
                         "[%(funcName)s]: %(message)s"
 
-
         filename = get_logging_filename(app_name)
-
-
         LOGGING_PATH = os.path.join(CWD, filename)
-        LOGGING_DATE_FMT = "%Y-%m-%d %H:%M:%S,uuu"
-
 
         if is_logging:
             logging.basicConfig(level=LOGGING_LEVEL,
                                 format=LOGGING_FORMAT,
                                 filename=LOGGING_PATH,
-                                datefmt=LOGGING_DATE_FMT,
                                 filemode="a")
