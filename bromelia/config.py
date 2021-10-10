@@ -12,7 +12,9 @@
 import logging
 import os
 
-BASEDIR = os.getcwd()
+from ._internal_utils import get_logging_filename
+
+CWD = os.getcwd()
 
 #: Configs for statemachine.py module
 STATE_MACHINE_TICKER = 0.0001
@@ -52,8 +54,9 @@ class Config(dict):
     def __init__(self, defaults=None):
         dict.__init__(self, defaults or {})
 
+
 class DiameterLogging(object):
-    def __init__(self, debug=False, is_logging=False):
+    def __init__(self, debug=False, is_logging=False, app_name=None):
         if debug:
             LOGGING_LEVEL = logging.DEBUG
         else:
@@ -63,8 +66,13 @@ class DiameterLogging(object):
                         "[%(thread)d:%(threadName)s] %(module)s [%(name)s] "\
                         "[%(funcName)s]: %(message)s"
 
-        LOGGING_PATH = os.path.join(BASEDIR, "dsa.log")
+
+        filename = get_logging_filename(app_name)
+
+
+        LOGGING_PATH = os.path.join(CWD, filename)
         LOGGING_DATE_FMT = "%Y-%m-%d %H:%M:%S,uuu"
+
 
         if is_logging:
             logging.basicConfig(level=LOGGING_LEVEL,

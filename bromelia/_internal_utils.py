@@ -9,6 +9,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import datetime
 import ipaddress
 import logging
 import os
@@ -315,3 +316,27 @@ def get_app_name(filepath=None):
         raise
 
     return from_config_file["name"]
+
+
+def get_logging_filename(app_name=None):
+    if app_name is None:
+        name = "dsa"
+    else:
+        if not isinstance(app_name, str):
+            name = "dsa"
+        else:
+            name = app_name.lower()
+
+    now = datetime.datetime.now()
+
+    year = str(now.year).zfill(2)
+    month = str(now.month).zfill(2)
+    day = str(now.day).zfill(2)
+
+    hour = str(now.hour).zfill(2)
+    minute = str(now.minute).zfill(2)
+    second = str(now.second).zfill(2)
+
+    return f"log-{name}-"\
+           f"{year}-{month}-{day}-{hour}-"\
+           f"{minute}-{second}-UTC3-pid_{os.getpid()}.log"

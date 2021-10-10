@@ -329,8 +329,14 @@ class Diameter:
         }
 
 
-    def __init__(self, debug=False, is_logging=False, config=None):
-        self.__logging = DiameterLogging(debug, is_logging)
+    def __init__(self,
+                 config=None,
+                 debug=False,
+                 is_logging=False,
+                 app_name=None):
+        
+        self.logging = DiameterLogging(debug, is_logging, app_name)
+        
         self.config = self.make_config(config)
         self._association = None
         self._peer_state_machine = None

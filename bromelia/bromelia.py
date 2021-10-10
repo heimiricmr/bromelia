@@ -282,7 +282,8 @@ class Bromelia:
         for config in self.configs:
           app = Diameter(config=config, 
                          debug=debug, 
-                         is_logging=is_logging)
+                         is_logging=is_logging,
+                         app_name=self.app_name)
           apps.append(app)
 
         return apps
@@ -445,18 +446,18 @@ class Bromelia:
         logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"
 
         callback_function = self.routes[application_id][command_code]
-        bromelia_logger.debug(f"[{logging_info}] {callback_function}")
+        bromelia_logger.debug(f"{logging_info} {callback_function}")
 
         try:
             answer = callback_function(request)
 
         except Exception as e:
-            bromelia_logger.exception(f"[{logging_info}] Error has been "\
+            bromelia_logger.exception(f"{logging_info} Error has been "\
                                       f"raised in callback_function: {e.args}")
             answer = None
 
         if not isinstance(answer, DiameterAnswer):
-            bromelia_logger.exception(f"[{logging_info}] There is no answer "\
+            bromelia_logger.exception(f"{logging_info} There is no answer "\
                                       f"processed to be sent. We are sending "\
                                       f"UNABLE_TO_COMPLY")
 
@@ -480,7 +481,7 @@ class Bromelia:
                 answer.pop("result_code_avp")
 
 
-        bromelia_logger.debug(f"[{logging_info}] Sending answer")
+        bromelia_logger.debug(f"{logging_info} Sending answer")
         self.send_message(answer)
 
 
