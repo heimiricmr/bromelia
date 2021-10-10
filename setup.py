@@ -22,7 +22,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=bromelia.__url__,
-    download_url="https://github.com/heimiricmr/bromelia/releases/tag/v0.1",
+    download_url="https://github.com/heimiricmr/bromelia/releases/tag/v0.2.0",
     packages=setuptools.find_packages(),
     include_package_data=True,
     keywords=[
