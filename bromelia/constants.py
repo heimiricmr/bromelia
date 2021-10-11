@@ -85,10 +85,17 @@ EXPERIMENTAL_RESULT_AVP_CODE = convert_to_4_bytes(297)                  # OK
 EXPERIMENTAL_RESULT_CODE_AVP_CODE = convert_to_4_bytes(298)
 INBAND_SECURITY_ID_AVP_CODE = convert_to_4_bytes(299)
 MIP_HOME_AGENT_HOST_AVP_CODE = convert_to_4_bytes(348)
+CC_REQUEST_NUMBER_AVP_CODE = convert_to_4_bytes(415)
+CC_REQUEST_TYPE_AVP_CODE = convert_to_4_bytes(416)
+RATING_GROUP_AVP_CODE = convert_to_4_bytes(432)
+SERVICE_IDENTIFIER_AVP_CODE = convert_to_4_bytes(439)
 SUBSCRIPTION_ID_AVP_CODE = convert_to_4_bytes(443)
 SUBSCRIPTION_ID_DATA_AVP_CODE = convert_to_4_bytes(444)
 SUBSCRIPTION_ID_TYPE_AVP_CODE = convert_to_4_bytes(450)
 RESERVATION_PRIORITY_AVP_CODE = convert_to_4_bytes(458)                 # TBT Rx
+USER_EQUIPMENT_INFO_AVP_CODE = convert_to_4_bytes(458)
+USER_EQUIPMENT_INFO_TYPE_AVP_CODE = convert_to_4_bytes(459)
+USER_EQUIPMENT_INFO_VALUE_AVP_CODE = convert_to_4_bytes(460)
 EAP_PAYLOAD_AVP_CODE = convert_to_4_bytes(462)
 EAP_MASTER_SESSION_KEY_AVP_CODE = convert_to_4_bytes(464)
 ACCOUNTING_RECORD_TYPE_AVP_CODE = convert_to_4_bytes(480)               # OK
@@ -98,6 +105,7 @@ MIP6_AGENT_INFO_AVP_CODE = convert_to_4_bytes(486)
 SERVICE_SELECTION_AVP_CODE = convert_to_4_bytes(493)
 ABORT_CAUSE_AVP_CODE = convert_to_4_bytes(500)                          # TBT Rx
 ACCESS_NETWORK_CHARGING_ADDRESS_AVP_CODE = convert_to_4_bytes(501)
+ACCESS_NETWORK_CHARGING_IDENTIFIER_VALUE_AVP_CODE = convert_to_4_bytes(503)
 AF_APPLICATION_IDENTIFIER_AVP_CODE = convert_to_4_bytes(504)            # TBT Rx
 AF_CHARGING_IDENTIFIER_AVP_CODE = convert_to_4_bytes(505)               # TBT Rx
 MOBILE_NODE_IDENTIFIER_AVP_CODE = convert_to_4_bytes(506)
@@ -130,16 +138,36 @@ INTEGRITY_KEY_AVP_CODE = convert_to_4_bytes(626)						# OK
 SUPPORTED_FEATURES_AVP_CODE = convert_to_4_bytes(628)
 FEATURE_LIST_ID_AVP_CODE = convert_to_4_bytes(629)
 FEATURE_LIST_AVP_CODE = convert_to_4_bytes(630)
+BEARER_USAGE_AVP_CODE = convert_to_4_bytes(1000)
+CHARGING_RULE_INSTALL_AVP_CODE = convert_to_4_bytes(1001)
+CHARGING_RULE_DEFINITION_AVP_CODE = convert_to_4_bytes(1003)
+CHARGING_RULE_NAME_AVP_CODE = convert_to_4_bytes(1005)
+EVENT_TRIGGER_AVP_CODE = convert_to_4_bytes(1006)
+METERING_METHOD_AVP_CODE = convert_to_4_bytes(1007)
+OFFLINE_AVP_CODE = convert_to_4_bytes(1008)
+ONLINE_AVP_CODE = convert_to_4_bytes(1009)
 PRECEDENCE_AVP_CODE = convert_to_4_bytes(1010)                          # TBT Rx
 REPORTING_LEVEL_AVP_CODE = convert_to_4_bytes(1011)                     # TBT Rx
+QOS_INFORMATION_AVP_CODE = convert_to_4_bytes(1016)
+CHARGING_RULE_REPORT_AVP_CODE = convert_to_4_bytes(1018)
+PCC_RULE_STATUS_AVP_CODE = convert_to_4_bytes(1019)
+ACCESS_NETWORK_CHARGING_IDENTIFIER_GX_AVP_CODE = convert_to_4_bytes(1022)
+NETWORK_REQUEST_SUPPORT_AVP_CODE = convert_to_4_bytes(1024)
+GUARANTEED_BITRATE_DL_AVP_CODE = convert_to_4_bytes(1025)
+GUARANTEED_BITRATE_UL_AVP_CODE = convert_to_4_bytes(1026)
 IP_CAN_TYPE_AVP_CODE = convert_to_4_bytes(1027)                         # TBT Rx
 QOS_CLASS_IDENTIFIER_AVP_CODE = convert_to_4_bytes(1028)
+RULE_FAILURE_CODE_AVP_CODE = convert_to_4_bytes(1031)
 RAT_TYPE_AVP_CODE = convert_to_4_bytes(1032)
 ALLOCATION_RETENTION_PRIORITY_AVP_CODE = convert_to_4_bytes(1034)
+APN_AGGREGATE_MAX_BITRATE_DL_AVP_CODE = convert_to_4_bytes(1040)
+APN_AGGREGATE_MAX_BITRATE_UL_AVP_CODE = convert_to_4_bytes(1041)
 PRIORITY_LEVEL_AVP_CODE = convert_to_4_bytes(1046)
 PRE_EMPTION_CAPABILITY_AVP_CODE = convert_to_4_bytes(1047)              # TBT
 PRE_EMPTION_VULNERABILITY_AVP_CODE = convert_to_4_bytes(1048)           # TBT
+DEFAULT_EPS_BEARER_QOS_AVP_CODE = convert_to_4_bytes(1049)
 AN_GW_ADDRESS_AVP_CODE = convert_to_4_bytes(1050)                       # TBT Rx
+FLOW_INFORMATION_AVP_CODE = convert_to_4_bytes(1058)
 CHARGING_CORRELATION_INDICATOR_AVP_CODE = convert_to_4_bytes(1073)      # TBT Rx
 TERMINAL_INFORMATION_AVP_CODE = convert_to_4_bytes(1401)
 IMEI_AVP_CODE = convert_to_4_bytes(1402)
@@ -172,6 +200,7 @@ CAPABILITIES_EXCHANGE_MESSAGE = convert_to_3_bytes(257)
 RE_AUTH_MESSAGE = convert_to_3_bytes(258)
 AA_MESSAGE = convert_to_3_bytes(265)
 DIAMETER_EAP_MESSAGE = convert_to_3_bytes(268)
+CC_MESSAGE = convert_to_3_bytes(272)
 ABORT_SESSION_MESSAGE = convert_to_3_bytes(274)
 SESSION_TERMINATION_MESSAGE = convert_to_3_bytes(275)
 DEVICE_WATCHDOG_MESSAGE = convert_to_3_bytes(280)
@@ -599,6 +628,142 @@ ABORT_CAUSE_INSUFFICIENT_SERVER_RESOURCES = convert_to_4_bytes(1)
 ABORT_CAUSE_INSUFFICIENT_BEARER_RESOURCES = convert_to_4_bytes(2)
 ABORT_CAUSE_PS_TO_CS_HANDOVER = convert_to_4_bytes(3)
 ABORT_CAUSE_SPONSORED_DATA_CONNECTIVITY_DISALLOWED = convert_to_4_bytes(4)
+
+#: List of CC-Request-Type AVP values.
+#: For more information, please refer to Section 8.3 of IETF RFC 8506.
+CC_REQUEST_TYPE_INITIAL_REQUEST = convert_to_4_bytes(1)
+CC_REQUEST_TYPE_UPDATE_REQUEST = convert_to_4_bytes(2)
+CC_REQUEST_TYPE_TERMINATION_REQUEST = convert_to_4_bytes(3)
+CC_REQUEST_TYPE_EVENT_REQUEST = convert_to_4_bytes(4)
+
+#: List of User-Equipment-Info-Type AVP values.
+#: For more information, please refer to Section 8.50 of IETF RFC 8506.
+USER_EQUIPMENT_INFO_TYPE_IMEISV = convert_to_4_bytes(0)
+USER_EQUIPMENT_INFO_TYPE_MAC = convert_to_4_bytes(1)
+USER_EQUIPMENT_INFO_TYPE_EUI64 = convert_to_4_bytes(2)
+USER_EQUIPMENT_INFO_TYPE_MODIFIED_EUI64 = convert_to_4_bytes(3)
+
+#: List of Bearer-Usage AVP values.
+#: For more information, please refer to Section 5.3.1 of 
+# ETSI TS 129 212 V15.3.0 (2018-07).
+BEARER_USAGE_GENERAL = convert_to_4_bytes(0)
+BEARER_USAGE_SIGNALLING = convert_to_4_bytes(1)
+
+#: List of Event-Trigger AVP values.
+#: For more information, please refer to Section 5.3.7 of 
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+EVENT_TRIGGER_SGSN_CHANGE = convert_to_4_bytes(0)
+EVENT_TRIGGER_QOS_CHANGE = convert_to_4_bytes(1)
+EVENT_TRIGGER_RAT_CHANGE = convert_to_4_bytes(2)
+EVENT_TRIGGER_TFT_CHANGE = convert_to_4_bytes(3)
+EVENT_TRIGGER_PLMN_CHANGE = convert_to_4_bytes(4)
+EVENT_TRIGGER_LOSS_OF_BEARER = convert_to_4_bytes(5)
+EVENT_TRIGGER_RECOVERY_OF_BEARER = convert_to_4_bytes(6)
+EVENT_TRIGGER_IP_CAN_CHANGE = convert_to_4_bytes(7)
+EVENT_TRIGGER_QOS_CHANGE_EXCEEDING_AUTHORIZATION = convert_to_4_bytes(11)
+EVENT_TRIGGER_RAI_CHANGE = convert_to_4_bytes(12)
+EVENT_TRIGGER_USER_LOCATION_CHANGE = convert_to_4_bytes(13)
+EVENT_TRIGGER_NO_EVENT_TRIGGERS = convert_to_4_bytes(14)
+EVENT_TRIGGER_OUT_OF_CREDIT = convert_to_4_bytes(15)
+EVENT_TRIGGER_REALLOCATION_OF_CREDIT = convert_to_4_bytes(16)
+EVENT_TRIGGER_REVALIDATION_TIMEOUT = convert_to_4_bytes(17)
+EVENT_TRIGGER_UE_IP_ADDRESS_ALLOCATE = convert_to_4_bytes(18)
+EVENT_TRIGGER_UE_IP_ADDRESS_RELEASE = convert_to_4_bytes(19)
+EVENT_TRIGGER_DEFAULT_EPS_BEARER_QOS_CHANGE = convert_to_4_bytes(20)
+EVENT_TRIGGER_AN_GW_CHANGE = convert_to_4_bytes(21)
+EVENT_TRIGGER_SUCCESSFUL_RESOURCE_ALLOCATION = convert_to_4_bytes(22)
+EVENT_TRIGGER_RESOURCE_MODIFICATION_REQUEST = convert_to_4_bytes(23)
+EVENT_TRIGGER_PGW_TRACE_CONTROL = convert_to_4_bytes(24)
+EVENT_TRIGGER_UE_TIME_ZONE_CHANGE = convert_to_4_bytes(25)
+EVENT_TRIGGER_TAI_CHANGE = convert_to_4_bytes(26)
+EVENT_TRIGGER_ECGI_CHANGE = convert_to_4_bytes(27)
+EVENT_TRIGGER_CHARGING_CORRELATION_EXCHANGE = convert_to_4_bytes(28)
+EVENT_TRIGGER_APN_AMBR_MODIFICATION_FAILURE = convert_to_4_bytes(29)
+EVENT_TRIGGER_USER_CSG_INFORMATION_CHANGE = convert_to_4_bytes(30)
+EVENT_TRIGGER_USAGE_REPORT = convert_to_4_bytes(33)
+EVENT_TRIGGER_DEFAULT_EPS_BEARER_QOS_MODIFICATION_FAILURE = convert_to_4_bytes(34)
+EVENT_TRIGGER_USER_CSG_HYBRID_SUBSCRIBED_INFORMATION_CHANGE = convert_to_4_bytes(35)
+EVENT_TRIGGER_USER_CSG_HYBRID_UNSUBSCRIBED_INFORMATION_CHANGE = convert_to_4_bytes(36)
+EVENT_TRIGGER_ROUTING_RULE_CHANGE = convert_to_4_bytes(37)
+EVENT_TRIGGER_APPLICATION_START = convert_to_4_bytes(39)
+EVENT_TRIGGER_APPLICATION_STOP = convert_to_4_bytes(40)
+EVENT_TRIGGER_CS_TO_PS_HANDOVER = convert_to_4_bytes(42)
+EVENT_TRIGGER_UE_LOCAL_IP_ADDRESS_CHANGE = convert_to_4_bytes(43)
+EVENT_TRIGGER_HENB_LOCAL_IP_ADDRESS_CHANGE = convert_to_4_bytes(44)
+EVENT_TRIGGER_ACCESS_NETWORK_INFO_REPORT = convert_to_4_bytes(45)
+EVENT_TRIGGER_CREDIT_MANAGEMENT_SESSION_FAILURE = convert_to_4_bytes(46)
+EVENT_TRIGGER_DEFAULT_QOS_CHANGE = convert_to_4_bytes(47)
+EVENT_TRIGGER_CHANGE_OF_UE_PRESENCE_IN_PRESENCE_REPORTING_AREA_REPORT = convert_to_4_bytes(48)
+EVENT_TRIGGER_ADDITION_OF_ACCESS = convert_to_4_bytes(49)
+EVENT_TRIGGER_REMOVAL_OF_ACCESS = convert_to_4_bytes(50)
+EVENT_TRIGGER_UNAVAILABILITY_OF_ACCESS = convert_to_4_bytes(51)
+EVENT_TRIGGER_AVAILABILITY_OF_ACCESS = convert_to_4_bytes(52)
+EVENT_TRIGGER_RESOURCE_RELEASE = convert_to_4_bytes(53)
+EVENT_TRIGGER_ENODEB_CHANGE = convert_to_4_bytes(54)
+EVENT_TRIGGER_3GPP_PS_DATA_OFF_CHANGE = convert_to_4_bytes(55)
+
+#: List of Metering-Method AVP values.
+#: For more information, please refer to Section 5.3.8 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+METERING_METHOD_DURATION = convert_to_4_bytes(0)
+METERING_METHOD_VOLUME = convert_to_4_bytes(1)
+METERING_METHOD_DURATION_VOLUME = convert_to_4_bytes(2)
+METERING_METHOD_EVENT = convert_to_4_bytes(3)
+
+#: List of Offline AVP values.
+#: For more information, please refer to Section 5.3.9 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+OFFLINE_DISABLE_OFFLINE = convert_to_4_bytes(0)
+OFFLINE_ENABLE_OFFLINE = convert_to_4_bytes(1)
+
+#: List of Online AVP values.
+#: For more information, please refer to Section 5.3.10 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+ONLINE_DISABLE_ONLINE = convert_to_4_bytes(0)
+ONLINE_ENABLE_ONLINE = convert_to_4_bytes(1)
+
+#: List of PCC-Rule-Status AVP values.
+#: For more information, please refer to Section 5.3.19 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+PCC_RULE_STATUS_ACTIVE = convert_to_4_bytes(0)
+PCC_RULE_STATUS_INACTIVE = convert_to_4_bytes(1)
+PCC_RULE_STATUS_TEMPORARILY_INACTIVE = convert_to_4_bytes(2)
+
+#: List of Network-Request-Support AVP values.
+#: For more information, please refer to Section 5.3.24 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+NETWORK_REQUEST_NOT_SUPPORTED = convert_to_4_bytes(0)
+NETWORK_REQUEST_SUPPORTED = convert_to_4_bytes(1)
+
+#: List of Rule-Failure-Code AVP values.
+#: For more information, please refer to Section 5.3.38 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+RULE_FAILURE_CODE_UNKNOWN_RULE_NAME = convert_to_4_bytes(1)
+RULE_FAILURE_CODE_RATING_GROUP_ERROR = convert_to_4_bytes(2)
+RULE_FAILURE_CODE_SERVICE_IDENTIFIER_ERROR = convert_to_4_bytes(3)
+RULE_FAILURE_CODE_GW_PCEF_MALFUNCTION = convert_to_4_bytes(4)
+RULE_FAILURE_CODE_RESOURCES_LIMITATION = convert_to_4_bytes(5)
+RULE_FAILURE_CODE_MAX_NR_BEARERS_REACHED = convert_to_4_bytes(6)
+RULE_FAILURE_CODE_UNKNOWN_BEARER_ID = convert_to_4_bytes(7)
+RULE_FAILURE_CODE_MISSING_BEARER_ID = convert_to_4_bytes(8)
+RULE_FAILURE_CODE_MISSING_FLOW_INFORMATION = convert_to_4_bytes(9)
+RULE_FAILURE_CODE_RESOURCE_ALLOCATION_FAILURE = convert_to_4_bytes(10)
+RULE_FAILURE_CODE_UNSUCCESSFUL_QOS_VALIDATION = convert_to_4_bytes(11)
+RULE_FAILURE_CODE_INCORRECT_FLOW_INFORMATION = convert_to_4_bytes(12)
+RULE_FAILURE_CODE_PS_TO_CS_HANDOVER = convert_to_4_bytes(13)
+RULE_FAILURE_CODE_TDF_APPLICATION_IDENTIFIER_ERROR = convert_to_4_bytes(14)
+RULE_FAILURE_CODE_NO_BEARER_BOUND = convert_to_4_bytes(15)
+RULE_FAILURE_CODE_FILTER_RESTRICTIONS = convert_to_4_bytes(16)
+RULE_FAILURE_CODE_AN_GW_FAILED = convert_to_4_bytes(17)
+RULE_FAILURE_CODE_MISSING_REDIRECT_SERVER_ADDRESS = convert_to_4_bytes(18)
+RULE_FAILURE_CODE_CM_END_USER_SERVICE_DENIED = convert_to_4_bytes(19)
+RULE_FAILURE_CODE_CM_CREDIT_CONTROL_NOT_APPLICABLE = convert_to_4_bytes(20)
+RULE_FAILURE_CODE_CM_AUTHORIZATION_REJECTED = convert_to_4_bytes(21)
+RULE_FAILURE_CODE_CM_USER_UNKNOWN = convert_to_4_bytes(22)
+RULE_FAILURE_CODE_CM_RATING_FAILED = convert_to_4_bytes(23)
+RULE_FAILURE_CODE_ROUTING_RULE_REJECTION = convert_to_4_bytes(24)
+RULE_FAILURE_CODE_UNKNOWN_ROUTING_ACCESS_INFORMATION = convert_to_4_bytes(25)
+RULE_FAILURE_CODE_NO_NBIFOM_SUPPORT = convert_to_4_bytes(26)
 
 #: *************************************************************************************************
 
