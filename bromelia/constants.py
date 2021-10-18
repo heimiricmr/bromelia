@@ -138,6 +138,7 @@ INTEGRITY_KEY_AVP_CODE = convert_to_4_bytes(626)						# OK
 SUPPORTED_FEATURES_AVP_CODE = convert_to_4_bytes(628)
 FEATURE_LIST_ID_AVP_CODE = convert_to_4_bytes(629)
 FEATURE_LIST_AVP_CODE = convert_to_4_bytes(630)
+MSISDN_AVP_CODE = convert_to_4_bytes(701)                               # TBT S6a/S6d
 BEARER_USAGE_AVP_CODE = convert_to_4_bytes(1000)
 CHARGING_RULE_INSTALL_AVP_CODE = convert_to_4_bytes(1001)
 CHARGING_RULE_DEFINITION_AVP_CODE = convert_to_4_bytes(1003)
@@ -169,26 +170,51 @@ DEFAULT_EPS_BEARER_QOS_AVP_CODE = convert_to_4_bytes(1049)
 AN_GW_ADDRESS_AVP_CODE = convert_to_4_bytes(1050)                       # TBT Rx
 FLOW_INFORMATION_AVP_CODE = convert_to_4_bytes(1058)
 CHARGING_CORRELATION_INDICATOR_AVP_CODE = convert_to_4_bytes(1073)      # TBT Rx
+SUBSCRIPTION_DATA_AVP_CODE = convert_to_4_bytes(1400)                   # TBT S6a/S6d
 TERMINAL_INFORMATION_AVP_CODE = convert_to_4_bytes(1401)
 IMEI_AVP_CODE = convert_to_4_bytes(1402)
 SOFTWARE_VERSION_AVP_CODE = convert_to_4_bytes(1403)
 ULR_FLAGS_AVP_CODE = convert_to_4_bytes(1405)
+ULA_FLAGS_AVP_CODE = convert_to_4_bytes(1406)
 VISITED_PLMN_ID_AVP_CODE = convert_to_4_bytes(1407)
+REQUESTED_EUTRAN_AUTHENTICATION_INFO_AVP_CODE = convert_to_4_bytes(1408)        # TBT S6a/S6d
+NUMBER_OF_REQUESTED_VECTORS_AVP_CODE = convert_to_4_bytes(1410)                 # TBT S6a/S6d
+RE_SYNCHRONIZATION_INFO_AVP_CODE = convert_to_4_bytes(1411)                     # TBT S6a/S6d
+IMMEDIATE_RESPONSE_PREFERRED_AVP_CODE = convert_to_4_bytes(1412)                # TBT S6a/S6d
+AUTHENTICATION_INFO_AVP_CODE = convert_to_4_bytes(1413)                         # TBT S6a/S6d
+E_UTRAN_VECTOR_AVP_CODE = convert_to_4_bytes(1414)                              # TBT S6a/S6d
+ITEM_NUMBER_AVP_CODE = convert_to_4_bytes(1419)                                 # TBT S6a/S6d
 CANCELLATION_TYPE_AVP_CODE = convert_to_4_bytes(1420)
 CONTEXT_IDENTIFIER_AVP_CODE = convert_to_4_bytes(1423)
+SUBSCRIBER_STATUS_AVP_CODE = convert_to_4_bytes(1424)                           # TBT S6a/S6d
+ALL_APN_CONFIGURATIONS_INCLUDED_INDICATOR_AVP_CODE = convert_to_4_bytes(1428)   # TBT S6a/S6d
+APN_CONFIGURATION_PROFILE_AVP_CODE = convert_to_4_bytes(1429)                   # TBT S6a/S6d
 APN_CONFIGURATION_AVP_CODE = convert_to_4_bytes(1430)
 EPS_SUBSCRIBED_QOS_PROFILE_AVP_CODE = convert_to_4_bytes(1431)
 VPLMN_DYNAMIC_ADDRESS_ALLOWED_AVP_CODE = convert_to_4_bytes(1432)
+STN_SR_AVP_CODE = convert_to_4_bytes(1433)                                      # TBT S6a/S6d
+ALERT_REASON_AVP_CODE = convert_to_4_bytes(1434)                                # TBT S6a/S6d
 AMBR_AVP_CODE = convert_to_4_bytes(1435)
 PDN_GW_ALLOCATION_TYPE_AVP_CODE = convert_to_4_bytes(1438)
+PUA_FLAGS_AVP_CODE = convert_to_4_bytes(1442)                                   # TBT S6a/S6d
+NOR_FLAGS_AVP_CODE = convert_to_4_bytes(1443)                                   # TBT S6a/S6d
 EQUIPMENT_STATUS_AVP_CODE = convert_to_4_bytes(1445)
+RAND_AVP_CODE = convert_to_4_bytes(1447)                                        # TBT S6a/S6d
+XRES_AVP_CODE = convert_to_4_bytes(1448)                                        # TBT S6a/S6d
+AUTN_AVP_CODE = convert_to_4_bytes(1449)                                        # TBT S6a/S6d
+KASME_AVP_CODE = convert_to_4_bytes(1450)                                       # TBT S6a/S6d
 PDN_TYPE_AVP_CODE = convert_to_4_bytes(1456)
+HOMOGENEOUS_SUPPORT_OF_IMS_VOICE_OVER_PS_SESSION_AVP_CODE = convert_to_4_bytes(1493)    # TBT S6a/S6d
 NON_3GPP_USER_DATA_AVP_CODE = convert_to_4_bytes(1500)
 NON_3GPP_IP_ACCESS_AVP_CODE = convert_to_4_bytes(1501)
 NON_3GPP_IP_ACCESS_APN_AVP_CODE = convert_to_4_bytes(1502)
 AN_TRUSTED_AVP_CODE = convert_to_4_bytes(1503)                          # TBT Rx
+ERROR_DIAGNOSTIC_AVP_CODE = convert_to_4_bytes(1614)                            # TBT S6a/S6d
 UE_SRVCC_CAPABILITY_AVP_CODE = convert_to_4_bytes(1615)
+PUR_FLAGS_AVP_CODE = convert_to_4_bytes(1635)                                   # TBT S6a/S6d
 CLR_FLAGS_AVP_CODE = convert_to_4_bytes(1638)
+AIR_FLAGS_AVP_CODE = convert_to_4_bytes(1679)                                   # TBT S6a/S6d
+UE_USAGE_TYPE_AVP_CODE = convert_to_4_bytes(1680)                               # TBT S6a/S6d
 UE_LOCAL_IP_ADDRESS_AVP_CODE = convert_to_4_bytes(2805)
 SUPPORTED_SERVICES_AVP_CODE = convert_to_4_bytes(3143)
 SUPPORTED_MONITORING_EVENTS_AVP_CODE = convert_to_4_bytes(3144)
@@ -209,7 +235,11 @@ SERVER_ASSIGNMENT_MESSAGE = convert_to_3_bytes(301)
 MULTIMEDIA_AUTH_MESSAGE = convert_to_3_bytes(303)
 REGISTRATION_TERMINATION_MESSAGE = convert_to_3_bytes(304)
 PUSH_PROFILE_MESSAGE = convert_to_3_bytes(305)
+UPDATE_LOCATION_MESSAGE = convert_to_3_bytes(316)                               # TBT S6a/S6d
 CANCEL_LOCATION_MESSAGE = convert_to_3_bytes(317)
+AUTHENTICATION_INFORMATION_MESSAGE = convert_to_3_bytes(318)                    # TBT S6a/S6d
+PURGE_UE_MESSAGE = convert_to_3_bytes(321)                                      # TBT S6a/S6d
+NOTIFY_MESSAGE = convert_to_3_bytes(323)                                        # TBT S6a/S6d
 EC_MESSAGE = convert_to_3_bytes(324)
 
 #: *************************************************************************************************
@@ -764,6 +794,39 @@ RULE_FAILURE_CODE_CM_RATING_FAILED = convert_to_4_bytes(23)
 RULE_FAILURE_CODE_ROUTING_RULE_REJECTION = convert_to_4_bytes(24)
 RULE_FAILURE_CODE_UNKNOWN_ROUTING_ACCESS_INFORMATION = convert_to_4_bytes(25)
 RULE_FAILURE_CODE_NO_NBIFOM_SUPPORT = convert_to_4_bytes(26)
+
+#: List of Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions AVP values.
+#: For more information, please refer to Section 7.3.107 of
+#: ETSI TS 129 272 V15.4.0 (2018-07).
+IMS_VOICE_OVER_PS_NOT_SUPPORTED = convert_to_4_bytes(0)
+IMS_VOICE_OVER_PS_SUPPORTED = convert_to_4_bytes(1)
+
+#: List of Subscriber-Status AVP values.
+#: For more information, please refer to Section 7.3.29 of
+#: ETSI TS 129 272 V15.4.0 (2018-07).
+SUBSCRIBER_STATUS_SERVICE_GRANTED = convert_to_4_bytes(0)
+SUBSCRIBER_STATUS_OPERATOR_DETERMINED_BARRING = convert_to_4_bytes(1)
+
+#: List of All-APN-Configurations-Included-Indicator AVP values.
+#: For more information, please refer to Section 7.3.33 of
+#: ETSI TS 129 272 V15.4.0 (2018-07).
+ALL_APN_CONFIGURATIONS_INCLUDED = convert_to_4_bytes(0)
+MODIFIED_ADDED_APN_CONFIGURATIONS_INCLUDED = convert_to_4_bytes(1)
+
+#: List of Alert-Reason AVP values.
+#: For more information, please refer to Section 7.3.83 of
+#: ETSI TS 129 272 V15.4.0 (2018-07).
+ALERT_REASON_UE_PRESET = convert_to_4_bytes(0)
+ALERT_REASON_UE_MEMORY_AVAILABLE = convert_to_4_bytes(1)
+
+#: List of Error-Diagnostic AVP values.
+#: For more information, please refer to Section 7.3.128 of
+#: ETSI TS 129 272 V15.4.0 (2018-07).
+ERROR_DIAGNOSTIC_GPRS_DATA_SUBSCRIBED = convert_to_4_bytes(0)
+ERROR_DIAGNOSTIC_NO_GPRS_DATA_SUBSCRIBED = convert_to_4_bytes(1)
+ERROR_DIAGNOSTIC_ODB_ALL_APN = convert_to_4_bytes(2)
+ERROR_DIAGNOSTIC_ODB_HPLMN_APN = convert_to_4_bytes(3)
+ERROR_DIAGNOSTIC_ODB_VPLMN_APN = convert_to_4_bytes(4)
 
 #: *************************************************************************************************
 
