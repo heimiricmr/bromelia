@@ -9,8 +9,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from collections import namedtuple
-
 from ._internal_utils import convert_to_integer_from_bytes
 from .constants import *
 
@@ -182,3 +180,70 @@ def is_result_code_error(answer):
         if answer.header.is_error():
             return True
         return False
+
+
+def convert_to_4_length_bit(input):
+    try:
+        return "{:04b}".format(int(input))
+    except ValueError:
+        return None
+
+
+special_chars = { 
+    "*": "1010",
+    "#": "1011",
+    "a": "1100",
+    "b": "1101",
+    "c": "1110",
+}
+
+
+def encode_special_chars_to_tbcd(input):
+    encoded = special_chars.get(input)
+    return encoded if encoded is not None else convert_to_4_length_bit(input)
+
+
+def get_two_bits(input, offset):
+    return input[offset:offset+2]
+
+
+def transform_bits(bits):
+    new_bits = str(encode_special_chars_to_tbcd(bits[0]))
+    new_bits += str(encode_special_chars_to_tbcd(bits[1]))    
+    return str(int(new_bits, 2))
+
+
+def is_special_char(bits):
+    return any(char in bits for char in special_chars.keys())
+
+
+def encode_to_tbcd(input):
+    offset, output = 0, ""
+    input = str(input) if isinstance(input, int) else input
+    
+    while offset < len(input):
+        bits = get_two_bits(input, offset)
+
+        if len(bits) == 2:
+            bits = bits[::-1]
+            bits = transform_bits(bits) if is_special_char(bits) else bits
+            output += bits
+            offset += 2
+        else:
+            bits = "f" + str(bits)
+            output += bits
+            return output
+
+
+def decode_from_tbcd(input):
+    offset, output = 0, ""
+
+    while offset < len(input):
+        bits = get_two_bits(input, offset)
+
+        if "f" not in bits:
+            output += bits[::-1]
+            offset += 2
+        else:
+            output += bits[1]
+            return output
