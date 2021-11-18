@@ -254,9 +254,11 @@ class Bromelia:
         self.configs = _convert_file_to_config(self.config_file, globals())
         self.app_name = get_app_name(self.config_file)
         self.routes = {}
+        self._routes = {}
         self.sessions = {}
         self.g = Global()
-
+        self.testing_answer = None
+        
         self.recv_queues = None
         self.associations = None
 
@@ -380,6 +382,8 @@ class Bromelia:
                     _command_code = {command_code: route_function}
                     self.routes[application_id].update(_command_code)
 
+                self._routes.update({route_function.__name__: route_function})
+
             return inner_function()
         return outer_function
 
@@ -485,10 +489,13 @@ class Bromelia:
         self.send_message(answer)
 
 
-    def send_message(self, message):
+    def send_message(self, message, recv_answer=True):
         application_id = message.header.application_id
         hop_by_hop = message.header.hop_by_hop
 
+        if self.associations is None:
+            return self.testing_answer
+            
         worker = self.associations[application_id]
         logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"
 
@@ -515,7 +522,7 @@ class Bromelia:
         bromelia_logger.debug(f"{logging_info} Just put message into "\
                               f"send_queue Queue and notified send_event Event")
 
-        if message.header.is_request():
+        if message.header.is_request() and recv_answer:
             pending_answer = PendingAnswer()
             worker.pending_answers.update({hop_by_hop: pending_answer})
             bromelia_logger.debug(f"{logging_info} Added Pending answer")
@@ -572,3 +579,7 @@ class Bromelia:
             setattr(self.__dict__[application_string], 
                     short_message_name, 
                     decorated_message(message))
+
+
+    def get_route(self, route_name):
+        return self._routes[route_name]
