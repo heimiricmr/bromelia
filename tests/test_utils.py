@@ -27,50 +27,50 @@ from bromelia.utils import encode_to_tbcd, encode_special_chars_to_tbcd, decode_
 class TestEncodeSpecialCharsToTbcd(unittest.TestCase):
     def test__encode_special_chars_to_tbcd__valid_entries_1(self):
         encoded = encode_special_chars_to_tbcd("*")
-        self.assertEquals(encoded, "1010")
+        self.assertEqual(encoded, "1010")
 
         encoded = encode_special_chars_to_tbcd("#")
-        self.assertEquals(encoded, "1011")
+        self.assertEqual(encoded, "1011")
 
         encoded = encode_special_chars_to_tbcd("a")
-        self.assertEquals(encoded, "1100")
+        self.assertEqual(encoded, "1100")
 
         encoded = encode_special_chars_to_tbcd("b")
-        self.assertEquals(encoded, "1101")
+        self.assertEqual(encoded, "1101")
 
         encoded = encode_special_chars_to_tbcd("c")
-        self.assertEquals(encoded, "1110")
+        self.assertEqual(encoded, "1110")
 
     def test__encode_special_chars_to_tbcd__valid_entries_2(self):
         encoded = encode_special_chars_to_tbcd(1)
-        self.assertEquals(encoded, "0001")
+        self.assertEqual(encoded, "0001")
 
         encoded = encode_special_chars_to_tbcd(2)
-        self.assertEquals(encoded, "0010")
+        self.assertEqual(encoded, "0010")
 
         encoded = encode_special_chars_to_tbcd(3)
-        self.assertEquals(encoded, "0011")
+        self.assertEqual(encoded, "0011")
 
         encoded = encode_special_chars_to_tbcd(4)
-        self.assertEquals(encoded, "0100")
+        self.assertEqual(encoded, "0100")
 
         encoded = encode_special_chars_to_tbcd(5)
-        self.assertEquals(encoded, "0101")
+        self.assertEqual(encoded, "0101")
 
         encoded = encode_special_chars_to_tbcd(6)
-        self.assertEquals(encoded, "0110")
+        self.assertEqual(encoded, "0110")
 
         encoded = encode_special_chars_to_tbcd(7)
-        self.assertEquals(encoded, "0111")
+        self.assertEqual(encoded, "0111")
 
         encoded = encode_special_chars_to_tbcd(8)
-        self.assertEquals(encoded, "1000")
+        self.assertEqual(encoded, "1000")
 
         encoded = encode_special_chars_to_tbcd(9)
-        self.assertEquals(encoded, "1001")
+        self.assertEqual(encoded, "1001")
 
         encoded = encode_special_chars_to_tbcd(10)
-        self.assertEquals(encoded, "1010")
+        self.assertEqual(encoded, "1010")
 
     def test__encode_special_chars_to_tbcd__invalid_entries_1(self):
         encoded = encode_special_chars_to_tbcd("d")
@@ -96,19 +96,19 @@ class TestEncodeSpecialCharsToTbcd(unittest.TestCase):
 class TestEncodeToTbcd(unittest.TestCase):
     def test__encode_to_tbcd__1(self):
         encoded = encode_to_tbcd("5521993082672")
-        self.assertEquals(encoded, "551299032876f2")
+        self.assertEqual(encoded, "551299032876f2")
 
     def test__encode_to_tbcd__2(self):
         encoded = encode_to_tbcd("5521999999999")
-        self.assertEquals(encoded, "551299999999f9")
+        self.assertEqual(encoded, "551299999999f9")
 
 
 class TestDecodeFromTbcd(unittest.TestCase):
     def test__decode_from_tbcd__1(self):
         decoded = decode_from_tbcd("551299032876f2")
-        self.assertEquals(decoded, "5521993082672")
+        self.assertEqual(decoded, "5521993082672")
 
     def test__decode_from_tbcd__2(self):
         decoded = decode_from_tbcd("551299999999f9")
-        self.assertEquals(decoded, "5521999999999")
+        self.assertEqual(decoded, "5521999999999")
 

@@ -2835,7 +2835,7 @@ class TestResultCodeAVP(unittest.TestCase):
 class TestProductNameAVP(unittest.TestCase):
     def test_product_name_avp__default(self):
         avp = ProductNameAVP()
-        ref = "0000010d0000001c507974686f6e2062726f6d656c69612076302e31"
+        ref = "0000010d0000001e507974686f6e2062726f6d656c69612076302e322e300000"
         self.assertEqual(avp.dump().hex(), ref)
 
     def test_product_name_avp__repr_dunder(self):
