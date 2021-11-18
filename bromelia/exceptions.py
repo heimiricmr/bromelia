@@ -36,6 +36,12 @@ class DiameterAvpError(BaseException):
     """ A Diameter AVP error occurred."""
     pass
 
+
+class DiameterTypeError(BaseException):
+    """ A Diameter Type error occurred """
+    pass
+
+
 class DiameterHeaderAttributeValueError(BaseException):
     """A valid attribute value is required."""
     pass

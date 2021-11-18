@@ -134,6 +134,112 @@ class Unsigned32Type(BaseDataType):
             self._data = data
 
 
+    def is_bit_set(self, bit):
+        if 0 <= bit < 8:
+            return self.data[3] & (2 ** bit) !=0
+        elif 8 <= bit < 16:
+            return self.data[2] & (2 ** (bit % 8)) !=0
+        elif 16 <= bit < 24:
+            return self.data[1] & (2 ** (bit % 8)) !=0
+        elif 24 <= bit < 32:
+            return self.data[0] & (2 ** (bit % 8)) !=0
+        else:
+            raise DiameterTypeError("Bit index out of range")
+
+
+    def set_bit(self, bit):
+        if self.is_bit_set(bit):
+            raise DiameterTypeError("Unable to set an already set bit")
+
+        if 0 <= bit < 8:
+            data = self.data[3] | 2 ** bit
+            self.data = bytes(bytearray([self.data[0], self.data[1], self.data[2], data]))
+        elif 8 <= bit < 16:
+            data = self.data[2] | 2 ** (bit % 8) 
+            self.data = bytes(bytearray([self.data[0], self.data[1], data, self.data[3]]))
+        elif 16 <= bit < 24:
+            data = self.data[1] | 2 ** (bit % 8)
+            self.data = bytes(bytearray([self.data[0], data, self.data[2], self.data[3]]))
+        elif 24 <= bit < 32:
+            data = self.data[0] | 2 ** (bit % 8)
+            self.data = bytes(bytearray([data, self.data[1], self.data[2], self.data[3]]))
+
+        return self.data
+
+
+    def unset_bit(self, bit):
+        if not self.is_bit_set(bit):
+            raise DiameterTypeError("Unable to unset an already unset bit")
+
+        if 0 <= bit < 8:
+            data = self.data[3] ^ 2 ** bit
+            self.data = bytes(bytearray([self.data[0], self.data[1], self.data[2], data]))
+        elif 8 <= bit < 16:
+            data = self.data[2] ^ 2 ** (bit % 8) 
+            self.data = bytes(bytearray([self.data[0], self.data[1], data, self.data[3]]))
+        elif 16 <= bit < 24:
+            data = self.data[1] ^ 2 ** (bit % 8)
+            self.data = bytes(bytearray([self.data[0], data, self.data[2], self.data[3]]))
+        elif 24 <= bit < 32:
+            data = self.data[0] ^ 2 ** (bit % 8)
+            self.data = bytes(bytearray([data, self.data[1], self.data[2], self.data[3]]))
+
+        return self.data
+
+
+    def is_bit_set(self, bit):
+        if 0 <= bit < 8:
+            return self.data[3] & (2 ** bit) !=0
+        elif 8 <= bit < 16:
+            return self.data[2] & (2 ** (bit % 8)) !=0
+        elif 16 <= bit < 24:
+            return self.data[1] & (2 ** (bit % 8)) !=0
+        elif 24 <= bit < 32:
+            return self.data[0] & (2 ** (bit % 8)) !=0
+        else:
+            raise DiameterTypeError("Bit index out of range")
+
+
+    def set_bit(self, bit):
+        if self.is_bit_set(bit):
+            raise DiameterTypeError("Unable to set an already set bit")
+
+        if 0 <= bit < 8:
+            data = self.data[3] | 2 ** bit
+            self.data = bytes(bytearray([self.data[0], self.data[1], self.data[2], data]))
+        elif 8 <= bit < 16:
+            data = self.data[2] | 2 ** (bit % 8) 
+            self.data = bytes(bytearray([self.data[0], self.data[1], data, self.data[3]]))
+        elif 16 <= bit < 24:
+            data = self.data[1] | 2 ** (bit % 8)
+            self.data = bytes(bytearray([self.data[0], data, self.data[2], self.data[3]]))
+        elif 24 <= bit < 32:
+            data = self.data[0] | 2 ** (bit % 8)
+            self.data = bytes(bytearray([data, self.data[1], self.data[2], self.data[3]]))
+
+        return self.data
+
+
+    def unset_bit(self, bit):
+        if not self.is_bit_set(bit):
+            raise DiameterTypeError("Unable to unset an already unset bit")
+
+        if 0 <= bit < 8:
+            data = self.data[3] ^ 2 ** bit
+            self.data = bytes(bytearray([self.data[0], self.data[1], self.data[2], data]))
+        elif 8 <= bit < 16:
+            data = self.data[2] ^ 2 ** (bit % 8) 
+            self.data = bytes(bytearray([self.data[0], self.data[1], data, self.data[3]]))
+        elif 16 <= bit < 24:
+            data = self.data[1] ^ 2 ** (bit % 8)
+            self.data = bytes(bytearray([self.data[0], data, self.data[2], self.data[3]]))
+        elif 24 <= bit < 32:
+            data = self.data[0] ^ 2 ** (bit % 8)
+            self.data = bytes(bytearray([data, self.data[1], self.data[2], self.data[3]]))
+
+        return self.data
+
+
 class Unsigned64Type(BaseDataType):
     @abc.abstractmethod
     def __init__(self, data, vendor_id=None):
