@@ -61,7 +61,7 @@ class FeatureListAVP(DiameterAVP, Unsigned32Type):
     code = FEATURE_LIST_AVP_CODE
     vendor_id = VENDOR_ID_3GPP
 
-    def __init__(self, data):
+    def __init__(self, data=convert_to_4_bytes(0)):
         DiameterAVP.__init__(self, 
                              FeatureListAVP.code,
                              FeatureListAVP.vendor_id)
@@ -630,7 +630,7 @@ class ApnConfigurationProfileAVP(DiameterAVP, GroupedType):
                     # "additional_context_identifier": AdditionalContextIdentifierAVP,
     }
 
-    def __init__(self, data):        
+    def __init__(self, data):
         DiameterAVP.__init__(self, 
                              ApnConfigurationProfileAVP.code,
                              ApnConfigurationProfileAVP.vendor_id)
@@ -656,6 +656,24 @@ class UeUsageTypeAVP(DiameterAVP, Unsigned32Type):
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
+class OperatorDeterminedBarringAVP(DiameterAVP, Unsigned32Type):
+    """Implementation of Operator-Determined-Barring AVP in Section 7.3.30 of 
+    ETSI TS 129 272 V15.10.0 (2020-01).
+
+    The Operator-Determined-Barring AVP (AVP Code 1425) is of type Unsigned32.
+    """
+    code = OPERATOR_DETERMINED_BARRING_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data=convert_to_4_bytes(0)):
+        DiameterAVP.__init__(self, 
+                             OperatorDeterminedBarringAVP.code,
+                             OperatorDeterminedBarringAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
 class SubscriptionDataAVP(DiameterAVP, GroupedType):
     """Implementation of Subscription-Data AVP in Section 7.3.2 of 
     ETSI TS 129 272 V15.4.0 (2018-07).
@@ -666,13 +684,13 @@ class SubscriptionDataAVP(DiameterAVP, GroupedType):
     vendor_id = VENDOR_ID_3GPP
 
     optionals = {
-                    # "subscriber_status": SubscriptionStatusAVP,
+                    "subscriber_status": SubscriberStatusAVP,
                     "msisdn": MsisdnAVP,
                     # "a_msisdn": AMsisdnAVP,
                     "stn_sr": StnSrAVP,
                     # "ics_indicator": IcsIndicatorAVP,
                     # "network_access_mode": NetworkAccessModeAVP,
-                    # "operator_determined_barring": OperatorDeterminedBarringAVP,
+                    "operator_determined_barring": OperatorDeterminedBarringAVP,
                     # "hplmn_odb": HplmnOdbAVP,
                     # "regional_subscription_zone_code": RegionalSubscriptionZoneCodeAVP,
                     # "access_restriction_data": AccessRestrictionDataAVP,

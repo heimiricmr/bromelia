@@ -145,6 +145,21 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(software_version_avp.data.hex(), "3035")
         self.assertEqual(software_version_avp.__repr__(), "<Diameter AVP: 1403 [Software-Version] VENDOR, MANDATORY>")
 
+    def test_diameter_avp__load_staticmethod__parsing_operator_determined_barring_avp_stream(self):
+        stream = bytes.fromhex("00000591c0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], OperatorDeterminedBarringAVP))
+        self.assertEqual(avps[0].code, OPERATOR_DETERMINED_BARRING_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000000"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1425 [Operator-Determined-Barring] VENDOR, MANDATORY>")
+
     def test_diameter_avp__load_staticmethod__parsing_imei_avp_stream(self):
         stream = bytes.fromhex("0000057ac000001a000028af33353335383531313030333431370000")
 
@@ -353,7 +368,9 @@ class TestFeatureListIdAVP(unittest.TestCase):
 
 class TestFeatureListAVP(unittest.TestCase):
     def test_feature_list_avp__no_value(self):
-        self.assertRaises(TypeError, FeatureListAVP)
+        avp = FeatureListAVP()
+        ref = "0000027680000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
 
     def test_feature_list_avp__repr_dunder(self):
         avp = FeatureListAVP(3690988033)
@@ -368,6 +385,37 @@ class TestFeatureListAVP(unittest.TestCase):
         avp = FeatureListAVP(153747456)
         ref = "0000027680000010000028af092a0000"
         self.assertEqual(avp.dump().hex(), ref)
+
+
+class TestOperatorDeterminedBarringAVP(unittest.TestCase):
+    def test_operator_determined_barring_avp__no_value(self):
+        avp = OperatorDeterminedBarringAVP()
+        ref = "00000591c0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_operator_determined_barring_avp__repr_dunder(self):
+        avp = OperatorDeterminedBarringAVP()
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1425 [Operator-Determined-Barring] VENDOR, MANDATORY>")
+
+    def test_operator_determined_barring_avp__set_bit_0(self):
+        avp = OperatorDeterminedBarringAVP()
+        self.assertEqual(avp.dump().hex(), "00000591c0000010000028af00000000")
+
+        avp.set_bit(0)
+        self.assertEqual(avp.dump().hex(), "00000591c0000010000028af00000001")
+
+        avp.unset_bit(0)
+        self.assertEqual(avp.dump().hex(), "00000591c0000010000028af00000000")
+
+    def test_operator_determined_barring_avp__set_bit_31(self):
+        avp = OperatorDeterminedBarringAVP()
+        self.assertEqual(avp.dump().hex(), "00000591c0000010000028af00000000")
+
+        avp.set_bit(31)
+        self.assertEqual(avp.dump().hex(), "00000591c0000010000028af80000000")
+
+        avp.unset_bit(31)
+        self.assertEqual(avp.dump().hex(), "00000591c0000010000028af00000000")
 
 
 class TestTerminalInformationAVP(unittest.TestCase):
