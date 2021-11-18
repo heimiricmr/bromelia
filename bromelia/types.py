@@ -27,6 +27,7 @@ from .constants import *
 from .exceptions import AVPAttributeValueError
 from .exceptions import DataTypeError
 from .exceptions import DiameterAvpError
+from .exceptions import DiameterTypeError
 
 
 class BaseDataType(abc.ABC):
@@ -187,59 +188,6 @@ class Unsigned32Type(BaseDataType):
         return self.data
 
 
-    def is_bit_set(self, bit):
-        if 0 <= bit < 8:
-            return self.data[3] & (2 ** bit) !=0
-        elif 8 <= bit < 16:
-            return self.data[2] & (2 ** (bit % 8)) !=0
-        elif 16 <= bit < 24:
-            return self.data[1] & (2 ** (bit % 8)) !=0
-        elif 24 <= bit < 32:
-            return self.data[0] & (2 ** (bit % 8)) !=0
-        else:
-            raise DiameterTypeError("Bit index out of range")
-
-
-    def set_bit(self, bit):
-        if self.is_bit_set(bit):
-            raise DiameterTypeError("Unable to set an already set bit")
-
-        if 0 <= bit < 8:
-            data = self.data[3] | 2 ** bit
-            self.data = bytes(bytearray([self.data[0], self.data[1], self.data[2], data]))
-        elif 8 <= bit < 16:
-            data = self.data[2] | 2 ** (bit % 8) 
-            self.data = bytes(bytearray([self.data[0], self.data[1], data, self.data[3]]))
-        elif 16 <= bit < 24:
-            data = self.data[1] | 2 ** (bit % 8)
-            self.data = bytes(bytearray([self.data[0], data, self.data[2], self.data[3]]))
-        elif 24 <= bit < 32:
-            data = self.data[0] | 2 ** (bit % 8)
-            self.data = bytes(bytearray([data, self.data[1], self.data[2], self.data[3]]))
-
-        return self.data
-
-
-    def unset_bit(self, bit):
-        if not self.is_bit_set(bit):
-            raise DiameterTypeError("Unable to unset an already unset bit")
-
-        if 0 <= bit < 8:
-            data = self.data[3] ^ 2 ** bit
-            self.data = bytes(bytearray([self.data[0], self.data[1], self.data[2], data]))
-        elif 8 <= bit < 16:
-            data = self.data[2] ^ 2 ** (bit % 8) 
-            self.data = bytes(bytearray([self.data[0], self.data[1], data, self.data[3]]))
-        elif 16 <= bit < 24:
-            data = self.data[1] ^ 2 ** (bit % 8)
-            self.data = bytes(bytearray([self.data[0], data, self.data[2], self.data[3]]))
-        elif 24 <= bit < 32:
-            data = self.data[0] ^ 2 ** (bit % 8)
-            self.data = bytes(bytearray([data, self.data[1], self.data[2], self.data[3]]))
-
-        return self.data
-
-
 class Unsigned64Type(BaseDataType):
     @abc.abstractmethod
     def __init__(self, data, vendor_id=None):
@@ -304,10 +252,6 @@ class GroupedType(BaseDataType):
         #: TO-DO: maybe create a custom condtional method to check specific
         #: rules for a given AVP. 
 
-        for avp in self.avps:
-            avp_name = loader._get_avp_class_name(avp)
-            self.__dict__.update({avp_name: avp})
-
         if isinstance(vendor_id, bytes):
             if len(vendor_id) != 4:
                 raise DataTypeError("GroupedType MUST have vendor_id "\
@@ -316,13 +260,15 @@ class GroupedType(BaseDataType):
             self._vendor_id = vendor_id
     
             if isinstance(data, bytes):
-                self._length = convert_to_3_bytes(len(data) + 12)
+                _length = AVP_HEADER_LENGTH_LONGER
+                self._length = convert_to_3_bytes(len(data) + _length)
 
         elif vendor_id is None:
             self._vendor_id = None
 
             if isinstance(data, bytes):
-                self._length = convert_to_3_bytes(len(data) + 8)
+                _length = AVP_HEADER_LENGTH
+                self._length = convert_to_3_bytes(len(data) + _length)
 
 
     @classmethod
@@ -339,7 +285,7 @@ class GroupedType(BaseDataType):
     @avps.setter
     def avps(self, value):
         if not isinstance(value, list):
-            raise DiameterAvpError("only list allowed. Cannot append a "\
+            raise DiameterAvpError(f"only list allowed. Cannot append a "\
                                    f"data type of '{type(value)}'")
     
         self.cleanup()
@@ -360,7 +306,7 @@ class GroupedType(BaseDataType):
 
     def append(self, avp):
         if not isinstance(avp, DiameterAVP):
-            raise DiameterAvpError("cannot append a data type of "\
+            raise DiameterAvpError(f"cannot append a data type of "\
                                    f"'{type(avp)}'")
 
         avp_name = avp_look_up(avp)
@@ -403,7 +349,7 @@ class GroupedType(BaseDataType):
     def pop(self, avp_key):
         if not self.avps:
             raise DiameterAvpError("`avps` attribute is empty. There is "\
-                                    "no DiameterAVP object to be removed")
+                                   "no DiameterAVP object to be removed")
 
         try:
             item = self.__dict__[avp_key]
@@ -475,16 +421,16 @@ class AddressType(OctetStringType):
                     ipaddress.IPv4Address(data[2:])
                 except ipaddress.AddressValueError:
                     raise DataTypeError("Stream of bytes does not "\
-                                    "correspond to a valid IPv4 address "\
-                                    "format")
+                                        "correspond to a valid IPv4 address "\
+                                        "format")
 
             elif data[:2] == HOST_IP_ADDRESS_FAMILY_CODE_IPV6:
                 try:
                     ipaddress.IPv6Address(data[2:])
                 except ipaddress.AddressValueError:
                     raise DataTypeError("Stream of bytes does not "\
-                                    "correspond to a valid IPv6 address "\
-                                    "format")
+                                        "correspond to a valid IPv6 address "\
+                                        "format")
 
         else:
             ip_address = ipaddress.ip_address(data)
@@ -534,7 +480,7 @@ class TimeType(OctetStringType):
         if isinstance(data, bytes):
             if len(data) != 4:
                 raise DataTypeError("Invalid data format for TimeType. It "\
-                                "MUST be 4 bytes long")
+                                    "MUST be 4 bytes long")
 
         elif isinstance(data, datetime.datetime):
             ref = datetime.datetime(1900, 1, 1, 0, 0, 0)
@@ -545,7 +491,7 @@ class TimeType(OctetStringType):
         
         elif not isinstance(data, datetime.datetime) or not isinstance(data, bytes):
             raise DataTypeError("Invalid data format for TimeType. It MUST "\
-                            "be a datetime object")
+                                "be a datetime object")
 
         OctetStringType.__init__(self, data, vendor_id)    
 
@@ -578,7 +524,7 @@ class DiameterURIType(OctetStringType):
 
         else:
             raise DataTypeError("invalid data format. Data MUST be of "\
-                            "'str' or 'bytes' and follow the URI syntax")
+                                "'str' or 'bytes' and follow the URI syntax")
 
         pattern = r"aaa[s]{0,1}://(?!\d\.)[a-zA-Z1-9_\-].{1,62}"\
                   r"[a-zA-Z1-9_\-](\:\b([1-9]|[1-9][0-9]|[1-9]"\
@@ -589,7 +535,7 @@ class DiameterURIType(OctetStringType):
 
         if not re.fullmatch(pattern, data):
             raise DataTypeError("invalid data format. It does not comply "\
-                            "to the DiameterURI syntax")
+                                "to the DiameterURI syntax")
 
         self._data = data.encode("utf-8")
 
@@ -600,8 +546,8 @@ class EnumeratedType(Integer32Type):
         avp_class_name = self.__class__.__name__
 
         if data not in self.values:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                    f"{avp_class_name}. Refer to the "\
-                                    "`values` class attribute for options")
+            raise AVPAttributeValueError(f"invalid input argument for "\
+                                         f"{avp_class_name}. Refer to the "\
+                                         f"`values` class attribute for options")
 
         Integer32Type.__init__(self, data, vendor_id)

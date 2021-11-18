@@ -187,6 +187,7 @@ ITEM_NUMBER_AVP_CODE = convert_to_4_bytes(1419)                                 
 CANCELLATION_TYPE_AVP_CODE = convert_to_4_bytes(1420)
 CONTEXT_IDENTIFIER_AVP_CODE = convert_to_4_bytes(1423)
 SUBSCRIBER_STATUS_AVP_CODE = convert_to_4_bytes(1424)                           # TBT S6a/S6d
+OPERATOR_DETERMINED_BARRING_AVP_CODE = convert_to_4_bytes(1425)
 ALL_APN_CONFIGURATIONS_INCLUDED_INDICATOR_AVP_CODE = convert_to_4_bytes(1428)   # TBT S6a/S6d
 APN_CONFIGURATION_PROFILE_AVP_CODE = convert_to_4_bytes(1429)                   # TBT S6a/S6d
 APN_CONFIGURATION_AVP_CODE = convert_to_4_bytes(1430)

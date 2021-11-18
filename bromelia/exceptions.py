@@ -52,11 +52,6 @@ class AVPAttributeValueError(BaseException):
     pass
 
 
-#class AVPKeyValueError(BaseException):
-#    """A valid key value is required."""
-#    pass
-
-
 class AVPOperationError(BaseException):
     """Invalid operation between two DiameterAVP objects"""
 
@@ -93,3 +88,10 @@ class MissingAttributes(KeyError):
 class BromeliaException(BaseException):
     """ Something went wrong in Bromelia class """
 
+
+class DiameterInvalidAvpValue(BaseException):
+    """ Refer to DIAMETER_INVALID_AVP_VALUE constant """
+
+    
+class DiameterMissingAvp(BaseException):
+    """ Refer to DIAMETER_MISSING_AVP constant"""
