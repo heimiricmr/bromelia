@@ -15,9 +15,6 @@ import socket
 
 from .avps import *
 
-from ..etsi_3gpp_s6a_s6d.avps import *
-from ..etsi_3gpp_s6b.avps import *
-from ..avps import *
 from ..base import DiameterRequest, DiameterAnswer
 from ..constants import *
 
@@ -124,8 +121,9 @@ class DiameterEapRequest(DiameterRequest):
 
     Usage::
 
-        >>> from bromelia.etsi_3gpp_swm.messages import DiameterEAPRequest as DER
+        >>> from bromelia.etsi_3gpp_swm.messages import DiameterEapRequest as DER
         >>> der = DER()
+        >>> der
         <Diameter Message: 268 [DER], REQ, PXY SWm, 7 AVP(s)>
     """    
 
@@ -195,8 +193,9 @@ class DiameterEapAnswer(DiameterAnswer):
 
     Usage::
 
-        >>> from bromelia.etsi_3gpp_swm.messages import DiameterEAPAnswer as DEA
+        >>> from bromelia.etsi_3gpp_swm.messages import DiameterEapAnswer as DEA
         >>> dea = DEA()
+        >>> dea
         <Diameter Message: 268 [DEA], PXY SWm, 9 AVP(s)>
     """
 

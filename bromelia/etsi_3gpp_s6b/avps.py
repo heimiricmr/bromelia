@@ -10,21 +10,24 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from ..base import *
-from ..constants import *
-from ..types import *
+from ..avps.etsi_3gpp.ts_129_212 import SupportedFeaturesAVP
 
+from ..avps.etsi_3gpp.ts_129_229 import VisitedNetworkIdentifierAVP
 
-class Mip6FeatureVectorAVP(DiameterAVP, Unsigned64Type):
-    """Implementation of MIP6-Feature-Vector AVP in Section 9.2.3.2.3 of 
-    ETSI TS 129 273 V14.3.0 (2017-07).
+from ..avps.etsi_3gpp.ts_129_272 import ApnConfigurationAVP
+from ..avps.etsi_3gpp.ts_129_272 import ServiceSelectionAVP
 
-    The MIP6-Feature-Vector AVP (AVP Code 124) is of type Unsigned64.
-    """
-    code = MIP6_FEATURE_VECTOR_AVP_CODE
-    vendor_id = None
+from ..avps.etsi_3gpp.ts_129_273 import Mip6FeatureVectorAVP
 
-    def __init__(self, data):
-        DiameterAVP.__init__(self, Mip6FeatureVectorAVP.code)
-        DiameterAVP.set_mandatory_bit(self, True)
-        Unsigned64Type.__init__(self, data=data)
+from ..avps.ietf.rfc5447 import Mip6AgentInfoAVP
+
+from ..avps.ietf.rfc6733 import AuthApplicationIdAVP
+from ..avps.ietf.rfc6733 import AuthRequestTypeAVP
+from ..avps.ietf.rfc6733 import DestinationRealmAVP
+from ..avps.ietf.rfc6733 import OriginHostAVP
+from ..avps.ietf.rfc6733 import OriginRealmAVP
+from ..avps.ietf.rfc6733 import RedirectHostAVP
+from ..avps.ietf.rfc6733 import ResultCodeAVP
+from ..avps.ietf.rfc6733 import SessionIdAVP
+from ..avps.ietf.rfc6733 import SessionTimeoutAVP
+from ..avps.ietf.rfc6733 import UserNameAVP

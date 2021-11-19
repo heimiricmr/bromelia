@@ -13,10 +13,10 @@
 import platform
 import socket
 
-from ..avps import *
+from .avps import *
+
 from ..base import DiameterRequest, DiameterAnswer
 from ..constants import *
-from ..etsi_3gpp_rx.avps import *
 
 
 class AAAnswer(DiameterAnswer):
@@ -59,7 +59,7 @@ class AAAnswer(DiameterAnswer):
                     # "oc_olr": OcOlrAVP,
                     "supported_features": SupportedFeaturesAVP,
                     "subscription_id": SubscriptionIdAVP,
-                    # "user_equipment_info": UserEquipmentInfoAVP,
+                    "user_equipment_info": UserEquipmentInfoAVP,
                     # "x3gpp_sgsn_mcc_mnc": X3gppSgsnMccMncAVP,
                     "_class": ClassAVP,
                     "error_message": ErrorMessageAVP,
@@ -371,7 +371,7 @@ class ReAuthAnswer(DiameterAnswer):
                     "experimental_result": ExperimentalResultAVP,
                     # "oc_supported_features": OcSupportedFeaturesAVP,
                     # "oc_olr": OcOlrAVP,
-                    # "media_component_description": MediaComponentDescriptionAVP,
+                    "media_component_description": MediaComponentDescriptionAVP,
                     # "service_urn": ServiceUrnAVP,
                     "origin_state_id": OriginStateIdAVP,
                     "_class": ClassAVP,

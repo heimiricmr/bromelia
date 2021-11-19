@@ -40,6 +40,10 @@ def convert_to_4_bytes(content):
     return struct.pack(">L", content)
 
 
+def convert_to_6_bytes(content):
+    return content.to_bytes(6, byteorder="big")
+
+
 def convert_to_8_bytes(content):
     return struct.pack(">q", content)
 

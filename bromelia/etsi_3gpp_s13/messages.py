@@ -15,7 +15,6 @@ import socket
 
 from .avps import *
 
-from ..avps import *
 from ..base import DiameterRequest, DiameterAnswer
 from ..constants import *
 

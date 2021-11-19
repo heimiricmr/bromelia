@@ -18,9 +18,6 @@ base_dir = os.path.dirname(testing_dir)
 
 sys.path.insert(0, base_dir)
 
-from bromelia.etsi_3gpp_swm.avps import *
-from bromelia.etsi_3gpp_swm.definitions import *
-
 from bromelia.utils import encode_to_tbcd, encode_special_chars_to_tbcd, decode_from_tbcd
 
 

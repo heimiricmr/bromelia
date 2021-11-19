@@ -18,9 +18,6 @@ base_dir = os.path.dirname(testing_dir)
 
 sys.path.insert(0, base_dir)
 
-from bromelia.etsi_3gpp_swm.definitions import EapPayload
-from bromelia.etsi_3gpp_swm.messages import DiameterEapRequest
-from bromelia.base import DiameterMessage
 from bromelia.constants import *
 from bromelia.messages import AbortSessionAnswer
 from bromelia.messages import AbortSessionRequest

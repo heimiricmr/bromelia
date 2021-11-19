@@ -13,10 +13,10 @@
 import platform
 import socket
 
-from ..avps import *
+from .avps import *
+
 from ..base import DiameterRequest, DiameterAnswer
 from ..constants import *
-from ..etsi_3gpp_gx.avps import *
 
 
 class CreditControlAnswer(DiameterAnswer):

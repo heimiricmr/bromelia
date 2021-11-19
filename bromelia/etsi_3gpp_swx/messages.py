@@ -6,7 +6,7 @@
     This module contains the Diameter protocol messages for 3GPP SWx
     Application Id.
 
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -15,12 +15,8 @@ import socket
 
 from .avps import *
 
-from ..avps import *
 from ..base import DiameterRequest, DiameterAnswer
 from ..constants import *
-from ..etsi_3gpp_s6a_s6d.avps import *
-from ..etsi_3gpp_swm.avps import *
-from ..etsi_3gpp_swx.avps import *
 
 
 class MultimediaAuthRequest(DiameterRequest):
@@ -34,6 +30,7 @@ class MultimediaAuthRequest(DiameterRequest):
 
         >>> from bromelia.etsi_3gpp_swx.messages import MultimediaAuthRequest as MAR
         >>> mar = MAR()
+        >>> mar
         <Diameter Message: 303 [MAR], REQ, PXY SWx, 10 AVP(s)>
     """    
 
@@ -99,6 +96,7 @@ class MultimediaAuthAnswer(DiameterAnswer):
 
         >>> from bromelia.etsi_3gpp_swx.messages import MultimediaAuthAnswer as MAA
         >>> maa = MAA()
+        >>> maa
         <Diameter Message: 303 [MAA], PXY SWx, 9 AVP(s)>
     """
 
@@ -159,13 +157,13 @@ class RegistrationTerminationRequest(DiameterRequest):
     Usage::
 
         >>> from bromelia.etsi_3gpp_swx.messages import RegistrationTerminationRequest as RTR
-        >>>
         >>> rtr_avps = {
         ...     "destination_realm": "example.com",
         ...     "user_name": "frodo"
         ...     "destination_host": "host.example.com",
         ... }
         >>> rtr = RTR(**rtr_avps)
+        >>> rtr
         <Diameter Message: 304 [RTR] REQ|PXY, 16777265 [3GPP SWx], 9 AVP(s)>
     """    
 
@@ -267,13 +265,13 @@ class ServerAssignmentRequest(DiameterRequest):
     Usage::
 
         >>> from bromelia.etsi_3gpp_swx.messages import ServerAssignmentRequest as SAR
-        >>>
         >>> sar_avps = {
         ...     "destination_realm": "example.com",
         ...     "user_name": "frodo"
         ...     "destination_host": "host.example.com",
         ... }
         >>> sar = SAR(**sar_avps)
+        >>> sar
         <Diameter Message: 301 [SAR], REQ, PXY SWx, 9 AVP(s)>
     """    
 
@@ -339,11 +337,11 @@ class ServerAssignmentAnswer(DiameterAnswer):
     Usage::
 
         >>> from bromelia.etsi_3gpp_swx.messages import ServerAssignmentAnswer as SAA
-        >>>
         >>> saa_avps = {
         ...     "user_name": "frodo"
         ... }
         >>> saa = SAA(**sar_avps)
+        >>> saa
         <Diameter Message: 301 [SAA], PXY SWx, 8 AVP(s)>
     """
 

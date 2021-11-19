@@ -22,6 +22,435 @@ from bromelia.avps import *
 from bromelia.base import *
 from bromelia.constants import *
 
+
+class TestDiameterAVP(unittest.TestCase):
+    def test_diameter_avp__vendor_id_bit__default(self):
+        avp = DiameterAVP()
+        self.assertFalse(avp.is_vendor_id())
+
+        avp.set_vendor_id_bit(True)
+        self.assertTrue(avp.is_vendor_id())
+
+        avp.set_vendor_id_bit(False)
+        self.assertFalse(avp.is_vendor_id())
+
+        avp.set_vendor_id_bit(True)
+        self.assertTrue(avp.is_vendor_id())
+
+        avp.set_vendor_id_bit(False)
+        self.assertFalse(avp.is_vendor_id())
+
+    def test_diameter_avp__vendor_id_bit__unset_when_is_unset(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.set_vendor_id_bit(False)
+        
+        self.assertEqual(cm.exception.args[0], "V-bit was already unset")
+
+    def test_diameter_avp__vendor_id_bit__set_when_is_set(self):
+        avp = DiameterAVP()
+        self.assertFalse(avp.is_vendor_id())
+
+        avp.set_vendor_id_bit(True)
+        self.assertTrue(avp.is_vendor_id())
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.set_vendor_id_bit(True)
+        
+        self.assertEqual(cm.exception.args[0], "V-bit was already set")
+
+    def test_diameter_avp__mandatory_bit__default(self):
+        avp = DiameterAVP()
+        self.assertFalse(avp.is_mandatory())
+
+        avp.set_mandatory_bit(True)
+        self.assertTrue(avp.is_mandatory())
+
+        avp.set_mandatory_bit(False)
+        self.assertFalse(avp.is_mandatory())
+
+        avp.set_mandatory_bit(True)
+        self.assertTrue(avp.is_mandatory())
+
+        avp.set_mandatory_bit(False)
+        self.assertFalse(avp.is_mandatory())
+
+    def test_diameter_avp__mandatory_bit__unset_when_is_unset(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.set_mandatory_bit(False)
+        
+        self.assertEqual(cm.exception.args[0], "M-bit was already unset")
+
+    def test_diameter_avp__mandatory_bit__set_when_is_set(self):
+        avp = DiameterAVP()
+        self.assertFalse(avp.is_mandatory())
+
+        avp.set_mandatory_bit(True)
+        self.assertTrue(avp.is_mandatory())
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.set_mandatory_bit(True)
+        
+        self.assertEqual(cm.exception.args[0], "M-bit was already set")
+
+    def test_diameter_avp__protected_bit__default(self):
+        avp = DiameterAVP()
+        self.assertFalse(avp.is_protected())
+
+        avp.set_protected_bit(True)
+        self.assertTrue(avp.is_protected())
+
+        avp.set_protected_bit(False)
+        self.assertFalse(avp.is_protected())
+
+        avp.set_protected_bit(True)
+        self.assertTrue(avp.is_protected())
+
+        avp.set_protected_bit(False)
+        self.assertFalse(avp.is_protected())
+
+    def test_diameter_avp__protected_bit__unset_when_is_unset(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.set_protected_bit(False)
+        
+        self.assertEqual(cm.exception.args[0], "P-bit was already unset")
+
+    def test_diameter_avp__protected_bit__set_when_is_set(self):
+        avp = DiameterAVP()
+        self.assertFalse(avp.is_protected())
+
+        avp.set_protected_bit(True)
+        self.assertTrue(avp.is_protected())
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.set_protected_bit(True)
+        
+        self.assertEqual(cm.exception.args[0], "P-bit was already set")
+
+    def test_diameter_avp__default_object(self):
+        avp = DiameterAVP()
+        
+        self.assertEqual(avp.code.hex(), "00000000")
+        self.assertEqual(avp.flags.hex(), "00")
+        self.assertIsNone(avp.vendor_id)
+        self.assertEqual(avp.length.hex(), "000008")
+        self.assertIsNone(avp.data)
+        self.assertIsNone(avp.padding)
+
+        self.assertEqual(avp.dump().hex(), "0000000000000008")
+
+        self.assertEqual(avp.get_code(), 0)
+        self.assertEqual(avp.get_flags(), 0)
+        self.assertIsNone(avp.get_vendor_id())
+        self.assertEqual(avp.get_length(), 8)
+
+    def test_diameter_avp__custom_object_by_constructor(self):
+        avp = DiameterAVP(code=1, vendor_id=3, flags=2, data="srcrary")
+
+        self.assertEqual(avp.code.hex(), "00000001")
+        self.assertEqual(avp.flags.hex(), "02")
+        self.assertEqual(avp.vendor_id.hex(), "00000003")
+        self.assertEqual(avp.length.hex(), "000013")
+        self.assertEqual(avp.data.hex(), "73726372617279")
+        self.assertEqual(avp.padding.hex(), "00")
+
+        self.assertEqual(avp.dump().hex(), "0000000102000013000000037372637261727900")
+
+        self.assertEqual(avp.get_code(), 1)
+        self.assertEqual(avp.get_flags(), 2)
+        self.assertEqual(avp.get_vendor_id(), 3)
+        self.assertEqual(avp.get_length(), 19)
+        self.assertEqual(avp.get_padding_length(), 1)
+
+    def test_diameter_avp__custom_object_by_instance_attributes(self):
+        avp = DiameterAVP()
+
+        avp.code = 1
+        avp.flags = 2
+        avp.vendor_id = 3
+        avp.data = "srcrary"
+
+        self.assertEqual(avp.code.hex(), "00000001")
+        self.assertEqual(avp.flags.hex(), "02")
+        self.assertEqual(avp.vendor_id.hex(), "00000003")
+        self.assertEqual(avp.length.hex(), "000013")
+        self.assertEqual(avp.data.hex(), "73726372617279")
+        self.assertEqual(avp.padding.hex(), "00")
+
+        self.assertEqual(avp.dump().hex(), "0000000102000013000000037372637261727900")
+
+        self.assertEqual(avp.get_code(), 1)
+        self.assertEqual(avp.get_flags(), 2)
+        self.assertEqual(avp.get_vendor_id(), 3)
+        self.assertEqual(avp.get_length(), 19)
+
+    def test_diameter_avp__custom_object__invalid_code_value__string(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = "4294967296"
+        
+        self.assertEqual(cm.exception.args[0], "invalid code attribute value")
+
+    def test_diameter_avp__custom_object__invalid_code_value__list(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = ["4294967296"]
+ 
+        self.assertEqual(cm.exception.args[0], "invalid code attribute value")
+
+    def test_diameter_avp__custom_object__invalid_code_value__integer_1(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = 4294967296
+        
+        self.assertEqual(cm.exception.args[0], "code attribute has 4-bytes length long")
+
+    def test_diameter_avp__custom_object__invalid_code_value__integer_2(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = -1
+        
+        self.assertEqual(cm.exception.args[0], "code attribute has 4-bytes length long")
+
+    def test_diameter_avp__custom_object__invalid_code_value__bytes_1(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = bytes.fromhex("00")
+        
+        self.assertEqual(cm.exception.args[0], "code attribute has 4-bytes length long")
+
+    def test_diameter_avp__custom_object__invalid_code_value__bytes_2(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = bytes.fromhex("0000")
+        
+        self.assertEqual(cm.exception.args[0], "code attribute has 4-bytes length long")
+
+    def test_diameter_avp__custom_object__invalid_code_value__bytes_3(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = bytes.fromhex("000000")
+        
+        self.assertEqual(cm.exception.args[0], "code attribute has 4-bytes length long")
+
+    def test_diameter_avp__custom_object__invalid_code_value__bytes_4(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.code = bytes.fromhex("0000000001")
+        
+        self.assertEqual(cm.exception.args[0], "code attribute has 4-bytes length long")
+
+    def test_diameter_avp__custom_object__invalid_flags_value__string(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.flags = "256"
+        
+        self.assertEqual(cm.exception.args[0], "invalid flags attribute value")
+
+    def test_diameter_avp__custom_object__invalid_flags_value__list(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.flags = ["256"]
+ 
+        self.assertEqual(cm.exception.args[0], "invalid flags attribute value")
+
+    def test_diameter_avp__custom_object__invalid_flags_value__integer_1(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.flags = 256
+        
+        self.assertEqual(cm.exception.args[0], "flags attribute has 1-byte length long")
+
+    def test_diameter_avp__custom_object__invalid_flags_value__integer_2(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.flags = -1
+        
+        self.assertEqual(cm.exception.args[0], "flags attribute has 1-byte length long")
+
+    def test_diameter_avp__custom_object__invalid_flags_value__bytes_1(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.flags = bytes.fromhex("0000")
+        
+        self.assertEqual(cm.exception.args[0], "flags attribute has 1-byte length long")
+
+    def test_diameter_avp__custom_object__invalid_flags_value__bytes_2(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AVPAttributeValueError) as cm: 
+            avp.flags = bytes.fromhex("000000")
+        
+        self.assertEqual(cm.exception.args[0], "flags attribute has 1-byte length long")
+
+    def test_diameter_avp__custom_object__flags_by_setting_class_attributes(self):
+        avp = DiameterAVP()
+
+        avp.flags = DiameterAVP.flag_vendor_id_bit
+        self.assertEqual(avp.flags.hex(), "80")
+
+        avp.flags = DiameterAVP.flag_mandatory_bit
+        self.assertEqual(avp.flags.hex(), "40")
+
+        avp.flags = DiameterAVP.flag_protected_bit
+        self.assertEqual(avp.flags.hex(), "20")
+
+        avp.flags = DiameterAVP.flag_reserved5_bit
+        self.assertEqual(avp.flags.hex(), "10")
+
+        avp.flags = DiameterAVP.flag_reserved4_bit
+        self.assertEqual(avp.flags.hex(), "08")
+
+        avp.flags = DiameterAVP.flag_reserved3_bit
+        self.assertEqual(avp.flags.hex(), "04")
+
+        avp.flags = DiameterAVP.flag_reserved2_bit
+        self.assertEqual(avp.flags.hex(), "02")
+
+        avp.flags = DiameterAVP.flag_reserved1_bit
+        self.assertEqual(avp.flags.hex(), "01")
+
+    def test_diameter_avp__custom_object__flags_by_set_flags_methods(self):
+        avp = DiameterAVP()
+
+        avp.set_protected_bit(True)
+        avp.set_mandatory_bit(True)
+        self.assertEqual(avp.flags.hex(), "60")
+
+        avp.set_vendor_id_bit(True)
+        self.assertEqual(avp.flags.hex(), "e0")
+
+        avp.set_protected_bit(False)
+        self.assertEqual(avp.flags.hex(), "c0")
+
+        avp.set_protected_bit(True)
+        avp.set_mandatory_bit(False)
+        self.assertEqual(avp.flags.hex(), "a0")
+
+        avp.set_protected_bit(False)
+        self.assertEqual(avp.flags.hex(), "80")
+
+        avp.set_vendor_id_bit(False)
+        self.assertEqual(avp.flags.hex(), "00")
+
+        avp.set_protected_bit(True)
+        self.assertEqual(avp.flags.hex(), "20")
+
+        avp.set_mandatory_bit(True)
+        avp.set_protected_bit(False)
+        self.assertEqual(avp.flags.hex(), "40")
+
+        avp.set_protected_bit(True)
+        self.assertEqual(avp.flags.hex(), "60")
+
+    def test_diameter_avp__custom_object__length_by_using_len_builtin_function(self):
+        avp = DiameterAVP(1, 2, 3, "srcrary")
+        self.assertEqual(len(avp), avp.get_length())
+
+        avp = DiameterAVP(1, 2, 3, "Pythonicsrcrary")
+        self.assertEqual(len(avp), avp.get_length())
+
+    def test_diameter_avp__custom_object__length_changing_based_on_data(self):
+        avp = DiameterAVP()
+        
+        avp.data = "srcrary"
+        self.assertEqual(avp.get_length(), 15)
+        self.assertEqual(avp.get_padding_length(), 1)
+
+        avp.data += b"FOO"
+        self.assertEqual(avp.get_length(), 18)
+        self.assertEqual(avp.get_padding_length(), 2)
+
+        avp.data += b"BAR"
+        self.assertEqual(avp.get_length(), 21)
+        self.assertEqual(avp.get_padding_length(), 3)
+
+        avp.data += b"F"
+        self.assertEqual(avp.get_length(), 22)
+        self.assertEqual(avp.get_padding_length(), 2)
+
+        avp.data += b"B"
+        self.assertEqual(avp.get_length(), 23)
+        self.assertEqual(avp.get_padding_length(), 1)
+        
+        avp.data += b"="
+        self.assertEqual(avp.get_length(), 24)
+        self.assertIsNone(avp.get_padding_length())
+
+    def test_diameter_avp__custom_object__length_by_adding_vendor_id(self):
+        avp = DiameterAVP()
+        
+        avp.data = "srcrary"
+        self.assertEqual(avp.get_length(), 15)
+        self.assertEqual(avp.get_padding_length(), 1)
+
+        avp.vendor_id = VENDOR_ID_3GPP
+        self.assertEqual(avp.get_length(), 19)
+        self.assertEqual(avp.get_padding_length(), 1)
+
+        avp.data += b"FooBar"
+        self.assertEqual(avp.get_length(), 25)
+        self.assertEqual(avp.get_padding_length(), 3)
+
+        avp.data = b""
+        self.assertEqual(avp.get_length(), 12)
+        self.assertIsNone(avp.get_padding_length())
+
+        avp.vendor_id = None
+        self.assertEqual(avp.get_length(), 8)
+        self.assertIsNone(avp.get_padding_length())
+
+    def test_diameter_avp__eq_dunder(self):
+        avp1 = DiameterAVP()
+        avp2 = DiameterAVP()
+
+        self.assertEqual(avp1, avp2)
+
+        avp1.set_mandatory_bit(True)
+        self.assertNotEqual(avp1, avp2)
+
+        avp2.set_mandatory_bit(True)
+        self.assertEqual(avp1, avp2)
+
+        avp2 = OriginHostAVP("host")
+        self.assertNotEqual(avp1, avp2)
+
+        avp1.code = avp2.code
+        avp1.flags = avp2.flags
+        avp1.data = avp2.data
+        self.assertEqual(avp1, avp2)
+
+        self.assertEqual(avp1.__repr__(), "<Diameter AVP: 264 [Origin-Host] MANDATORY>")
+        self.assertEqual(avp2.__repr__(), "<Diameter AVP: 264 [Origin-Host] MANDATORY>")
+
+    # include tests for data attribute and vendor_id
+
+    def test_diameter_avp__custom_object__padding_not_allowed_to_set(self):
+        avp = DiameterAVP()
+
+        with self.assertRaises(AttributeError) as cm: 
+            avp.padding = bytes.fromhex("0000")
+        self.assertEqual(cm.exception.args[0], "can't set attribute")
+
+
 class TestDiameterHeader(unittest.TestCase):
     def test_diameter_header__repr_dunder_default(self):
         header = DiameterHeader()
@@ -911,6 +1340,7 @@ class TestDiameterMessage(unittest.TestCase):
             message.update_key("firmware1", "firmware0")
         
         self.assertEqual(cm.exception.args[0], "`firmware0` key already defined")
+
 
 if __name__ == "__main__":
     unittest.main()

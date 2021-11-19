@@ -15,10 +15,8 @@ import socket
 
 from .avps import *
 
-from ..avps import *
 from ..base import DiameterAnswer, DiameterRequest 
 from ..constants import *
-from ..etsi_3gpp_s6a_s6d.avps import *
 
 
 class AuthenticationInformationRequest(DiameterRequest):
@@ -37,6 +35,7 @@ class AuthenticationInformationRequest(DiameterRequest):
         ...     "visited_plmn_id": bytes.fromhex("ffffff")
         ... }
         >>> air = AIR(**air_avps)
+        >>> air
         <Diameter Message: 318 [AIR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
     """    
 
@@ -101,6 +100,7 @@ class AuthenticationInformationAnswer(DiameterAnswer):
 
         >>> from bromelia.etsi_3gpp_s6a_s6d.messages import AuthenticationInformationAnswer as AIA
         >>> aia = AIA()
+        >>> aia
         <Diameter Message: 318 [AIA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
     """
 
@@ -172,6 +172,7 @@ class CancelLocationRequest(DiameterRequest):
         ...     "user_name": "frodo"
         ... }
         >>> clr = CLR(**clr_avps)
+        >>> clr
         <Diameter Message: 317 [CLR] REQ|PXY, 16777251 [3GPP S6a], 9 AVP(s)>
     """    
 
@@ -230,6 +231,7 @@ class CancelLocationAnswer(DiameterAnswer):
 
         >>> from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationAnswer as CLA
         >>> cla = CLA()
+        >>> cla
         <Diameter Message: 317 [CLA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
     """
 
@@ -288,6 +290,7 @@ class NotifyRequest(DiameterRequest):
         ...     "user_name": "frodo",
         ... }
         >>> nor = NOR(**nor_avps)
+        >>> nor
         <Diameter Message: 323 [NOR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
     """    
 
@@ -368,6 +371,7 @@ class NotifyAnswer(DiameterAnswer):
 
         >>> from bromelia.etsi_3gpp_s6a_s6d.messages import NotifyAnswer as NOA
         >>> noa = NOA()
+        >>> noa
         <Diameter Message: 323 [NOA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
     """
 
@@ -432,6 +436,7 @@ class PurgeUeRequest(DiameterRequest):
         ...     "user_name": "frodo",
         ... }
         >>> pur = PUR(**pur_avps)
+        >>> pur
         <Diameter Message: 321 [PUR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
     """    
 
@@ -492,6 +497,7 @@ class PurgeUeAnswer(DiameterAnswer):
 
         >>> from bromelia.etsi_3gpp_s6a_s6d.messages import PurgeUeAnswer as PUA
         >>> pua = PUA()
+        >>> pua
         <Diameter Message: 321 [PUA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
     """
 
@@ -557,6 +563,7 @@ class UpdateLocationRequest(DiameterRequest):
         ...     "visited_plmn_id": bytes.fromhex("ffffff")
         ... }
         >>> ulr = ULR(**ulr_avps)
+        >>> ulr
         <Diameter Message: 316 [ULR] REQ|PXY, 16777251 [3GPP S6a], 10 AVP(s)>
     """    
 
@@ -645,6 +652,7 @@ class UpdateLocationAnswer(DiameterAnswer):
 
         >>> from bromelia.etsi_3gpp_s6a_s6d.messages import UpdateLocationAnswer as ULA
         >>> ula = ULA()
+        >>> ula
         <Diameter Message: 316 [ULA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
     """
 
