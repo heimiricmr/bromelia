@@ -15,8 +15,11 @@ import socket
 
 from .avps import *
 
+from .._internal_utils import show_warn
 from ..base import DiameterRequest, DiameterAnswer
 from ..constants import *
+
+show_warn("messages", "etsi_3gpp_swx")
 
 
 class MultimediaAuthRequest(DiameterRequest):

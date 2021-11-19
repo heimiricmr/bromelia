@@ -10,6 +10,10 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from .._internal_utils import show_warn
+
+show_warn("avps", "etsi_3gpp_swm")
+
 from ..avps.etsi_3gpp.ts_129_061 import X3gppChargingCharacteristicsAVP
 
 from ..avps.etsi_3gpp.ts_129_212 import RatTypeAVP

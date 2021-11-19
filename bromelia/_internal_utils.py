@@ -15,13 +15,15 @@ import logging
 import os
 import struct
 import yaml
+import warnings
 from collections import namedtuple
+from warnings import warn
 
-from .exceptions import InvalidConfigKey
-from .exceptions import InvalidConfigValue
 from .definitions import diameter_application_ids
 from .definitions import diameter_avps
 from .definitions import diameter_command_codes
+from .exceptions import InvalidConfigKey
+from .exceptions import InvalidConfigValue
 
 
 def convert_to_1_byte(content):
@@ -344,3 +346,22 @@ def get_logging_filename(app_name=None):
     return f"log-{name}-"\
            f"{year}-{month}-{day}-{hour}-"\
            f"{minute}-{second}-UTC3-pid_{os.getpid()}.log"
+
+
+warnings.simplefilter("default")
+
+
+def show_warn(module, _path, _except=None):
+    if module not in ["avps", "messages"]:
+        raise ValueError("Deprecation Warning for avps & messages only")
+
+    if _except is None:
+        warn(f"Please prefer import Diameter Message classes from "\
+             f"bromelia.lib.{_path} instead bromelia.{_path}.{module}. "\
+             f"The latter one will be deprecated in the next release",
+             DeprecationWarning, stacklevel=5)
+    else:
+        warn(f"Please prefer import Diameter Message classes from "\
+             f"bromelia.lib.{_except} instead bromelia.{_path}.{module}. "\
+             f"The latter one will be deprecated in the next release",
+             DeprecationWarning, stacklevel=5)

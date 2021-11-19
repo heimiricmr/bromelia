@@ -15,8 +15,11 @@ import socket
 
 from .avps import *
 
+from .._internal_utils import show_warn
 from ..base import DiameterAnswer, DiameterRequest 
 from ..constants import *
+
+show_warn("messages", "etsi_3gpp_s6a_s6d", "etsi_3gpp_s6a")
 
 
 class AuthenticationInformationRequest(DiameterRequest):
@@ -37,7 +40,7 @@ class AuthenticationInformationRequest(DiameterRequest):
         >>> air = AIR(**air_avps)
         >>> air
         <Diameter Message: 318 [AIR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
-    """    
+    """
 
     mandatory = {
                     "session_id": SessionIdAVP,
