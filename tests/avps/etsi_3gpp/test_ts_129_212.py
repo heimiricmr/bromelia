@@ -52,7 +52,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].get_padding_length())
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1028 [Qos-Class-Identifier] VENDOR>")
 
-    def test_diameter_avp__load_staticmethod__parsing_preemption_capability_avp_stream(self):
+    def test_diameter_avp__load_staticmethod__parsing_pre_emption_capability_avp_stream(self):
         stream = bytes.fromhex("00000417c0000010000028af00000000")
         
         avps = DiameterAVP.load(stream)
@@ -67,7 +67,7 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertIsNone(avps[0].get_padding_length())
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1047 [Pre-Emption-Capability] VENDOR, MANDATORY>")
 
-    def test_diameter_avp__load_staticmethod__parsing_preemption_vulnerability_avp_stream(self):
+    def test_diameter_avp__load_staticmethod__parsing_pre_emption_vulnerability_avp_stream(self):
         stream = bytes.fromhex("00000418c0000010000028af00000000")
         
         avps = DiameterAVP.load(stream)
@@ -269,38 +269,38 @@ class TestPriorityLevelAVP(unittest.TestCase):
 
 
 class TestPreEmptionCapabilityAVP(unittest.TestCase):
-    def test_preemption_capability_avp__no_value(self):
+    def test_pre_emption_capability_avp__no_value(self):
         self.assertRaises(TypeError, PreEmptionCapabilityAVP)
 
-    def test_preemption_capability_avp__repr_dunder(self):
+    def test_pre_emption_capability_avp__repr_dunder(self):
         avp = PreEmptionCapabilityAVP(PRE_EMPTION_CAPABILITY_ENABLED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1047 [Pre-Emption-Capability] VENDOR, MANDATORY>")
 
-    def test_preemption_capability_avp__enabled(self):
+    def test_pre_emption_capability_avp__enabled(self):
         avp = PreEmptionCapabilityAVP(PRE_EMPTION_CAPABILITY_ENABLED)
         ref = "00000417c0000010000028af00000000"
         self.assertEqual(avp.dump().hex(), ref)
 
-    def test_preemption_capability_avp__disabled(self):
+    def test_pre_emption_capability_avp__disabled(self):
         avp = PreEmptionCapabilityAVP(PRE_EMPTION_CAPABILITY_DISABLED)
         ref = "00000417c0000010000028af00000001"
         self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestPreEmptionVulnerabilityAVP(unittest.TestCase):
-    def test_preemption_vulnerability_avp__no_value(self):
+    def test_pre_emption_vulnerability_avp__no_value(self):
         self.assertRaises(TypeError, PreEmptionVulnerabilityAVP)
 
-    def test_preemption_vulnerability_avp__repr_dunder(self):
+    def test_pre_emption_vulnerability_avp__repr_dunder(self):
         avp = PreEmptionVulnerabilityAVP(PRE_EMPTION_VULNERABILITY_ENABLED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1048 [Pre-Emption-Vulnerability] VENDOR, MANDATORY>")
 
-    def test_preemption_vulnerability_avp__enabled(self):
+    def test_pre_emption_vulnerability_avp__enabled(self):
         avp = PreEmptionVulnerabilityAVP(PRE_EMPTION_VULNERABILITY_ENABLED)
         ref = "00000418c0000010000028af00000000"
         self.assertEqual(avp.dump().hex(), ref)
 
-    def test_preemption_vulnerability_avp__disabled(self):
+    def test_pre_emption_vulnerability_avp__disabled(self):
         avp = PreEmptionVulnerabilityAVP(PRE_EMPTION_VULNERABILITY_DISABLED)
         ref = "00000418c0000010000028af00000001"
         self.assertEqual(avp.dump().hex(), ref)
@@ -377,6 +377,41 @@ class TestQosClassIdentifierAVP(unittest.TestCase):
     def test_qos_class_identifier_avp__qci70(self):
         avp = QosClassIdentifierAVP(QCI_70)
         ref = "0000040480000010000028af00000046"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci75(self):
+        avp = QosClassIdentifierAVP(QCI_75)
+        ref = "0000040480000010000028af0000004b"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci79(self):
+        avp = QosClassIdentifierAVP(QCI_79)
+        ref = "0000040480000010000028af0000004f"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci80(self):
+        avp = QosClassIdentifierAVP(QCI_80)
+        ref = "0000040480000010000028af00000050"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci82(self):
+        avp = QosClassIdentifierAVP(QCI_82)
+        ref = "0000040480000010000028af00000052"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci83(self):
+        avp = QosClassIdentifierAVP(QCI_83)
+        ref = "0000040480000010000028af00000053"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci84(self):
+        avp = QosClassIdentifierAVP(QCI_84)
+        ref = "0000040480000010000028af00000054"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_qos_class_identifier_avp__qci85(self):
+        avp = QosClassIdentifierAVP(QCI_85)
+        ref = "0000040480000010000028af00000055"
         self.assertEqual(avp.dump().hex(), ref)
 
 

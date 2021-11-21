@@ -9,8 +9,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from ..ietf.rfc6733 import *
-
 from ...base import DiameterAVP
 from ...constants import *
 from ...types import *

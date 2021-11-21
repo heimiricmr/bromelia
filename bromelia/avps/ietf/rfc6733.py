@@ -50,7 +50,7 @@ class ClassAVP(DiameterAVP, OctetStringType):
 
 
 class SessionTimeoutAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of Session-Timeout AVP in Section 8.13 IETF RFC 6733.
+    """Implementation of Session-Timeout AVP in Section 8.13 of IETF RFC 6733.
 
     The Session-Timeout AVP (AVP Code 27) is of type Unsigned32.
     """
@@ -192,9 +192,6 @@ class VendorIdAVP(DiameterAVP, Unsigned32Type):
     """Implementation of Vendor-Id AVP in Section 5.3.3 of IETF RFC 6733.
 
     The Vendor-Id AVP (AVP Code 266) is of type Unsigned32.
-
-    A Vendor-Id value of zero in the CER or CEA messages is reserved and 
-    indicates that this field is ignored.
     """
     code = VENDOR_ID_AVP_CODE
     vendor_id = None

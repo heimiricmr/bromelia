@@ -354,7 +354,7 @@ DISCONNECT_CAUSE_DO_NOT_WANT_TO_TALK_TO_YOU = convert_to_4_bytes(2)
 
 #: List of QOS-CLASS-IDENTIFIER.
 #: For more information, please refer to Section 5.3.17 of 
-#: ETSI TS 129 212 V12.6.0 (2014-10).
+#: of ETSI TS 129 212 V15.3.0 (2018-07).
 QCI_1 = convert_to_4_bytes(1)
 QCI_2 = convert_to_4_bytes(2)
 QCI_3 = convert_to_4_bytes(3)
@@ -368,6 +368,13 @@ QCI_65 = convert_to_4_bytes(65)
 QCI_66 = convert_to_4_bytes(66)
 QCI_69 = convert_to_4_bytes(69)
 QCI_70 = convert_to_4_bytes(70)
+QCI_75 = convert_to_4_bytes(75)
+QCI_79 = convert_to_4_bytes(79)
+QCI_80 = convert_to_4_bytes(80)
+QCI_82 = convert_to_4_bytes(82)
+QCI_83 = convert_to_4_bytes(83)
+QCI_84 = convert_to_4_bytes(84)
+QCI_85 = convert_to_4_bytes(85)
 
 #: List of Auth-Request-Type AVP values.
 #: For more information, please refer to Section 8.7 of IETF RFC 3588.

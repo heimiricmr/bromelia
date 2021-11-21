@@ -75,7 +75,8 @@ class FramedIpv6PrefixAVP(DiameterAVP, OctetStringType):
 
 
 class CallingStationIdAVP(DiameterAVP, UTF8StringType):
-    """Implementation of Calling-Station-Id AVP in Section 4.2.6 IETF RFC 7155.
+    """Implementation of Calling-Station-Id AVP in Section 4.2.6 of 
+    IETF RFC 7155.
 
     The Calling-Station-Id AVP (AVP Code 31) is of type UTF8String.
     """

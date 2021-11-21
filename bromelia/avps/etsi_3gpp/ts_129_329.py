@@ -37,7 +37,10 @@ class MsisdnAVP(DiameterAVP, OctetStringType):
         if isinstance(data, int):
             return bytes.fromhex(encode_to_tbcd(data))
         
-        if isinstance(data, bytes):
+        elif isinstance(data, str):
+            return bytes.fromhex(encode_to_tbcd(int(data)))
+
+        elif isinstance(data, bytes):
             return data
 
 

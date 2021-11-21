@@ -25,7 +25,20 @@ from bromelia.avps.ietf.rfc5447 import *
 
 class TestDiameterAVP(unittest.TestCase):
     def test_diameter_avp__load_staticmethod__parsing_stn_sr_avp_stream(self):
-        pass
+        stream = bytes.fromhex("00000599c0000013000028af551299032876f200")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], StnSrAVP))
+        self.assertEqual(avps[0].code, STN_SR_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 19)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("551299032876f2"))
+        self.assertEqual(avps[0].data, bytes.fromhex(encode_to_tbcd("5521993082672")))
+        self.assertEqual(avps[0].get_padding_length(), 1)
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1433 [Stn-Sr] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_ambr_avp_stream(self):
         stream = bytes.fromhex("0000059bc000002c000028af00000203c0000010000028af0003e80000000204c0000010000028af0003e800")
@@ -645,7 +658,54 @@ class TestDiameterAVP(unittest.TestCase):
 
 
 class TestStnSrAVP(unittest.TestCase):
-    pass
+    def test__stn_sr_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = StnSrAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__stn_sr_avp__repr_dunder(self):
+        avp = StnSrAVP(5521993082672)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1433 [Stn-Sr] VENDOR, MANDATORY>")
+
+    def test__stn_sr_avp__diameter_avp_convert_classmethod(self):
+        avp = StnSrAVP(5521993082672)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+        avp = StnSrAVP("5521993082672")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__stn_sr_avp__1(self):
+        ref = "00000599c0000013000028af551299032876f200"
+
+        avp = StnSrAVP(5521993082672)
+        self.assertEqual(avp.dump().hex(), ref)
+
+        avp = StnSrAVP("5521993082672")
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__stn_sr_avp__2(self):
+        ref = "00000599c0000013000028af559909000000f000"
+
+        avp = StnSrAVP(5599900000000)
+        self.assertEqual(avp.dump().hex(), ref)
+
+        avp = StnSrAVP("5599900000000")
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestAmbrAVP(unittest.TestCase):

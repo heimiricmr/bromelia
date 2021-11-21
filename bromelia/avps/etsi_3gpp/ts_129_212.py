@@ -9,8 +9,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from ..ietf.rfc6733 import *
-
 from ...base import DiameterAVP
 from ...constants import *
 from ...types import *
@@ -18,7 +16,7 @@ from ...types import *
 
 class PriorityLevelAVP(DiameterAVP, Unsigned32Type):
     """Implementation of Priority-Level AVP in Section 5.3.45
-    of ETSI TS 129 212 V12.6.0 (2014-10)
+    of ETSI TS 129 212 V12.6.0 (2014-10).
 
     The Priority-Level AVP (AVP Code 1406) is of type Unsigned32.
     """
@@ -81,7 +79,7 @@ class PreEmptionVulnerabilityAVP(DiameterAVP, EnumeratedType):
 
 class QosClassIdentifierAVP(DiameterAVP, EnumeratedType):
     """Implementation of QoS-Class-Identifier AVP in Section 5.3.17
-    of ETSI TS 129 212 V12.6.0 (2014-10)
+    of ETSI TS 129 212 V15.3.0 (2018-07).
 
     The QoS-Class-Identifier AVP (AVP Code 1028) is of type Enumerated.
     """
@@ -101,7 +99,14 @@ class QosClassIdentifierAVP(DiameterAVP, EnumeratedType):
                 QCI_65,
                 QCI_66,
                 QCI_69,
-                QCI_70
+                QCI_70,
+                QCI_75,
+                QCI_79,
+                QCI_80,
+                QCI_82,
+                QCI_83,
+                QCI_84,
+                QCI_85,
     ]
 
     def __init__(self, data):
@@ -439,7 +444,7 @@ class MeteringMethodAVP(DiameterAVP, EnumeratedType):
     """Implementation of Metering-Method AVP in Section 5.3.8 of 
     ETSI TS 129 212 V15.3.0 (2018-07).
 
-    The Metering-Method AVP(AVP Code 1007) is of type Enumerated.
+    The Metering-Method AVP (AVP Code 1007) is of type Enumerated.
     """
     code = METERING_METHOD_AVP_CODE
     vendor_id = VENDOR_ID_3GPP
