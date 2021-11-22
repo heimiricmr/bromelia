@@ -334,6 +334,20 @@ class TestUserEquipmentInfoAVP(unittest.TestCase):
         ])
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 458 [User-Equipment-Info] MANDATORY>")
 
+    def test_user_equipment_info_avp__diameter_avp_convert_classmethod(self):
+        avp = UserEquipmentInfoAVP([
+                        UserEquipmentInfoTypeAVP(USER_EQUIPMENT_INFO_TYPE_IMEISV), 
+                        UserEquipmentInfoValueAVP("35358511003417")
+        ])
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_user_equipment_info_avp__default_1(self):
         avp = UserEquipmentInfoAVP([
                         UserEquipmentInfoTypeAVP(USER_EQUIPMENT_INFO_TYPE_IMEISV), 

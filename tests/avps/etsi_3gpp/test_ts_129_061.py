@@ -47,6 +47,18 @@ class TestX3gppChargingCharacteristicsAVP(unittest.TestCase):
         avp = X3gppChargingCharacteristicsAVP(value)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 13 [X3gpp-Charging-Characteristics] VENDOR>")
 
+    def test__3gpp_charging_characteristics_avp__diameter_avp_convert_classmethod(self):
+        value = bytes.fromhex("30343030")                #: 0400
+        avp = X3gppChargingCharacteristicsAVP(value)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__3gpp_charging_characteristics_avp__1(self):
         value = bytes.fromhex("30343030")                #: 0400
         avp = X3gppChargingCharacteristicsAVP(value)

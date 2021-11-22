@@ -260,6 +260,17 @@ class TestPriorityLevelAVP(unittest.TestCase):
         avp = PriorityLevelAVP(convert_to_4_bytes(8))
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1046 [Priority-Level] VENDOR>")
 
+    def test_priority_level_avp__diameter_avp_convert_classmethod(self):
+        avp = PriorityLevelAVP(convert_to_4_bytes(8))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_priority_level_avp__8(self):
         value = convert_to_4_bytes(8)
 
@@ -275,6 +286,17 @@ class TestPreEmptionCapabilityAVP(unittest.TestCase):
     def test_pre_emption_capability_avp__repr_dunder(self):
         avp = PreEmptionCapabilityAVP(PRE_EMPTION_CAPABILITY_ENABLED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1047 [Pre-Emption-Capability] VENDOR, MANDATORY>")
+
+    def test_pre_emption_capability_avp__diameter_avp_convert_classmethod(self):
+        avp = PreEmptionCapabilityAVP(PRE_EMPTION_CAPABILITY_ENABLED)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_pre_emption_capability_avp__enabled(self):
         avp = PreEmptionCapabilityAVP(PRE_EMPTION_CAPABILITY_ENABLED)
@@ -295,6 +317,17 @@ class TestPreEmptionVulnerabilityAVP(unittest.TestCase):
         avp = PreEmptionVulnerabilityAVP(PRE_EMPTION_VULNERABILITY_ENABLED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1048 [Pre-Emption-Vulnerability] VENDOR, MANDATORY>")
 
+    def test_pre_emption_vulnerability_avp__diameter_avp_convert_classmethod(self):
+        avp = PreEmptionVulnerabilityAVP(PRE_EMPTION_VULNERABILITY_ENABLED)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_pre_emption_vulnerability_avp__enabled(self):
         avp = PreEmptionVulnerabilityAVP(PRE_EMPTION_VULNERABILITY_ENABLED)
         ref = "00000418c0000010000028af00000000"
@@ -313,6 +346,17 @@ class TestQosClassIdentifierAVP(unittest.TestCase):
     def test_qos_class_identifier_avp__repr_dunder(self):
         avp = QosClassIdentifierAVP(QCI_1)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1028 [Qos-Class-Identifier] VENDOR>")
+
+    def test_qos_class_identifier_avp__diameter_avp_convert_classmethod(self):
+        avp = QosClassIdentifierAVP(QCI_1)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_qos_class_identifier_avp__qci1(self):
         avp = QosClassIdentifierAVP(QCI_1)
@@ -423,6 +467,17 @@ class TestRatTypeAVP(unittest.TestCase):
         avp = RatTypeAVP(RAT_TYPE_WLAN)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1032 [Rat-Type] VENDOR, MANDATORY>")
 
+    def test_rat_type_avp__diameter_avp_convert_classmethod(self):
+        avp = RatTypeAVP(RAT_TYPE_WLAN)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_rat_type_avp__wlan(self):
         avp = RatTypeAVP(RAT_TYPE_WLAN)
         ref = "00000408c0000010000028af00000000"
@@ -486,6 +541,17 @@ class TestUeLocalIpAddressAVP(unittest.TestCase):
     def test_ue_local_ip_address_avp__repr_dunder(self):
         avp = UeLocalIpAddressAVP("127.0.0.1")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 2805 [Ue-Local-Ip-Address] VENDOR>")
+
+    def test_ue_local_ip_address_avp__diameter_avp_convert_classmethod(self):
+        avp = UeLocalIpAddressAVP("127.0.0.1")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_ue_local_ip_address_avp__1(self):
         avp = UeLocalIpAddressAVP("189.63.75.2")

@@ -719,6 +719,20 @@ class TestAmbrAVP(unittest.TestCase):
         ])
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1435 [Ambr] VENDOR, MANDATORY>")
 
+    def test_ambr_avp__diameter_avp_convert_classmethod(self):
+        avp = AmbrAVP([
+                        MaxRequestedBandwidthDlAVP(convert_to_4_bytes(256000)), 
+                        MaxRequestedBandwidthUlAVP(convert_to_4_bytes(256000))
+        ])
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_ambr_avp__default_1(self):
         MAX_DL = convert_to_4_bytes(256000)
         max_requested_bw_dl_avp = MaxRequestedBandwidthDlAVP(MAX_DL)
@@ -754,6 +768,17 @@ class TestContextIdentifierAVP(unittest.TestCase):
         avp = ContextIdentifierAVP(convert_to_4_bytes(1))
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1423 [Context-Identifier] VENDOR>")
 
+    def test_context_identifier_avp__diameter_avp_convert_classmethod(self):
+        avp = ContextIdentifierAVP(convert_to_4_bytes(1))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_context_identifier_avp__value1(self):
         VALUE = convert_to_4_bytes(1)
         avp = ContextIdentifierAVP(VALUE)
@@ -787,6 +812,17 @@ class TestPdnTypeAVP(unittest.TestCase):
         avp = PdnTypeAVP(PDN_TYPE_IPV4)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1456 [Pdn-Type] VENDOR>")
 
+    def test_pdn_type_avp__diameter_avp_convert_classmethod(self):
+        avp = PdnTypeAVP(PDN_TYPE_IPV4)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_pdn_type_avp__ipv4_only(self):
         avp = PdnTypeAVP(PDN_TYPE_IPV4)
         ref = "000005b080000010000028af00000000"
@@ -815,6 +851,17 @@ class TestServiceSelectionAVP(unittest.TestCase):
     def test_service_selection_avp__repr_dunder(self):
         avp = ServiceSelectionAVP("operator.com")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 493 [Service-Selection] MANDATORY>")
+
+    def test_service_selection_avp__diameter_avp_convert_classmethod(self):
+        avp = ServiceSelectionAVP("operator.com")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_service_selection_avp__apn_1(self):
         avp = ServiceSelectionAVP("operator.com")
@@ -850,6 +897,17 @@ class TestAllocationRetentionPriorityAVP(unittest.TestCase):
         avp = AllocationRetentionPriorityAVP([PriorityLevelAVP(QCI_8)])
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1034 [Allocation-Retention-Priority] VENDOR>")
 
+    def test_allocation_retention_priority_avp__diameter_avp_convert_classmethod(self):
+        avp = AllocationRetentionPriorityAVP([PriorityLevelAVP(QCI_8)])
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_allocation_retention_priority_avp__default(self):
         ref = "0000040a8000001c000028af0000041680000010000028af00000008"
 
@@ -881,6 +939,20 @@ class TestEpsSubscribedQosProfileAVP(unittest.TestCase):
         ])
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1431 [Eps-Subscribed-Qos-Profile] VENDOR, MANDATORY>")
 
+    def test_eps_subscribed_qos_profile_avp__diameter_avp_convert_classmethod(self):
+        avp = EpsSubscribedQosProfileAVP([
+                                            AllocationRetentionPriorityAVP([PriorityLevelAVP(QCI_8)]), 
+                                            QosClassIdentifierAVP(QCI_9)
+        ])
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_eps_subscribed_qos_profile_avp__default(self):
         ref = "00000597c0000038000028af0000040a8000001c000028af0000041680000010000028af000000080000040480000010000028af00000009"
       
@@ -909,9 +981,20 @@ class TestVplmnDynamicAddressAllowedAVP(unittest.TestCase):
     def test_vplmn_dynamic_address_allowed_avp__no_value(self):
         self.assertRaises(TypeError, VplmnDynamicAddressAllowedAVP)
 
-    def test_eps_subscribed_qos_profile_avp__repr_dunder(self):
+    def test_vplmn_dynamic_address_allowed_avp__repr_dunder(self):
         avp = VplmnDynamicAddressAllowedAVP(VPLMN_DYNAMIC_ADDRESS_ALLOWED_NOT_ALLOWED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1432 [Vplmn-Dynamic-Address-Allowed] VENDOR, MANDATORY>")
+
+    def test_vplmn_dynamic_address_allowed_avp__diameter_avp_convert_classmethod(self):
+        avp = VplmnDynamicAddressAllowedAVP(VPLMN_DYNAMIC_ADDRESS_ALLOWED_NOT_ALLOWED)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_vplmn_dynamic_address_allowed_avp__not_allowed(self):
         avp = VplmnDynamicAddressAllowedAVP(VPLMN_DYNAMIC_ADDRESS_ALLOWED_NOT_ALLOWED)
@@ -931,6 +1014,17 @@ class TestPdnGwAllocationTypeAVP(unittest.TestCase):
     def test_pdn_gw_allocation_type_avp__repr_dunder(self):
         avp = PdnGwAllocationTypeAVP(PDN_GW_ALLOCATION_TYPE_STATIC)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1438 [Pdn-Gw-Allocation-Type] VENDOR, MANDATORY>")
+
+    def test_pdn_gw_allocation_type_avp__diameter_avp_convert_classmethod(self):
+        avp = PdnGwAllocationTypeAVP(PDN_GW_ALLOCATION_TYPE_STATIC)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_pdn_gw_allocation_type_avp__static(self):
         avp = PdnGwAllocationTypeAVP(PDN_GW_ALLOCATION_TYPE_STATIC)
@@ -954,6 +1048,21 @@ class TestApnConfigurationAVP(unittest.TestCase):
                                     ServiceSelectionAVP("xcap")
         ])
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1430 [Apn-Configuration] VENDOR, MANDATORY>")
+
+    def test_apn_configuration_avp__diameter_avp_convert_classmethod(self):
+        avp = ApnConfigurationAVP([
+                                    ContextIdentifierAVP(convert_to_4_bytes(3)), 
+                                    PdnTypeAVP(PDN_TYPE_IPV4), 
+                                    ServiceSelectionAVP("xcap")
+        ])
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_apn_configuration_avp__default(self):
         ref = "00000596c0000038000028af0000058f80000010000028af00000003000005b080000010000028af00000000000001ed4000000c78636170"
@@ -1059,6 +1168,17 @@ class TestOperatorDeterminedBarringAVP(unittest.TestCase):
         avp = OperatorDeterminedBarringAVP()
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1425 [Operator-Determined-Barring] VENDOR, MANDATORY>")
 
+    def test_operator_determined_barring_avp__diameter_avp_convert_classmethod(self):
+        avp = OperatorDeterminedBarringAVP()
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_operator_determined_barring_avp__set_bit_0(self):
         avp = OperatorDeterminedBarringAVP()
         self.assertEqual(avp.dump().hex(), "00000591c0000010000028af00000000")
@@ -1091,6 +1211,17 @@ class TestImeiAVP(unittest.TestCase):
     def test_imei_avp__repr_dunder(self):
         avp = ImeiAVP("35358511003417")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1402 [Imei] VENDOR, MANDATORY>")
+
+    def test_imei_avp__diameter_avp_convert_classmethod(self):
+        avp = ImeiAVP("35358511003417")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_imei_avp__1(self):
         avp = ImeiAVP("35358511003417")
@@ -1132,6 +1263,17 @@ class TestSoftwareVersionAVP(unittest.TestCase):
         avp = SoftwareVersionAVP("05")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1403 [Software-Version] VENDOR, MANDATORY>")
 
+    def test_software_version_avp__diameter_avp_convert_classmethod(self):
+        avp = SoftwareVersionAVP("05")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_software_version_avp__1(self):
         avp = SoftwareVersionAVP("05")
         ref = "0000057bc000000e000028af30350000"
@@ -1155,6 +1297,21 @@ class TestTerminalInformationAVP(unittest.TestCase):
         avp = TerminalInformationAVP(avps)
 
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1401 [Terminal-Information] VENDOR, MANDATORY>")
+
+    def test_terminal_information_avp__diameter_avp_convert_classmethod(self):
+        imei_avp = ImeiAVP("35358511003417")
+        software_version_avp = SoftwareVersionAVP("05")
+
+        avps = [imei_avp, software_version_avp]
+        avp = TerminalInformationAVP(avps)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_terminal_information_avp__1(self):
         ref = "00000579c0000038000028af0000057ac000001a000028af333533353835313130303334313700000000057bc000000e000028af30350000"
@@ -1190,6 +1347,17 @@ class TestUlrFlagsAVP(unittest.TestCase):
     def test_ulr_flags_avp__repr_dunder(self):
         avp = UlrFlagsAVP(3)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1405 [Ulr-Flags] VENDOR, MANDATORY>")
+
+    def test_ulr_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = UlrFlagsAVP(3)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_ulr_flags_avp__1(self):
         avp = UlrFlagsAVP(3)
@@ -1238,6 +1406,17 @@ class TestVisitedPlmnIdAVP(unittest.TestCase):
         avp = VisitedPlmnIdAVP(bytes.fromhex("27f450"))
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1407 [Visited-Plmn-Id] VENDOR, MANDATORY>")
 
+    def test_visited_plmn_id_avp__diameter_avp_convert_classmethod(self):
+        avp = VisitedPlmnIdAVP(bytes.fromhex("27f450"))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_visited_plmn_id_avp__1(self):
         avp = VisitedPlmnIdAVP(bytes.fromhex("27f450"))
         ref = "0000057fc000000f000028af27f45000"
@@ -1284,6 +1463,17 @@ class TestUeSrvccCapabilityAVP(unittest.TestCase):
         avp = UeSrvccCapabilityAVP(UE_SRVCC_NOT_SUPPORTED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1615 [Ue-Srvcc-Capability] VENDOR>")
 
+    def test_ue_srvcc_capability_avp__diameter_avp_convert_classmethod(self):
+        avp = UeSrvccCapabilityAVP(UE_SRVCC_NOT_SUPPORTED)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_ue_srvcc_capability_avp__ue_srvcc_not_supported(self):
         avp = UeSrvccCapabilityAVP(UE_SRVCC_NOT_SUPPORTED)
         ref = "0000064f80000010000028af00000000"
@@ -1307,6 +1497,20 @@ class TestSupportedServicesAVP(unittest.TestCase):
 
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 3143 [Supported-Services] VENDOR>")
 
+    def test_supported_services_avp__diameter_avp_convert_classmethod(self):
+        supported_monitoring_events_avp = SupportedMonitoringEventsAVP(bytes.fromhex("000000000000001a"))
+
+        avps = [supported_monitoring_events_avp]
+        avp = SupportedServicesAVP(avps)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_supported_services_avp__1(self):
         ref = "00000c4780000020000028af00000c4880000014000028af000000000000001a"
 
@@ -1326,6 +1530,17 @@ class TestSupportedMonitoringEventsAVP(unittest.TestCase):
         avp = SupportedMonitoringEventsAVP(bytes.fromhex("000000000000001a"))
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 3144 [Supported-Monitoring-Events] VENDOR>")
 
+    def test_supported_monitoring_events_avp__diameter_avp_convert_classmethod(self):
+        avp = SupportedMonitoringEventsAVP(bytes.fromhex("000000000000001a"))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_supported_monitoring_events_avp__1(self):
         avp = SupportedMonitoringEventsAVP(bytes.fromhex("000000000000001a"))
         ref = "00000c4880000014000028af000000000000001a"
@@ -1339,6 +1554,17 @@ class TestCancellationTypeAVP(unittest.TestCase):
     def test_cancellation_type_avp__repr_dunder(self):
         avp = CancellationTypeAVP(CANCELLATION_TYPE_MME_UPDATE_PROCEDURE)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1420 [Cancellation-Type] VENDOR, MANDATORY>")
+
+    def test_cancellation_type_avp__diameter_avp_convert_classmethod(self):
+        avp = CancellationTypeAVP(CANCELLATION_TYPE_MME_UPDATE_PROCEDURE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_cancellation_type_avp__mme_update_procedure(self):
         avp = CancellationTypeAVP(CANCELLATION_TYPE_MME_UPDATE_PROCEDURE)
@@ -1373,6 +1599,17 @@ class TestClrFlagsAVP(unittest.TestCase):
     def test_clr_flags_avp__repr_dunder(self):
         avp = ClrFlagsAVP(2)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1638 [Clr-Flags] VENDOR>")
+
+    def test_clr_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = ClrFlagsAVP(2)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_clr_flags_avp__1(self):
         avp = ClrFlagsAVP(2)

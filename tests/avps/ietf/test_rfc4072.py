@@ -92,7 +92,7 @@ class TestEapPayloadAVP(unittest.TestCase):
         ref = "000001ce4000003a02000032016d792d75736572406e61692e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000"
         self.assertEqual(avp.dump().hex(), ref)
 
-    def test_eap_payload_avp__ea_type_umts_authentication_and_key_agreement_eap(self):
+    def test_eap_payload_avp__eap_type_umts_authentication_and_key_agreement_eap(self):
         content = {"nai": self.nai, "payload": "AgEAKBcBAAADAwBAtRAM4pAWdZkLBQAANb\/0OV77760sUjmpBDihxA=="}
         eap_payload = EapPayload(eap_code=EAP_CODE_RESPONSE, eap_id=1, eap_type=EAP_TYPE_UMTS_AUTHENTICATION_AND_KEY_AGREEMENT_EAP, content=content)
 

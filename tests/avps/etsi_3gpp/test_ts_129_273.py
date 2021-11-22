@@ -402,6 +402,17 @@ class TestMobileNodeIdentifierAVP(unittest.TestCase):
         avp = MobileNodeIdentifierAVP("123456789012345@nai.epc.mncXXX.mccYYY.3gppnetwork.org")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 506 [Mobile-Node-Identifier] MANDATORY>")
 
+    def test_mobile_node_identifier_avp__diameter_avp_convert_classmethod(self):
+        avp = MobileNodeIdentifierAVP("123456789012345@nai.epc.mncXXX.mccYYY.3gppnetwork.org")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_mobile_node_identifier_avp__256kbps(self):
         avp = MobileNodeIdentifierAVP("123456789012345@nai.epc.mncXXX.mccYYY.3gppnetwork.org")
         ref = "000001fa4000003d313233343536373839303132333435406e61692e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000"
@@ -415,6 +426,17 @@ class TestNon3gppIpAccessAVP(unittest.TestCase):
     def test_non_3gpp_ip_access_avp__repr_dunder(self):
         avp = Non3gppIpAccessAVP(NON_3GPP_SUBSCRIPTION_ALLOWED)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1501 [Non3gpp-Ip-Access] VENDOR, MANDATORY>")
+
+    def test_non_3gpp_ip_access_avp__diameter_avp_convert_classmethod(self):
+        avp = Non3gppIpAccessAVP(NON_3GPP_SUBSCRIPTION_ALLOWED)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_non_3gpp_ip_access_avp__non_3gpp_subscription_allowed(self):
         avp = Non3gppIpAccessAVP(NON_3GPP_SUBSCRIPTION_ALLOWED)
@@ -436,6 +458,18 @@ class TestMip6FeatureVectorAVP(unittest.TestCase):
         avp = Mip6FeatureVectorAVP(value)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 124 [Mip6-Feature-Vector] MANDATORY>")
 
+    def test__mip6_feature_vector_avp__diameter_avp_convert_classmethod(self):
+        value = bytes.fromhex("0000400000000000")
+        avp = Mip6FeatureVectorAVP(value)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__mip6_feature_vector_avp__1(self):
         value = bytes.fromhex("0000400000000000")
         avp = Mip6FeatureVectorAVP(value)
@@ -455,6 +489,17 @@ class TestNon3gppIpAccessApnAVP(unittest.TestCase):
     def test__non_3gpp_ip_access_apn_avp__repr_dunder(self):
         avp = Non3gppIpAccessApnAVP(NON_3GPP_APNS_ENABLE)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1502 [Non3gpp-Ip-Access-Apn] VENDOR, MANDATORY>")
+
+    def test__non_3gpp_ip_access_apn_avp__diameter_avp_convert_classmethod(self):
+        avp = Non3gppIpAccessApnAVP(NON_3GPP_APNS_ENABLE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__non_3gpp_ip_access_apn_avp__enable(self):
         avp = Non3gppIpAccessApnAVP(NON_3GPP_APNS_ENABLE)
@@ -499,11 +544,48 @@ class TestNon3gppUserDataAVP(unittest.TestCase):
                                         ]),
                                         VplmnDynamicAddressAllowedAVP(VPLMN_DYNAMIC_ADDRESS_ALLOWED_NOT_ALLOWED)
                  ])
-
-
         ]
         avp = Non3gppUserDataAVP(avps)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 1500 [Non3gpp-User-Data] VENDOR, MANDATORY>")
+
+    def test__non_3gpp_user_data_avp__diameter_avp_convert_classmethod(self):
+        avps = [
+                 SubscriptionIdAVP([
+                                        SubscriptionIdTypeAVP(END_USER_E164),
+                                        SubscriptionIdDataAVP("5511123456789")
+                 ]), 
+                 Non3gppIpAccessAVP(NON_3GPP_SUBSCRIPTION_ALLOWED), 
+                 Non3gppIpAccessApnAVP(NON_3GPP_APNS_ENABLE), 
+                 AmbrAVP([
+                                        MaxRequestedBandwidthDlAVP(256000),
+                                        MaxRequestedBandwidthUlAVP(256000)
+                 ]),
+                 X3gppChargingCharacteristicsAVP("0B00"),
+                 ContextIdentifierAVP(1),
+                 ApnConfigurationAVP([
+                                        ContextIdentifierAVP(1423),
+                                        ServiceSelectionAVP("ims"),
+                                        PdnTypeAVP(PDN_TYPE_IPV4V6),
+                                        EpsSubscribedQosProfileAVP([
+                                                                        QosClassIdentifierAVP(QCI_5),
+                                                                        AllocationRetentionPriorityAVP([PriorityLevelAVP(8)])
+                                        ]),
+                                        AmbrAVP([
+                                                    MaxRequestedBandwidthDlAVP(256000),
+                                                    MaxRequestedBandwidthUlAVP(256000)
+                                        ]),
+                                        VplmnDynamicAddressAllowedAVP(VPLMN_DYNAMIC_ADDRESS_ALLOWED_NOT_ALLOWED)
+                 ])
+        ]
+        avp = Non3gppUserDataAVP(avps)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__non_3gpp_user_data_avp__1(self):
         avps = [

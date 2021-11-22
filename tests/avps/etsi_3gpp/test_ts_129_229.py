@@ -304,6 +304,17 @@ class TestFeatureListIdAVP(unittest.TestCase):
         avp = FeatureListIdAVP(1)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 629 [Feature-List-Id] VENDOR>")
 
+    def test_feature_list_id_avp__diameter_avp_convert_classmethod(self):
+        avp = FeatureListIdAVP(1)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_feature_list_id_avp__1(self):
         avp = FeatureListIdAVP(1)
         ref = "0000027580000010000028af00000001"
@@ -324,6 +335,17 @@ class TestFeatureListAVP(unittest.TestCase):
     def test_feature_list_avp__repr_dunder(self):
         avp = FeatureListAVP(3690988033)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 630 [Feature-List] VENDOR>")
+
+    def test_feature_list_avp__diameter_avp_convert_classmethod(self):
+        avp = FeatureListAVP(3690988033)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_feature_list_avp__1(self):
         avp = FeatureListAVP(3690988033)
@@ -349,6 +371,22 @@ class TestSupportedFeaturesAVP(unittest.TestCase):
         avp = SupportedFeaturesAVP(avps)
 
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 628 [Supported-Features] VENDOR>")
+
+    def test_supported_features_avp__diameter_avp_convert_classmethod(self):
+        vendor_id_avp = VendorIdAVP(VENDOR_ID_3GPP)
+        feature_list_id_avp = FeatureListIdAVP(1)
+        feature_list_avp = FeatureListAVP(3690988033)
+
+        avps = [vendor_id_avp, feature_list_id_avp, feature_list_avp]
+        avp = SupportedFeaturesAVP(avps)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test_supported_features_avp__1(self):
         ref = "0000027480000038000028af0000010a4000000c000028af0000027580000010000028af000000010000027680000010000028afdc000201"
@@ -383,6 +421,17 @@ class TestVisitedNetworkIdentifierAVP(unittest.TestCase):
         avp = VisitedNetworkIdentifierAVP("mncXXX.mccYYY.3gppnetwork.org")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 600 [Visited-Network-Identifier] VENDOR, MANDATORY>")
 
+    def test_visited_network_identifier_avp__diameter_avp_convert_classmethod(self):
+        avp = VisitedNetworkIdentifierAVP("mncXXX.mccYYY.3gppnetwork.org")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_visited_network_identifier_avp__mncXXX_mccYYY(self):
         avp = VisitedNetworkIdentifierAVP("mncXXX.mccYYY.3gppnetwork.org")
         ref = "00000258c0000029000028af6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000"
@@ -396,6 +445,17 @@ class TestSipNumberAuthItemsAVP(unittest.TestCase):
     def test__sip_number_auth_items_avp__repr_dunder(self):
         avp = SipNumberAuthItemsAVP(0)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 607 [Sip-Number-Auth-Items] VENDOR, MANDATORY>")
+
+    def test__sip_number_auth_items_avp__diameter_avp_convert_classmethod(self):
+        avp = SipNumberAuthItemsAVP(0)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__sip_number_auth_items_avp__1(self):
         avp = SipNumberAuthItemsAVP(1)
@@ -415,6 +475,17 @@ class TestSipAuthenticationSchemeAVP(unittest.TestCase):
     def test__sip_authentication_scheme_avp__repr_dunder(self):
         avp = SipAuthenticationSchemeAVP("SIP Digest")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 608 [Sip-Authentication-Scheme] VENDOR, MANDATORY>")
+
+    def test__sip_authentication_scheme_avp__diameter_avp_convert_classmethod(self):
+        avp = SipAuthenticationSchemeAVP("SIP Digest")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__sip_authentication_scheme_avp__1(self):
         avp = SipAuthenticationSchemeAVP("SIP Digest")
@@ -451,6 +522,18 @@ class TestSipAuthenticateAVP(unittest.TestCase):
         avp = SipAuthenticateAVP(data)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 609 [Sip-Authenticate] VENDOR, MANDATORY>")
 
+    def test__sip_authenticate_avp__diameter_avp_convert_classmethod(self):
+        data = bytes.fromhex("0d005afac8190f0af480882e1168f5721fd697f6ce41000057bafb6ffd6a720d")
+        avp = SipAuthenticateAVP(data)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__sip_authenticate_avp__1(self):
         data = bytes.fromhex("0d005afac8190f0af480882e1168f5721fd697f6ce41000057bafb6ffd6a720d")
         avp = SipAuthenticateAVP(data)
@@ -466,6 +549,17 @@ class TestSipAuthorizationAVP(unittest.TestCase):
         avp = SipAuthorizationAVP(bytes.fromhex("b8cfc7056c4891ce"))
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 610 [Sip-Authorization] VENDOR, MANDATORY>")
 
+    def test__sip_authorization_avp__diameter_avp_convert_classmethod(self):
+        avp = SipAuthorizationAVP(bytes.fromhex("b8cfc7056c4891ce"))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__sip_authorization_avp__1(self):
         avp = SipAuthorizationAVP(bytes.fromhex("b8cfc7056c4891ce"))
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 610 [Sip-Authorization] VENDOR, MANDATORY>")
@@ -479,6 +573,18 @@ class TestConfidentialityKeyAVP(unittest.TestCase):
         data = bytes.fromhex("d0916caa8f6008195cbff313d8411369")
         avp = ConfidentialityKeyAVP(data)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 625 [Confidentiality-Key] VENDOR, MANDATORY>")
+
+    def test__confidentiality_key_avp__diameter_avp_convert_classmethod(self):
+        data = bytes.fromhex("d0916caa8f6008195cbff313d8411369")
+        avp = ConfidentialityKeyAVP(data)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__confidentiality_key_avp__1(self):
         data = bytes.fromhex("d0916caa8f6008195cbff313d8411369")
@@ -494,6 +600,17 @@ class TestIntegrityKeyAVP(unittest.TestCase):
     def test__integrity_key_avp__repr_dunder(self):
         avp = IntegrityKeyAVP("1d9f3aadeef31e24f3ebd7c52eee4d26")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 626 [Integrity-Key] VENDOR, MANDATORY>")
+
+    def test__integrity_key_avp__diameter_avp_convert_classmethod(self):
+        avp = IntegrityKeyAVP("1d9f3aadeef31e24f3ebd7c52eee4d26")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__integrity_key_avp__1(self):
         data = bytes.fromhex("1d9f3aadeef31e24f3ebd7c52eee4d26")
@@ -517,6 +634,24 @@ class TestSipAuthDataItemAVP(unittest.TestCase):
         avp = SipAuthDataItemAVP(avps)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 612 [Sip-Auth-Data-Item] VENDOR, MANDATORY>")
 
+    def test__sip_auth_data_item_avp__diameter_avp_convert_classmethod(self):
+        sip_authentication_scheme_avp = SipAuthenticationSchemeAVP("EAP-AKA")
+        sip_authenticate_avp = SipAuthenticateAVP(bytes.fromhex("0d005afac8190f0af480882e1168f5721fd697f6ce41000057bafb6ffd6a720d"))
+        sip_authorization_avp = SipAuthorizationAVP(bytes.fromhex("b8cfc7056c4891ce"))
+        confidentiality_key_avp = ConfidentialityKeyAVP(bytes.fromhex("d0916caa8f6008195cbff313d8411369"))
+        integrity_key_avp = IntegrityKeyAVP(bytes.fromhex("1d9f3aadeef31e24f3ebd7c52eee4d26"))
+
+        avps = [sip_authentication_scheme_avp, sip_authenticate_avp, sip_authorization_avp, confidentiality_key_avp, integrity_key_avp]
+        avp = SipAuthDataItemAVP(avps)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__sip_auth_data_item_avp__1(self):
         sip_authentication_scheme_avp = SipAuthenticationSchemeAVP("EAP-AKA")
         sip_authenticate_avp = SipAuthenticateAVP(bytes.fromhex("0d005afac8190f0af480882e1168f5721fd697f6ce41000057bafb6ffd6a720d"))
@@ -538,6 +673,17 @@ class TestServerAssignmentTypeAVP(unittest.TestCase):
     def test__server_assignment_type_avp__repr_dunder(self):
         avp = ServerAssignmentTypeAVP(SERVER_ASSIGNMENT_TYPE_NO_ASSIGNMENT)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 614 [Server-Assignment-Type] VENDOR, MANDATORY>")
+
+    def test__server_assignment_type_avp__diameter_avp_convert_classmethod(self):
+        avp = ServerAssignmentTypeAVP(SERVER_ASSIGNMENT_TYPE_NO_ASSIGNMENT)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__server_assignment_type_avp__no_assignment(self):
         avp = ServerAssignmentTypeAVP(SERVER_ASSIGNMENT_TYPE_NO_ASSIGNMENT)
@@ -623,6 +769,17 @@ class TestReasonCodeAVP(unittest.TestCase):
         avp = ReasonCodeAVP(REASON_CODE_PERMANENT_TERMINATION)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 616 [Reason-Code] VENDOR, MANDATORY>")
 
+    def test__reason_code_avp__diameter_avp_convert_classmethod(self):
+        avp = ReasonCodeAVP(REASON_CODE_PERMANENT_TERMINATION)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__reason_code_avp__permanent_termination(self):
         avp = ReasonCodeAVP(REASON_CODE_PERMANENT_TERMINATION)
         ref = "00000268c0000010000028af00000000"
@@ -652,6 +809,17 @@ class TestReasonInfoAVP(unittest.TestCase):
         avp = ReasonInfoAVP("Subscriber has been removed from NW.")
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 617 [Reason-Info] VENDOR, MANDATORY>")
 
+    def test__reason_info_avp__diameter_avp_convert_classmethod(self):
+        avp = ReasonInfoAVP("Subscriber has been removed from NW.")
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test__reason_info_avp__1(self):
         avp = ReasonInfoAVP("Subscriber has been removed from NW.")
         ref = "00000269c0000030000028af5375627363726962657220686173206265656e2072656d6f7665642066726f6d204e572e"
@@ -678,6 +846,20 @@ class TestDeregistrationReasonAVP(unittest.TestCase):
         ]
         avp = DeregistrationReasonAVP(avps)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 615 [Deregistration-Reason] VENDOR, MANDATORY>")
+
+    def test__de_registration_reason_avp__diameter_avp_convert_classmethod(self):
+        avps = [
+                    ReasonCodeAVP(REASON_CODE_PERMANENT_TERMINATION)
+        ]
+        avp = DeregistrationReasonAVP(avps)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
 
     def test__de_registration_reason_avp__reason_code_1(self):
         ref = "00000267c000001c000028af00000268c0000010000028af00000000"

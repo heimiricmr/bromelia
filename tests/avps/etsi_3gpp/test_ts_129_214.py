@@ -229,6 +229,19 @@ class TestMaxRequestedBandwidthDlAVP(unittest.TestCase):
         avp = MaxRequestedBandwidthDlAVP(MAX_DL)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 515 [Max-Requested-Bandwidth-Dl] VENDOR, MANDATORY>")
 
+    def test_max_requested_bandwidth_dl_avp__diameter_avp_convert_classmethod(self):
+        MAX_DL = convert_to_4_bytes(256000)
+        
+        avp = MaxRequestedBandwidthDlAVP(MAX_DL)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_max_requested_bandwidth_dl_avp__256kbps(self):
         MAX_DL = convert_to_4_bytes(256000)
 
@@ -249,22 +262,35 @@ class TestMaxRequestedBandwidthUlAVP(unittest.TestCase):
         self.assertRaises(TypeError, MaxRequestedBandwidthUlAVP)
 
     def test_max_requested_bandwidth_ul_avp__repr_dunder(self):
-        MAX_DL = convert_to_4_bytes(256000)
+        MAX_UL = convert_to_4_bytes(256000)
         
-        avp = MaxRequestedBandwidthUlAVP(MAX_DL)
+        avp = MaxRequestedBandwidthUlAVP(MAX_UL)
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 516 [Max-Requested-Bandwidth-Ul] VENDOR, MANDATORY>")
 
-    def test_max_requested_bandwidth_ul_avp__256kbps(self):
-        MAX_DL = convert_to_4_bytes(256000)
+    def test_max_requested_bandwidth_ul_avp__diameter_avp_convert_classmethod(self):
+        MAX_UL = convert_to_4_bytes(256000)
+        
+        avp = MaxRequestedBandwidthUlAVP(MAX_UL)
 
-        avp = MaxRequestedBandwidthUlAVP(MAX_DL)
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_max_requested_bandwidth_ul_avp__256kbps(self):
+        MAX_UL = convert_to_4_bytes(256000)
+
+        avp = MaxRequestedBandwidthUlAVP(MAX_UL)
         ref = "00000204c0000010000028af0003e800"
         self.assertEqual(avp.dump().hex(), ref)
 
     def test_max_requested_bandwidth_ul_avp__999Mbps(self):
-        MAX_DL = convert_to_4_bytes(999000000)
+        MAX_UL = convert_to_4_bytes(999000000)
 
-        avp = MaxRequestedBandwidthUlAVP(MAX_DL)
+        avp = MaxRequestedBandwidthUlAVP(MAX_UL)
         ref = "00000204c0000010000028af3b8b87c0"
         self.assertEqual(avp.dump().hex(), ref)
 

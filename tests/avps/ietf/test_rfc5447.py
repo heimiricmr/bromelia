@@ -173,6 +173,22 @@ class TestMip6AgentInfoAVP(unittest.TestCase):
         
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 486 [Mip6-Agent-Info] MANDATORY>")
 
+    def test_mip6_agent_info_avp__diameter_avp_convert_classmethod(self):
+        avp = Mip6AgentInfoAVP([
+                                    MipHomeAgentHostAVP([
+                                                            DestinationRealmAVP("epc.mncXXX.mccYYY.3gppnetwork.org"), 
+                                                            DestinationHostAVP("topon.s5pgw.node.epc.mncXXX.mccYYY.3gppnetwork.org")
+                                    ])
+        ])
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
     def test_mip6_agent_info_avp__mip_home_agent_host_only(self):
         ref = "000001e6400000780000015c400000700000011b400000296570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f7267000000000001254000003a746f706f6e2e73357067772e6e6f64652e6570632e6d6e635858582e6d63635959592e336770706e6574776f726b2e6f72670000"
 
