@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-    bromelia.avps
-    ~~~~~~~~~~~~~
+    bromelia.constants
+    ~~~~~~~~~~~~~~~~~~
 
-    This module contains the Diameter protocol AVP library 
-    that are used to create Diameter messages.
+    This module contains constants that are defined in several
+    Diameter standard documents (both ETSI and IETF specs).
     
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
@@ -25,3 +25,9 @@ from .ietf.rfc5447 import *
 from .ietf.rfc6733 import *
 from .ietf.rfc7155 import *
 from .ietf.rfc8506 import *
+
+from .app_ids import *
+from .experimental_result_codes import *
+from .flags import *
+from .general import *
+from .result_codes import *

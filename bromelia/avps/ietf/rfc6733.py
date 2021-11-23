@@ -14,7 +14,7 @@ import datetime
 from ...__version__ import __version__
 
 from ...base import DiameterAVP
-from ...constants import *
+from ...constants.ietf.rfc6733 import *
 from ...types import *
 
 PRODUCT_NAME = f"Python bromelia v{__version__}"

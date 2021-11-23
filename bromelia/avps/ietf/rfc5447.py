@@ -11,8 +11,8 @@
 
 from ..ietf.rfc6733 import DestinationHostAVP
 from ..ietf.rfc6733 import DestinationRealmAVP
-from ...base import *
-from ...constants import *
+from ...base import DiameterAVP
+from ...constants.ietf.rfc5447 import *
 from ...types import *
 
 

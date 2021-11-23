@@ -12,7 +12,7 @@
 from ..ietf.rfc6733 import VendorIdAVP
 
 from ...base import DiameterAVP
-from ...constants import *
+from ...constants.etsi_3gpp.ts_129_229 import *
 from ...types import *
 
 

@@ -19,7 +19,7 @@ from ..ietf.rfc4006 import SubscriptionIdAVP
 from ..ietf.rfc6733 import SessionTimeoutAVP
 
 from ...base import DiameterAVP
-from ...constants import *
+from ...constants.etsi_3gpp.ts_129_273 import *
 from ...types import *
 
 

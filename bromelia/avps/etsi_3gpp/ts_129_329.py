@@ -10,7 +10,7 @@
 """
 
 from ...base import DiameterAVP
-from ...constants import *
+from ...constants.etsi_3gpp.ts_129_329 import *
 from ...types import *
 from ...utils import decode_from_tbcd, encode_to_tbcd
 

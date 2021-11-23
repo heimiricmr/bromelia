@@ -1,0 +1,43 @@
+# -*- coding: utf-8 -*-
+"""
+    bromelia.constants.flags
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module contains list of Diameter Flags defined in IETF RFC 6733.
+    
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
+    :license: MIT, see LICENSE for more details.
+"""
+
+from .._internal_utils import convert_to_1_byte
+
+
+#: List of COMMAND FLAGS IN DIAMETER HEADER.
+FLAG_RESPONSE = convert_to_1_byte(0x00)
+FLAG_RESPONSE_AND_RETRANSMITTED = convert_to_1_byte(0x10)
+FLAG_RESPONSE_AND_ERROR = convert_to_1_byte(0x20)
+FLAG_RESPONSE_AND_ERROR_AND_RETRANSMITTED = convert_to_1_byte(0x30)
+FLAG_RESPONSE_AND_PROXYABLE = convert_to_1_byte(0x40)
+FLAG_RESPONSE_AND_PROXYABLE_AND_RETRANSMITTED = convert_to_1_byte(0x50)
+FLAG_RESPONSE_AND_PROXYABLE_AND_ERROR = convert_to_1_byte(0x60)
+FLAG_RESPONSE_AND_PROXYABLE_AND_ERROR_AND_RETRANSMITTED = convert_to_1_byte(0x70)
+
+FLAG_REQUEST = convert_to_1_byte(0x80)
+FLAG_REQUEST_AND_RETRANSMITTED = convert_to_1_byte(0x90)
+FLAG_REQUEST_AND_ERROR = convert_to_1_byte(0xa0)
+FLAG_REQUEST_AND_ERROR_AND_RETRANSMITTED = convert_to_1_byte(0xb0)
+FLAG_REQUEST_AND_PROXYABLE = convert_to_1_byte(0xc0)
+FLAG_REQUEST_AND_PROXYABLE_AND_RETRANSMITTED = convert_to_1_byte(0xd0)
+FLAG_REQUEST_AND_PROXYABLE_AND_ERROR = convert_to_1_byte(0xe0)
+FLAG_REQUEST_AND_PROXYABLE_AND_ERROR_AND_RETRANSMITTED = convert_to_1_byte(0xf0)
+
+#: List of COMMAND FLAGS IN DIAMETER AVP HEADER.
+FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED = convert_to_1_byte(0x00)
+FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_PROTECTED = convert_to_1_byte(0x20)
+FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED = convert_to_1_byte(0x40)
+FLAG_NOT_VENDOR_SPECIFIC_MANDATORY_AND_PROTECTED = convert_to_1_byte(0x60)
+
+FLAG_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED = convert_to_1_byte(0x80)
+FLAG_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_PROTECTED = convert_to_1_byte(0xa0)
+FLAG_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED = convert_to_1_byte(0xc0)
+FLAG_VENDOR_SPECIFIC_MANDATORY_AND_PROTECTED = convert_to_1_byte(0xe0)

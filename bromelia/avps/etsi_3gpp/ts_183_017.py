@@ -40,5 +40,3 @@ class ReservationPriorityAVP(DiameterAVP, EnumeratedType):
                              ReservationPriorityAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_ETSI)
-
-

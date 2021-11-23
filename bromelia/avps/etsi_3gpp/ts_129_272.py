@@ -26,7 +26,7 @@ from ..etsi_3gpp.ts_129_329 import MsisdnAVP
 from ..ietf.rfc5447 import Mip6AgentInfoAVP
 
 from ...base import DiameterAVP
-from ...constants import *
+from ...constants.etsi_3gpp.ts_129_272 import *
 from ...exceptions import AVPAttributeValueError
 from ...types import *
 from ...utils import decode_from_tbcd, encode_to_tbcd
@@ -83,7 +83,7 @@ class AmbrAVP(DiameterAVP, GroupedType):
                     # "extended_max_requested_bw_dl": ExtendedMaxRequestedBwDlAVP,
     }
 
-    def __init__(self, data):        
+    def __init__(self, data):
         DiameterAVP.__init__(self, 
                              AmbrAVP.code,
                              AmbrAVP.vendor_id)
@@ -310,7 +310,7 @@ class ApnConfigurationAVP(DiameterAVP, GroupedType):
                     # "rds_indicator": RdsIndicatorAVP,
     }
 
-    def __init__(self, data):        
+    def __init__(self, data):
         DiameterAVP.__init__(self, 
                              ApnConfigurationAVP.code,
                              ApnConfigurationAVP.vendor_id)
@@ -1091,4 +1091,3 @@ class ClrFlagsAVP(DiameterAVP, Unsigned32Type):
                              ClrFlagsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
-

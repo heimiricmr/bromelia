@@ -12,8 +12,8 @@
 import base64
 
 from ..._internal_utils import convert_to_1_byte
-from ...base import *
-from ...constants import *
+from ...base import DiameterAVP
+from ...constants.ietf.rfc4072 import *
 from ...types import *
 
 

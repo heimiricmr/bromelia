@@ -10,7 +10,7 @@
 """
 
 from ...base import DiameterAVP
-from ...constants import *
+from ...constants.etsi_3gpp.ts_129_214 import *
 from ...types import *
 
 
