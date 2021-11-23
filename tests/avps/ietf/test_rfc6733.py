@@ -1520,6 +1520,10 @@ class TestAcctMultiSessionIdAVP(unittest.TestCase):
 
 
 class TestEventTimestampAVP(unittest.TestCase):
+    def test_event_timestamp_avp__no_value(self):
+        avp = EventTimestampAVP()
+        self.assertIsInstance(avp, EventTimestampAVP)
+
     def test_event_timestamp_avp__repr_dunder(self):
         avp = EventTimestampAVP()
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 55 [Event-Timestamp] MANDATORY>")
@@ -2153,6 +2157,10 @@ class TestResultCodeAVP(unittest.TestCase):
         
 
 class TestProductNameAVP(unittest.TestCase):
+    def test_product_name_avp__no_value(self):
+        avp = ProductNameAVP()
+        self.assertIsInstance(avp, ProductNameAVP)
+
     def test_product_name_avp__default(self):
         avp = ProductNameAVP()
         ref = "0000010d0000001e507974686f6e2062726f6d656c69612076302e322e300000"
@@ -3256,6 +3264,10 @@ class TestInbandSecurityIdAVP(unittest.TestCase):
 
 
 class TestAccountingRecordTypeAVP(unittest.TestCase):
+    def test_accounting_record_type_avp__no_value(self):
+        avp = AccountingRecordTypeAVP()
+        self.assertIsInstance(avp, AccountingRecordTypeAVP)
+
     def test_accounting_record_type_avp__repr_dunder(self):
         avp = AccountingRecordTypeAVP()
         self.assertEqual(avp.__repr__(), "<Diameter AVP: 480 [Accounting-Record-Type] MANDATORY>")
