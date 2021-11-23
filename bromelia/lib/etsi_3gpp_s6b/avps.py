@@ -10,8 +10,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from ...avps.etsi_3gpp.ts_129_212 import SupportedFeaturesAVP
-
+from ...avps.etsi_3gpp.ts_129_229 import SupportedFeaturesAVP
 from ...avps.etsi_3gpp.ts_129_229 import VisitedNetworkIdentifierAVP
 
 from ...avps.etsi_3gpp.ts_129_272 import ApnConfigurationAVP

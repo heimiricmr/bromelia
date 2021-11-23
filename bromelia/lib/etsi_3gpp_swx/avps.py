@@ -11,7 +11,6 @@
 """
 
 from ...avps.etsi_3gpp.ts_129_212 import RatTypeAVP
-from ...avps.etsi_3gpp.ts_129_212 import SupportedFeaturesAVP
 
 from ...avps.etsi_3gpp.ts_129_272 import ContextIdentifierAVP
 from ...avps.etsi_3gpp.ts_129_272 import ServiceSelectionAVP
@@ -23,6 +22,7 @@ from ...avps.etsi_3gpp.ts_129_229 import SipNumberAuthItemsAVP
 from ...avps.etsi_3gpp.ts_129_229 import SipAuthenticationSchemeAVP
 from ...avps.etsi_3gpp.ts_129_229 import SipAuthDataItemAVP
 from ...avps.etsi_3gpp.ts_129_229 import ServerAssignmentTypeAVP
+from ...avps.etsi_3gpp.ts_129_229 import SupportedFeaturesAVP
 from ...avps.etsi_3gpp.ts_129_229 import ReasonCodeAVP
 from ...avps.etsi_3gpp.ts_129_229 import DeregistrationReasonAVP
 from ...avps.etsi_3gpp.ts_129_229 import VisitedNetworkIdentifierAVP

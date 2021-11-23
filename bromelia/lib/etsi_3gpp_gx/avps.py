@@ -25,10 +25,11 @@ from ...avps.etsi_3gpp.ts_129_212 import OfflineAVP
 from ...avps.etsi_3gpp.ts_129_212 import OnlineAVP
 from ...avps.etsi_3gpp.ts_129_212 import QosInformationAVP
 from ...avps.etsi_3gpp.ts_129_212 import RatTypeAVP
-from ...avps.etsi_3gpp.ts_129_212 import SupportedFeaturesAVP
 from ...avps.etsi_3gpp.ts_129_212 import UeLocalIpAddressAVP
 
 from ...avps.etsi_3gpp.ts_129_214 import AccessNetworkChargingAddressAVP
+
+from ...avps.etsi_3gpp.ts_129_229 import SupportedFeaturesAVP
 
 from ...avps.etsi_3gpp.ts_129_273 import AnTrustedAVP
 

@@ -18,8 +18,8 @@ from ..avps.etsi_3gpp.ts_129_061 import X3gppChargingCharacteristicsAVP
 
 from ..avps.etsi_3gpp.ts_129_212 import RatTypeAVP
 from ..avps.etsi_3gpp.ts_129_212 import UeLocalIpAddressAVP
-from ..avps.etsi_3gpp.ts_129_212 import SupportedFeaturesAVP
 
+from ..avps.etsi_3gpp.ts_129_229 import SupportedFeaturesAVP
 from ..avps.etsi_3gpp.ts_129_229 import VisitedNetworkIdentifierAVP
 
 from ..avps.etsi_3gpp.ts_129_272 import ServiceSelectionAVP

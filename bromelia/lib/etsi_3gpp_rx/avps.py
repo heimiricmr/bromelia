@@ -55,3 +55,5 @@ from ...avps.ietf.rfc6733 import TerminationCauseAVP
 from ...avps.ietf.rfc7155 import FramedIpAddressAVP
 from ...avps.ietf.rfc7155 import CalledStationIdAVP
 from ...avps.ietf.rfc7155 import FramedIpv6PrefixAVP
+
+from ...avps.ietf.rfc8506 import UserEquipmentInfoAVP
