@@ -510,19 +510,79 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1405 [Ulr-Flags] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_ula_flags_avp_stream(self):
-        pass
+        stream = bytes.fromhex("0000057ec0000010000028af00000003")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], UlaFlagsAVP))
+        self.assertEqual(avps[0].code, ULA_FLAGS_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000003"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1406 [Ula-Flags] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_air_flags_avp_stream(self):
-        pass
+        stream = bytes.fromhex("0000068f80000010000028af00000003")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], AirFlagsAVP))
+        self.assertEqual(avps[0].code, AIR_FLAGS_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertFalse(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000003"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1679 [Air-Flags] VENDOR>")
 
     def test_diameter_avp__load_staticmethod__parsing_nor_flags_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000005a3c0000010000028af00000003")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], NorFlagsAVP))
+        self.assertEqual(avps[0].code, NOR_FLAGS_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000003"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1443 [Nor-Flags] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_pur_flags_avp_stream(self):
-        pass
+        stream = bytes.fromhex("0000066380000010000028af00000003")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], PurFlagsAVP))
+        self.assertEqual(avps[0].code, PUR_FLAGS_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertFalse(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000003"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1635 [Pur-Flags] VENDOR>")
 
     def test_diameter_avp__load_staticmethod__parsing_pua_flags_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000005a2c0000010000028af00000003")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], PuaFlagsAVP))
+        self.assertEqual(avps[0].code, PUA_FLAGS_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000003"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1442 [Pua-Flags] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_alert_reason_avp_stream(self):
         pass
@@ -1371,23 +1431,168 @@ class TestUlrFlagsAVP(unittest.TestCase):
 
 
 class TestUlaFlagsAVP(unittest.TestCase):
-    pass
+    def test_ula_flags_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = UlaFlagsAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test_ula_flags_avp__repr_dunder(self):
+        avp = UlaFlagsAVP(3)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1406 [Ula-Flags] VENDOR, MANDATORY>")
+
+    def test_ula_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = UlaFlagsAVP(3)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_ula_flags_avp__1(self):
+        avp = UlaFlagsAVP(3)
+        ref = "0000057ec0000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_ula_flags_avp__2(self):
+        avp = UlaFlagsAVP(255)
+        ref = "0000057ec0000010000028af000000ff"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestAirFlagsAVP(unittest.TestCase):
-    pass
+    def test_air_flags_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = AirFlagsAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test_air_flags_avp__repr_dunder(self):
+        avp = AirFlagsAVP(3)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1679 [Air-Flags] VENDOR>")
+
+    def test_air_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = AirFlagsAVP(3)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_air_flags_avp__1(self):
+        avp = AirFlagsAVP(3)
+        ref = "0000068f80000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_air_flags_avp__2(self):
+        avp = AirFlagsAVP(255)
+        ref = "0000068f80000010000028af000000ff"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestNorFlagsAVP(unittest.TestCase):
-    pass
+    def test_nor_flags_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = NorFlagsAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test_nor_flags_avp__repr_dunder(self):
+        avp = NorFlagsAVP(3)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1443 [Nor-Flags] VENDOR, MANDATORY>")
+
+    def test_nor_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = NorFlagsAVP(3)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_nor_flags_avp__1(self):
+        avp = NorFlagsAVP(3)
+        ref = "000005a3c0000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_nor_flags_avp__2(self):
+        avp = NorFlagsAVP(255)
+        ref = "000005a3c0000010000028af000000ff"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestPurFlagsAVP(unittest.TestCase):
-    pass
+    def test_pur_flags_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = PurFlagsAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test_pur_flags_avp__repr_dunder(self):
+        avp = PurFlagsAVP(3)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1635 [Pur-Flags] VENDOR>")
+
+    def test_pur_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = PurFlagsAVP(3)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_pur_flags_avp__1(self):
+        avp = PurFlagsAVP(3)
+        ref = "0000066380000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_pur_flags_avp__2(self):
+        avp = PurFlagsAVP(255)
+        ref = "0000066380000010000028af000000ff"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestPuaFlagsAVP(unittest.TestCase):
-    pass
+    def test_pua_flags_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = PuaFlagsAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test_pua_flags_avp__repr_dunder(self):
+        avp = PuaFlagsAVP(3)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1442 [Pua-Flags] VENDOR, MANDATORY>")
+
+    def test_pua_flags_avp__diameter_avp_convert_classmethod(self):
+        avp = PuaFlagsAVP(3)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_pua_flags_avp__1(self):
+        avp = PuaFlagsAVP(3)
+        ref = "000005a2c0000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_pua_flags_avp__2(self):
+        avp = PuaFlagsAVP(255)
+        ref = "000005a2c0000010000028af000000ff"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestAlertReasonAVP(unittest.TestCase):

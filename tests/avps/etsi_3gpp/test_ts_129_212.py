@@ -191,9 +191,6 @@ class TestDiameterAVP(unittest.TestCase):
     def test_diameter_avp__load_staticmethod__parsing_bearer_usage_avp_stream(self):
         pass
 
-    def test_diameter_avp__load_staticmethod__parsing_supported_features_avp_stream(self):
-        pass
-
     def test_diameter_avp__load_staticmethod__parsing_charging_rule_install_avp_stream(self):
         pass
 
