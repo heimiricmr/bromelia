@@ -299,23 +299,6 @@ class BearerUsageAVP(DiameterAVP, EnumeratedType):
         EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
-class SupportedFeaturesAVP(DiameterAVP, GroupedType):
-    """Implementation of Supported-Features AVP in Section 6.3.29 of 
-    ETSI TS 129 229 V14.3.0 (2019-10).
-
-    The Supported-Features AVP (AVP Code 628) is of type Grouped.
-    """
-    code = SUPPORTED_FEATURES_AVP_CODE
-    vendor_id = VENDOR_ID_3GPP
-
-    def __init__(self, data):
-        DiameterAVP.__init__(self, 
-                             SupportedFeaturesAVP.code,
-                             SupportedFeaturesAVP.vendor_id)
-        DiameterAVP.set_vendor_id_bit(self, True)
-        GroupedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
-
-
 class ChargingRuleInstallAVP(DiameterAVP, GroupedType):
     """Implementation of Charging-Rule-Install AVP in Section 5.3.2 of 
     ETSI TS 129 212 V15.3.0 (2018-07).

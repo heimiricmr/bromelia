@@ -1004,32 +1004,6 @@ class SupportedServicesAVP(DiameterAVP, GroupedType):
                              SupportedServicesAVP.code,
                              SupportedServicesAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
-
-        if isinstance(data, bytes):
-            data = DiameterAVP.load(data)
-            self.avps = data
-
-        if not isinstance(data, list):
-                raise DataTypeError("GroupedType MUST have data argument "\
-                                "of 'list'")
-
-        self.data = b""
-
-        supported_monitoring_events_avp_count = 0
-        for avp in data:
-            if isinstance(avp, SupportedMonitoringEventsAVP):
-                self.supported_monitoring_events_avp = avp
-                self.data += avp.dump()
-                supported_monitoring_events_avp_count += 1
-
-
-        if supported_monitoring_events_avp_count > 1:
-            raise AVPAttributeValueError("invalid input argument for "\
-                                         "SupportedServicesAVP. It "\
-                                         "MUST contain only one "\
-                                         "SupportedMonitoringEventsAVP object",
-                                         DIAMETER_AVP_OCCURS_TOO_MANY_TIMES)
-
         GroupedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
