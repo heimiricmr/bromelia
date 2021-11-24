@@ -189,7 +189,19 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1073 [Charging-Correlation-Indicator] VENDOR>")
 
     def test_diameter_avp__load_staticmethod__parsing_bearer_usage_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000003e8c0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], BearerUsageAVP))
+        self.assertEqual(avps[0].code, BEARER_USAGE_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, BEARER_USAGE_GENERAL)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1000 [Bearer-Usage] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_charging_rule_install_avp_stream(self):
         pass
@@ -201,16 +213,64 @@ class TestDiameterAVP(unittest.TestCase):
         pass
 
     def test_diameter_avp__load_staticmethod__parsing_event_trigger_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000003eec0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], EventTriggerAVP))
+        self.assertEqual(avps[0].code, EVENT_TRIGGER_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, EVENT_TRIGGER_SGSN_CHANGE)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1006 [Event-Trigger] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_metering_method_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000003efc0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], MeteringMethodAVP))
+        self.assertEqual(avps[0].code, METERING_METHOD_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, METERING_METHOD_DURATION)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1007 [Metering-Method] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_offline_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000003f0c0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], OfflineAVP))
+        self.assertEqual(avps[0].code, OFFLINE_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, OFFLINE_DISABLE_OFFLINE)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1008 [Offline] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_online_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000003f1c0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], OnlineAVP))
+        self.assertEqual(avps[0].code, ONLINE_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, ONLINE_DISABLE_ONLINE)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1009 [Online] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_qos_information_avp_stream(self):
         pass
@@ -219,28 +279,112 @@ class TestDiameterAVP(unittest.TestCase):
         pass
 
     def test_diameter_avp__load_staticmethod__parsing_pcc_rule_status_avp_stream(self):
-        pass
+        stream = bytes.fromhex("000003fbc0000010000028af00000001")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], PccRuleStatusAVP))
+        self.assertEqual(avps[0].code, PCC_RULE_STATUS_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, PCC_RULE_STATUS_INACTIVE)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1019 [Pcc-Rule-Status] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_access_network_charging_identifier_gx_avp_stream(self):
         pass
 
     def test_diameter_avp__load_staticmethod__parsing_network_request_support_avp_stream(self):
-        pass
+        stream = bytes.fromhex("00000400c0000010000028af00000000")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], NetworkRequestSupportAVP))
+        self.assertEqual(avps[0].code, NETWORK_REQUEST_SUPPORT_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, NETWORK_REQUEST_NOT_SUPPORTED)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1024 [Network-Request-Support] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_guaranteed_bitrate_dl_avp_stream(self):
-        pass
+        stream = bytes.fromhex("00000401c0000010000028af00000100")
+        
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], GuaranteedBitrateDlAVP))
+        self.assertEqual(avps[0].code, GUARANTEED_BITRATE_DL_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000100"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1025 [Guaranteed-Bitrate-Dl] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_guaranteed_bitrate_ul_avp_stream(self):
-        pass
+        stream = bytes.fromhex("00000402c0000010000028af00000008")
+        
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], GuaranteedBitrateUlAVP))
+        self.assertEqual(avps[0].code, GUARANTEED_BITRATE_UL_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, bytes.fromhex("00000008"))
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1026 [Guaranteed-Bitrate-Ul] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_rule_failure_code_avp_stream(self):
-        pass
+        stream = bytes.fromhex("00000407c0000010000028af00000001")
+
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], RuleFailureCodeAVP))
+        self.assertEqual(avps[0].code, RULE_FAILURE_CODE_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertTrue(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data, RULE_FAILURE_CODE_UNKNOWN_RULE_NAME)
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1031 [Rule-Failure-Code] VENDOR, MANDATORY>")
 
     def test_diameter_avp__load_staticmethod__parsing_apn_aggregate_max_bitrate_dl_avp_stream(self):
-        pass
+        stream = bytes.fromhex("0000041080000010000028af00000008")
+        
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], ApnAggregateMaxBitrateDlAVP))
+        self.assertEqual(avps[0].code, APN_AGGREGATE_MAX_BITRATE_DL_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertFalse(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data.hex(), "00000008")
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1040 [Apn-Aggregate-Max-Bitrate-Dl] VENDOR>")
 
     def test_diameter_avp__load_staticmethod__parsing_apn_aggregate_max_bitrate_ul_avp_stream(self):
-        pass
+        stream = bytes.fromhex("0000041180000010000028af00000008")
+        
+        avps = DiameterAVP.load(stream)
+        self.assertTrue(isinstance(avps[0], ApnAggregateMaxBitrateUlAVP))
+        self.assertEqual(avps[0].code, APN_AGGREGATE_MAX_BITRATE_UL_AVP_CODE)
+        self.assertTrue(avps[0].is_vendor_id())
+        self.assertFalse(avps[0].is_mandatory())
+        self.assertFalse(avps[0].is_protected())
+        self.assertEqual(avps[0].get_length(), 16)
+        self.assertEqual(avps[0].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(avps[0].data.hex(), "00000008")
+        self.assertIsNone(avps[0].get_padding_length())
+        self.assertEqual(avps[0].__repr__(), "<Diameter AVP: 1041 [Apn-Aggregate-Max-Bitrate-Ul] VENDOR>")
 
     def test_diameter_avp__load_staticmethod__parsing_default_eps_bearer_qos_avp_stream(self):
         pass
@@ -762,7 +906,36 @@ class TestChargingCorrelationIndicatorAVP(unittest.TestCase):
 
 
 class TestBearerUsageAVP(unittest.TestCase):
-    pass
+    def test__bearer_usage_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = BearerUsageAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__bearer_usage_avp__repr_dunder(self):
+        avp = BearerUsageAVP(BEARER_USAGE_GENERAL)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1000 [Bearer-Usage] VENDOR, MANDATORY>")
+
+    def test__bearer_usage_avp__diameter_avp_convert_classmethod(self):
+        avp = BearerUsageAVP(BEARER_USAGE_GENERAL)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__bearer_usage_avp__general(self):
+        avp = BearerUsageAVP(BEARER_USAGE_GENERAL)
+        ref = "000003e8c0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__bearer_usage_avp__signalling(self):
+        avp = BearerUsageAVP(BEARER_USAGE_SIGNALLING)
+        ref = "000003e8c0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestSupportedFeaturesAVP(unittest.TestCase):
@@ -782,19 +955,380 @@ class TestChargingRuleNameAVP(unittest.TestCase):
 
 
 class TestEventTriggerAVP(unittest.TestCase):
-    pass
+    def test__event_trigger_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = EventTriggerAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__event_trigger_avp__repr_dunder(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_SGSN_CHANGE)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1006 [Event-Trigger] VENDOR, MANDATORY>")
+
+    def test__event_trigger_avp__diameter_avp_convert_classmethod(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_SGSN_CHANGE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__event_trigger_avp__sgsn_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_SGSN_CHANGE)
+        ref = "000003eec0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__qos_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_QOS_CHANGE)
+        ref = "000003eec0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__rat_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_RAT_CHANGE)
+        ref = "000003eec0000010000028af00000002"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__tft_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_TFT_CHANGE)
+        ref = "000003eec0000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__plmn_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_PLMN_CHANGE)
+        ref = "000003eec0000010000028af00000004"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__plmn_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_LOSS_OF_BEARER)
+        ref = "000003eec0000010000028af00000005"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__recovery_of_bearer(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_RECOVERY_OF_BEARER)
+        ref = "000003eec0000010000028af00000006"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__ip_can_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_IP_CAN_CHANGE)
+        ref = "000003eec0000010000028af00000007"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__exceeding_authorization(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_QOS_CHANGE_EXCEEDING_AUTHORIZATION)
+        ref = "000003eec0000010000028af0000000b"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__rai_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_RAI_CHANGE)
+        ref = "000003eec0000010000028af0000000c"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__user_location_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_USER_LOCATION_CHANGE)
+        ref = "000003eec0000010000028af0000000d"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__no_event_triggers(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_NO_EVENT_TRIGGERS)
+        ref = "000003eec0000010000028af0000000e"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__out_of_credit(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_OUT_OF_CREDIT)
+        ref = "000003eec0000010000028af0000000f"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__reallocation_of_credit(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_REALLOCATION_OF_CREDIT)
+        ref = "000003eec0000010000028af00000010"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__revalidation_timeout(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_REVALIDATION_TIMEOUT)
+        ref = "000003eec0000010000028af00000011"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__ue_ip_address_allocate(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_UE_IP_ADDRESS_ALLOCATE)
+        ref = "000003eec0000010000028af00000012"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__ue_ip_address_release(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_UE_IP_ADDRESS_RELEASE)
+        ref = "000003eec0000010000028af00000013"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__default_eps_bearer_qos_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_DEFAULT_EPS_BEARER_QOS_CHANGE)
+        ref = "000003eec0000010000028af00000014"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__an_gw_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_AN_GW_CHANGE)
+        ref = "000003eec0000010000028af00000015"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__successful_resource_allocation(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_SUCCESSFUL_RESOURCE_ALLOCATION)
+        ref = "000003eec0000010000028af00000016"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__resource_modification_request(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_RESOURCE_MODIFICATION_REQUEST)
+        ref = "000003eec0000010000028af00000017"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__pgw_trace_control(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_PGW_TRACE_CONTROL)
+        ref = "000003eec0000010000028af00000018"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__ue_time_zone_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_UE_TIME_ZONE_CHANGE)
+        ref = "000003eec0000010000028af00000019"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__tai_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_TAI_CHANGE)
+        ref = "000003eec0000010000028af0000001a"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__ecgi_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_ECGI_CHANGE)
+        ref = "000003eec0000010000028af0000001b"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__charging_correlation_exchange(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_CHARGING_CORRELATION_EXCHANGE)
+        ref = "000003eec0000010000028af0000001c"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__apn_ambr_modification_failure(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_APN_AMBR_MODIFICATION_FAILURE)
+        ref = "000003eec0000010000028af0000001d"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__user_csg_information_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_USER_CSG_INFORMATION_CHANGE)
+        ref = "000003eec0000010000028af0000001e"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__usage_report(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_USAGE_REPORT)
+        ref = "000003eec0000010000028af00000021"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__default_eps_bearer_qos_modification_failure(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_DEFAULT_EPS_BEARER_QOS_MODIFICATION_FAILURE)
+        ref = "000003eec0000010000028af00000022"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__user_csg_hybrid_subscribed_information_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_USER_CSG_HYBRID_SUBSCRIBED_INFORMATION_CHANGE)
+        ref = "000003eec0000010000028af00000023"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__user_csg_hybrid_unsubscribed_information_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_USER_CSG_HYBRID_UNSUBSCRIBED_INFORMATION_CHANGE)
+        ref = "000003eec0000010000028af00000024"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__routing_rule_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_ROUTING_RULE_CHANGE)
+        ref = "000003eec0000010000028af00000025"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__application_start(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_APPLICATION_START)
+        ref = "000003eec0000010000028af00000027"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__application_stop(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_APPLICATION_STOP)
+        ref = "000003eec0000010000028af00000028"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__cs_to_ps_handover(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_CS_TO_PS_HANDOVER)
+        ref = "000003eec0000010000028af0000002a"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__ue_local_ip_address_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_UE_LOCAL_IP_ADDRESS_CHANGE)
+        ref = "000003eec0000010000028af0000002b"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__henb_local_ip_address_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_HENB_LOCAL_IP_ADDRESS_CHANGE)
+        ref = "000003eec0000010000028af0000002c"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__access_network_info_report(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_ACCESS_NETWORK_INFO_REPORT)
+        ref = "000003eec0000010000028af0000002d"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__credit_management_session_failure(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_CREDIT_MANAGEMENT_SESSION_FAILURE)
+        ref = "000003eec0000010000028af0000002e"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__default_qos_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_DEFAULT_QOS_CHANGE)
+        ref = "000003eec0000010000028af0000002f"
+        self.assertEqual(avp.dump().hex(), ref)
+ 
+    def test__event_trigger_avp__change_of_ue_presence_in_presence_reporting_area_report(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_CHANGE_OF_UE_PRESENCE_IN_PRESENCE_REPORTING_AREA_REPORT)
+        ref = "000003eec0000010000028af00000030"
+        self.assertEqual(avp.dump().hex(), ref)
+ 
+    def test__event_trigger_avp__addition_of_access(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_ADDITION_OF_ACCESS)
+        ref = "000003eec0000010000028af00000031"
+        self.assertEqual(avp.dump().hex(), ref)
+ 
+    def test__event_trigger_avp__removal_of_access(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_REMOVAL_OF_ACCESS)
+        ref = "000003eec0000010000028af00000032"
+        self.assertEqual(avp.dump().hex(), ref)
+ 
+    def test__event_trigger_avp__unavailability_of_access(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_UNAVAILABILITY_OF_ACCESS)
+        ref = "000003eec0000010000028af00000033"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__availability_of_access(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_AVAILABILITY_OF_ACCESS)
+        ref = "000003eec0000010000028af00000034"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__resource_release(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_RESOURCE_RELEASE)
+        ref = "000003eec0000010000028af00000035"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__enodeb_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_ENODEB_CHANGE)
+        ref = "000003eec0000010000028af00000036"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__event_trigger_avp__3gpp_ps_data_off_change(self):
+        avp = EventTriggerAVP(EVENT_TRIGGER_3GPP_PS_DATA_OFF_CHANGE)
+        ref = "000003eec0000010000028af00000037"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestMeteringMethodAVP(unittest.TestCase):
-    pass
+    def test__metering_method_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = MeteringMethodAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__metering_method_avp__repr_dunder(self):
+        avp = MeteringMethodAVP(METERING_METHOD_DURATION)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1007 [Metering-Method] VENDOR, MANDATORY>")
+
+    def test__metering_method_avp__diameter_avp_convert_classmethod(self):
+        avp = MeteringMethodAVP(METERING_METHOD_DURATION)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__metering_method_avp__duration(self):
+        avp = MeteringMethodAVP(METERING_METHOD_DURATION)
+        ref = "000003efc0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__metering_method_avp__volume(self):
+        avp = MeteringMethodAVP(METERING_METHOD_VOLUME)
+        ref = "000003efc0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__metering_method_avp__duration_volume(self):
+        avp = MeteringMethodAVP(METERING_METHOD_DURATION_VOLUME)
+        ref = "000003efc0000010000028af00000002"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__metering_method_avp__event(self):
+        avp = MeteringMethodAVP(METERING_METHOD_EVENT)
+        ref = "000003efc0000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestOfflineAVP(unittest.TestCase):
-    pass
+    def test__offline_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = OfflineAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__offline_avp__repr_dunder(self):
+        avp = OfflineAVP(OFFLINE_DISABLE_OFFLINE)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1008 [Offline] VENDOR, MANDATORY>")
+
+    def test__offline_avp__diameter_avp_convert_classmethod(self):
+        avp = OfflineAVP(OFFLINE_DISABLE_OFFLINE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__offline_avp__disable_offline(self):
+        avp = OfflineAVP(OFFLINE_DISABLE_OFFLINE)
+        ref = "000003f0c0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__offline_avp__enable_offline(self):
+        avp = OfflineAVP(OFFLINE_ENABLE_OFFLINE)
+        ref = "000003f0c0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestOnlineAVP(unittest.TestCase):
-    pass
+    def test__online_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = OnlineAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__online_avp__repr_dunder(self):
+        avp = OnlineAVP(ONLINE_DISABLE_ONLINE)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1009 [Online] VENDOR, MANDATORY>")
+
+    def test__online_avp__diameter_avp_convert_classmethod(self):
+        avp = OnlineAVP(ONLINE_DISABLE_ONLINE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__online_avp__disable_online(self):
+        avp = OnlineAVP(ONLINE_DISABLE_ONLINE)
+        ref = "000003f1c0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__online_avp__enable_online(self):
+        avp = OnlineAVP(ONLINE_ENABLE_ONLINE)
+        ref = "000003f1c0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestQosInformationAVP(unittest.TestCase):
@@ -806,7 +1340,41 @@ class TestChargingRuleReportAVP(unittest.TestCase):
 
 
 class TestPccRuleStatusAVP(unittest.TestCase):
-    pass
+    def test__pcc_rule_status_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = PccRuleStatusAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__pcc_rule_status_avp__repr_dunder(self):
+        avp = PccRuleStatusAVP(PCC_RULE_STATUS_ACTIVE)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1019 [Pcc-Rule-Status] VENDOR, MANDATORY>")
+
+    def test__pcc_rule_status_avp__diameter_avp_convert_classmethod(self):
+        avp = PccRuleStatusAVP(PCC_RULE_STATUS_ACTIVE)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__pcc_rule_status_avp__active(self):
+        avp = PccRuleStatusAVP(PCC_RULE_STATUS_ACTIVE)
+        ref = "000003fbc0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__pcc_rule_status_avp__inactive(self):
+        avp = PccRuleStatusAVP(PCC_RULE_STATUS_INACTIVE)
+        ref = "000003fbc0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__pcc_rule_status_avp__temporarily_inactive(self):
+        avp = PccRuleStatusAVP(PCC_RULE_STATUS_TEMPORARILY_INACTIVE)
+        ref = "000003fbc0000010000028af00000002"
+        self.assertEqual(avp.dump().hex(), ref)                
 
 
 class TestAccessNetworkChargingIdentifierGxAVP(unittest.TestCase):
@@ -814,27 +1382,321 @@ class TestAccessNetworkChargingIdentifierGxAVP(unittest.TestCase):
 
 
 class TestNetworkRequestSupportAVP(unittest.TestCase):
-    pass
+    def test__network_request_support_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = NetworkRequestSupportAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__network_request_support_avp__repr_dunder(self):
+        avp = NetworkRequestSupportAVP(NETWORK_REQUEST_NOT_SUPPORTED)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1024 [Network-Request-Support] VENDOR, MANDATORY>")
+
+    def test__network_request_support_avp__diameter_avp_convert_classmethod(self):
+        avp = NetworkRequestSupportAVP(NETWORK_REQUEST_NOT_SUPPORTED)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__network_request_support_avp__not_supported(self):
+        avp = NetworkRequestSupportAVP(NETWORK_REQUEST_NOT_SUPPORTED)
+        ref = "00000400c0000010000028af00000000"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__network_request_support_avp__supported(self):
+        avp = NetworkRequestSupportAVP(NETWORK_REQUEST_SUPPORTED)
+        ref = "00000400c0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestGuaranteedBitrateDlAVP(unittest.TestCase):
-    pass
+    def test_guaranteed_bitrate_dl_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = GuaranteedBitrateDlAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+        
+    def test_guaranteed_bitrate_dl_avp__repr_dunder(self):
+        avp = GuaranteedBitrateDlAVP(convert_to_4_bytes(8))
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1025 [Guaranteed-Bitrate-Dl] VENDOR, MANDATORY>")
+
+    def test_guaranteed_bitrate_dl_avp__diameter_avp_convert_classmethod(self):
+        avp = GuaranteedBitrateDlAVP(convert_to_4_bytes(8))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_guaranteed_bitrate_dl_avp__8(self):
+        avp = GuaranteedBitrateDlAVP(convert_to_4_bytes(8))
+        ref = "00000401c0000010000028af00000008"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_guaranteed_bitrate_dl_avp__256(self):
+        avp = GuaranteedBitrateDlAVP(convert_to_4_bytes(256))
+        ref = "00000401c0000010000028af00000100"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestGuaranteedBitrateUlAVP(unittest.TestCase):
-    pass
+    def test_guaranteed_bitrate_ul_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = GuaranteedBitrateUlAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+        
+    def test_guaranteed_bitrate_ul_avp__repr_dunder(self):
+        avp = GuaranteedBitrateUlAVP(convert_to_4_bytes(8))
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1026 [Guaranteed-Bitrate-Ul] VENDOR, MANDATORY>")
+
+    def test_guaranteed_bitrate_ul_avp__diameter_avp_convert_classmethod(self):
+        avp = GuaranteedBitrateUlAVP(convert_to_4_bytes(8))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_guaranteed_bitrate_ul_avp__8(self):
+        avp = GuaranteedBitrateUlAVP(convert_to_4_bytes(8))
+        ref = "00000402c0000010000028af00000008"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_guaranteed_bitrate_ul_avp__256(self):
+        avp = GuaranteedBitrateUlAVP(convert_to_4_bytes(256))
+        ref = "00000402c0000010000028af00000100"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestRuleFailureCodeAVP(unittest.TestCase):
-    pass
+    def test__rule_failure_code_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = RuleFailureCodeAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+
+    def test__rule_failure_code_avp__repr_dunder(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_UNKNOWN_RULE_NAME)
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1031 [Rule-Failure-Code] VENDOR, MANDATORY>")
+
+    def test__rule_failure_code_avp__diameter_avp_convert_classmethod(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_UNKNOWN_RULE_NAME)
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test__rule_failure_code_avp__unknown_rule_name(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_UNKNOWN_RULE_NAME)
+        ref = "00000407c0000010000028af00000001"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__rating_group_error(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_RATING_GROUP_ERROR)
+        ref = "00000407c0000010000028af00000002"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__service_identifier_error(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_SERVICE_IDENTIFIER_ERROR)
+        ref = "00000407c0000010000028af00000003"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__gw_pcef_malfunction(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_GW_PCEF_MALFUNCTION)
+        ref = "00000407c0000010000028af00000004"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__resources_limitation(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_RESOURCES_LIMITATION)
+        ref = "00000407c0000010000028af00000005"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__max_nr_bearers_reached(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_MAX_NR_BEARERS_REACHED)
+        ref = "00000407c0000010000028af00000006"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__unknown_bearer_id(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_UNKNOWN_BEARER_ID)
+        ref = "00000407c0000010000028af00000007"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__missing_bearer_id(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_MISSING_BEARER_ID)
+        ref = "00000407c0000010000028af00000008"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__missing_flow_information(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_MISSING_FLOW_INFORMATION)
+        ref = "00000407c0000010000028af00000009"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__resource_allocation_failure(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_RESOURCE_ALLOCATION_FAILURE)
+        ref = "00000407c0000010000028af0000000a"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__unsuccessful_qos_validation(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_UNSUCCESSFUL_QOS_VALIDATION)
+        ref = "00000407c0000010000028af0000000b"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__incorrect_flow_information(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_INCORRECT_FLOW_INFORMATION)
+        ref = "00000407c0000010000028af0000000c"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__ps_to_cs_handover(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_PS_TO_CS_HANDOVER)
+        ref = "00000407c0000010000028af0000000d"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__tdf_application_identifier_error(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_TDF_APPLICATION_IDENTIFIER_ERROR)
+        ref = "00000407c0000010000028af0000000e"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__no_bearer_bound(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_NO_BEARER_BOUND)
+        ref = "00000407c0000010000028af0000000f"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__filter_restrictions(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_FILTER_RESTRICTIONS)
+        ref = "00000407c0000010000028af00000010"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__an_gw_failed(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_AN_GW_FAILED)
+        ref = "00000407c0000010000028af00000011"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__missing_redirect_server_address(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_MISSING_REDIRECT_SERVER_ADDRESS)
+        ref = "00000407c0000010000028af00000012"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__cm_end_user_service_denied(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_CM_END_USER_SERVICE_DENIED)
+        ref = "00000407c0000010000028af00000013"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__cm_credit_control_not_applicable(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_CM_CREDIT_CONTROL_NOT_APPLICABLE)
+        ref = "00000407c0000010000028af00000014"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__cm_authorization_rejected(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_CM_AUTHORIZATION_REJECTED)
+        ref = "00000407c0000010000028af00000015"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__cm_user_unknown(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_CM_USER_UNKNOWN)
+        ref = "00000407c0000010000028af00000016"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__cm_rating_failed(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_CM_RATING_FAILED)
+        ref = "00000407c0000010000028af00000017"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__routing_rule_rejection(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_ROUTING_RULE_REJECTION)
+        ref = "00000407c0000010000028af00000018"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__unknown_routing_access_information(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_UNKNOWN_ROUTING_ACCESS_INFORMATION)
+        ref = "00000407c0000010000028af00000019"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test__rule_failure_code_avp__no_nbifom_support(self):
+        avp = RuleFailureCodeAVP(RULE_FAILURE_CODE_NO_NBIFOM_SUPPORT)
+        ref = "00000407c0000010000028af0000001a"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestApnAggregateMaxBitrateDlAVP(unittest.TestCase):
-    pass
+    def test_apn_aggregate_max_bitrate_dl_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = ApnAggregateMaxBitrateDlAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+        
+    def test_apn_aggregate_max_bitrate_dl_avp__repr_dunder(self):
+        avp = ApnAggregateMaxBitrateDlAVP(convert_to_4_bytes(8))
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1040 [Apn-Aggregate-Max-Bitrate-Dl] VENDOR>")
+
+    def test_apn_aggregate_max_bitrate_dl_avp__diameter_avp_convert_classmethod(self):
+        avp = ApnAggregateMaxBitrateDlAVP(convert_to_4_bytes(8))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_apn_aggregate_max_bitrate_dl_avp__8(self):
+        avp = ApnAggregateMaxBitrateDlAVP(convert_to_4_bytes(8))
+        ref = "0000041080000010000028af00000008"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_apn_aggregate_max_bitrate_dl_avp__256(self):
+        avp = ApnAggregateMaxBitrateDlAVP(convert_to_4_bytes(256))
+        ref = "0000041080000010000028af00000100"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestApnAggregateMaxBitrateUlAVP(unittest.TestCase):
-    pass
+    def test_apn_aggregate_max_bitrate_ul_avp__no_value(self):
+        with self.assertRaises(TypeError) as cm: 
+            avp = ApnAggregateMaxBitrateUlAVP()
+    
+        self.assertEqual(cm.exception.args[0], "__init__() missing 1 required positional argument: 'data'")
+        
+    def test_apn_aggregate_max_bitrate_ul_avp__repr_dunder(self):
+        avp = ApnAggregateMaxBitrateUlAVP(convert_to_4_bytes(8))
+        self.assertEqual(avp.__repr__(), "<Diameter AVP: 1041 [Apn-Aggregate-Max-Bitrate-Ul] VENDOR>")
+
+    def test_apn_aggregate_max_bitrate_ul_avp__diameter_avp_convert_classmethod(self):
+        avp = ApnAggregateMaxBitrateUlAVP(convert_to_4_bytes(8))
+
+        custom = DiameterAVP.convert(avp)
+        self.assertEqual(custom.code, avp.code)
+        self.assertEqual(custom.flags, avp.flags)
+        self.assertEqual(custom.length, avp.length)
+        self.assertEqual(custom.vendor_id, avp.vendor_id)
+        self.assertEqual(custom.data, avp.data)
+        self.assertEqual(custom._padding, avp._padding)
+
+    def test_apn_aggregate_max_bitrate_ul_avp__8(self):
+        avp = ApnAggregateMaxBitrateUlAVP(convert_to_4_bytes(8))
+        ref = "0000041180000010000028af00000008"
+        self.assertEqual(avp.dump().hex(), ref)
+
+    def test_apn_aggregate_max_bitrate_ul_avp__256(self):
+        avp = ApnAggregateMaxBitrateUlAVP(convert_to_4_bytes(256))
+        ref = "0000041180000010000028af00000100"
+        self.assertEqual(avp.dump().hex(), ref)
 
 
 class TestDefaultEpsBearerQosAVP(unittest.TestCase):
