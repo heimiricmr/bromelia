@@ -67,8 +67,8 @@ Find more information on how to run a simple Diameter class example in [examples
 from bromelia import Diameter
 from bromelia import DiameterRequest
 from bromelia.avps import *
-from bromelia.etsi_3gpp_s6a_s6d.avps import *
-from bromelia.etsi_3gpp_swm.avps import *
+from bromelia.lib.etsi_3gpp_s6a import *
+from bromelia.lib.etsi_3gpp_swm import *
 
 LOCAL_HOSTNAME = "mme.epc.mynetwork.com"
 LOCAL_REALM = "epc.mynetwork.com"
@@ -132,11 +132,10 @@ Find more information on how to run a simple Bromelia class example in [examples
 ```python
 #: Script found in examples/diameter-app2/bromelia_mme.py
 from bromelia import Bromelia
-from bromelia.avps import *
 from bromelia.constants import *
-from bromelia.etsi_3gpp_s6a_s6d.avps import *
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationAnswer as CLA
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationRequest as CLR
+from bromelia.lib.etsi_3gpp_s6a import *
+from bromelia.lib.etsi_3gpp_s6a import CLA # CancelLocationAnswer
+from bromelia.lib.etsi_3gpp_s6a import CLR # CancelLocationRequest
 
 #: Application initialization 
 config_file = os.path.join(basedir, "bromelia_mme_config.yaml")
@@ -181,9 +180,9 @@ The documentation for *bromelia* is composed of tutorials on basic usage and lin
 
 - [Base Structures](bromelia/base.py), `bromelia.base`
 - [Bromelia](bromelia/bromelia.py), `bromelia.bromelia`
-- [Constants](bromelia/constants.py), `bromelia.constants`
+- [Constants](bromelia/constants), `bromelia.constants`
 - [Data Types](bromelia/types.py), `bromelia.types`
-- [Diameter AVPs](bromelia/avps.py), `bromelia.avps`
+- [Diameter AVPs](bromelia/avps), `bromelia.avps`
 - [Diameter Messages](bromelia/messages.py), `bromelia.messages`
 - [Peer State Machine](bromelia/statemachine.py), `bromelia.statemachine`
 

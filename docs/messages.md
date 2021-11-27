@@ -21,7 +21,7 @@ When it comes to Diameter Message handling, *bromelia* makes use of two availabl
 
 ### The `base` module
 
-The `bromelia.base` contains two classes for creation, handling and parsing of [Diameter Headers](https://tools.ietf.org/html/rfc6733#page-34) (`DiameterHeader`) and Diameter Messages (`DiameterMessage`). Aside that, it has built-in also more two specific classes for Diameter Messages: Diameter Requests (`DiameterRequest`) and Diameter Answers (`DiameterAnswer`).
+The `bromelia.base` module contains three classes for creation, handling and parsing of [Diameter Headers](https://tools.ietf.org/html/rfc6733#page-34) (`DiameterHeader`), Diameter Messages (`DiameterMessage`) and [Diameter AVPs](https://tools.ietf.org/html/rfc6733#page-40). Aside that, it has built-in also more two specific classes for Diameter Messages: Diameter Requests (`DiameterRequest`) and Diameter Answers (`DiameterAnswer`). For more details on Diameter AVP handling, see [here](avps.md).
 
 The `DiameterHeader` class represents a Diameter Header including all its header fields (`version`, `length`, `flags`, `command code`, `application id`, `hop by hop` and `end to end`) as instance attributes. It has several methods to handle easily its attributes.
 
@@ -137,7 +137,7 @@ It is possible changing values for each attribute that represents Diameter Heade
 >>> header.set_error_bit(True)
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
-  File "F:\bromelia\avps.py", line 361, in set_error_bit
+  File "F:\bromelia\base.py", line 361, in set_error_bit
     raise DiameterHeaderError("E-bit MUST NOT be set when R-bit "\
 bromelia.exceptions.DiameterHeaderError: E-bit MUST NOT be set when R-bit is set
 >>> header.set_request_bit(False)
@@ -243,8 +243,8 @@ Below you may find two ways to create meaningful DiameterMessage objects.
 >>> message.header.end_to_end = 11111
 >>> message
 <Diameter Message: 280 [DWA] ERR, 0 [Diameter common message], 0 AVP(s)>
->>> from bromelia.avps import DiameterAVP
->>> avp = DiameterAVP(1, 40, 10415, "Mobile-Network")
+>>> from bromelia.base import DiameterAVP
+>>> avp = DiameterAVP(1, 10415, 40, "Mobile-Network")
 >>> message.append(avp)
 >>> message
 <Diameter Message: 280 [DWA] ERR, 0 [Diameter common message], 1 AVP(s)>
@@ -253,7 +253,7 @@ Below you may find two ways to create meaningful DiameterMessage objects.
 #### Constructor for DiameterMessage
 
 ```python
->>> from bromelia.avps import DiameterAVP
+>>> from bromelia.base import DiameterAVP
 >>> from bromelia.base import DiameterHeader
 >>> from bromelia.base import DiameterMessage
 >>> header = DiameterHeader(1, 40, 280, 0, 11111, 11111)
@@ -435,7 +435,7 @@ True
 Sometimes you may add a custom DiameterAVP object that is not defined anywhere. Once *bromelia* is not aware on this spec, it will create a custom attribute for DiameterMessage named as `unknown_avp`. As new unknown DiameterAVP objects are placed into DiameterMessage's `avps` attribute, it will named it as `unknown_avp__1`, `unknown_avp__2` and so on. That's why `.update_key()` comes into play, to change as per your taste.
 
 ```python
->>> from bromelia.avps import DiameterAVP
+>>> from bromelia.base import DiameterAVP
 >>> from bromelia.base import DiameterMessage
 >>> message = DiameterMessage()
 >>> avp = DiameterAVP()
@@ -537,7 +537,7 @@ Finally we have got our message ready. But it took a while to set it up. What if
 ### Ready-to-Go
 
 ```python
->>> from bromelia.messages import CapabilitiesExchangeRequest as CER
+>>> from bromelia.messages import CER # CapabilitiesExchangeRequest
 >>> cer = CER()
 >>> cer
 <Diameter Message: 257 [CER] REQ, 0 [Diameter common message], 6 AVP(s)>
@@ -560,14 +560,14 @@ There is also a way to check what are the mandatory and optional AVPs of a given
 
 ```python
 >>> CER.mandatory
-{'origin_host': <class 'bromelia.avps.OriginHostAVP'>, 'origin_realm': <class 'bromelia.avps.OriginRealmAVP'>, 'host_ip_address': <class 'bromelia.avps.HostIpAddressAVP'>, 'vendor_id': <class 'bromelia.avps.VendorIdAVP'>, 'product_name': <class 'bromelia.avps.ProductNameAVP'>}
+{'origin_host': <class 'bromelia.avps.ietf.rfc6733.OriginHostAVP'>, 'origin_realm': <class 'bromelia.avps.ietf.rfc6733.OriginRealmAVP'>, 'host_ip_address': <class 'bromelia.avps.ietf.rfc6733.HostIpAddressAVP'>, 'vendor_id': <class 'bromelia.avps.ietf.rfc6733.VendorIdAVP'>, 'product_name': <class 'bromelia.avps.ietf.rfc6733.ProductNameAVP'>}
 ```
 
 #### Optionals (CER)
 
 ```python
 >>> CER.optionals
-{'origin_state_id': <class 'bromelia.avps.OriginStateIdAVP'>, 'supported_vendor_id': <class 'bromelia.avps.SupportedVendorIdAVP'>, 'auth_application_id': <class 'bromelia.avps.AuthApplicationIdAVP'>, 'inband_security_id': <class 'bromelia.avps.InbandSecurityIdAVP'>, 'acct_application_id': <class 'bromelia.avps.AcctApplicationIdAVP'>, 'vendor_specific_application_id': <class 'bromelia.avps.VendorSpecificApplicationIdAVP'>, 'firmware_revision': <class 'bromelia.avps.FirmwareRevisionAVP'>}
+{'origin_state_id': <class 'bromelia.avps.ietf.rfc6733.OriginStateIdAVP'>, 'supported_vendor_id': <class 'bromelia.avps.ietf.rfc6733.SupportedVendorIdAVP'>, 'auth_application_id': <class 'bromelia.avps.ietf.rfc6733.AuthApplicationIdAVP'>, 'inband_security_id': <class 'bromelia.avps.ietf.rfc6733.InbandSecurityIdAVP'>, 'acct_application_id': <class 'bromelia.avps.ietf.rfc6733.AcctApplicationIdAVP'>, 'vendor_specific_application_id': <class 'bromelia.avps.ietf.rfc6733.VendorSpecificApplicationIdAVP'>, 'firmware_revision': <class 'bromelia.avps.ietf.rfc6733.FirmwareRevisionAVP'>}
 ```
 
 ### Building a response
@@ -597,7 +597,7 @@ Maybe your Diameter application has received a CER message and it needs to reply
 We already know how to create it by hand, but we can simply instantiate a CapabilitiesExchangeAnswer object to do so.
 
 ```python
->>> from bromelia.messages import CapabilitiesExchangeAnswer as CEA
+>>> from bromelia.messages import CEA # CapabilitiesExchangeAnswer
 >>> cea = CEA()
 >>> cea
 <Diameter Message: 257 [CEA], 0 [Diameter common message], 7 AVP(s)>
@@ -615,14 +615,14 @@ Below there are two examples on how to create a custom CEA message which applies
 
 ```python
 >>> CEA.mandatory
-{'result_code': <class 'bromelia.avps.ResultCodeAVP'>, 'origin_host': <class 'bromelia.avps.OriginHostAVP'>, 'origin_realm': <class 'bromelia.avps.OriginRealmAVP'>, 'host_ip_address': <class 'bromelia.avps.HostIpAddressAVP'>, 'vendor_id': <class 'bromelia.avps.VendorIdAVP'>, 'product_name': <class 'bromelia.avps.ProductNameAVP'>}
+{'result_code': <class 'bromelia.avps.ietf.rfc6733.ResultCodeAVP'>, 'origin_host': <class 'bromelia.avps.ietf.rfc6733.OriginHostAVP'>, 'origin_realm': <class 'bromelia.avps.ietf.rfc6733.OriginRealmAVP'>, 'host_ip_address': <class 'bromelia.avps.ietf.rfc6733.HostIpAddressAVP'>, 'vendor_id': <class 'bromelia.avps.ietf.rfc6733.VendorIdAVP'>, 'product_name': <class 'bromelia.avps.ietf.rfc6733.ProductNameAVP'>}
 ```
 
 #### Optionals (CEA)
 
 ```python
 >>> CEA.optionals
-{'origin_state_id': <class 'bromelia.avps.OriginStateIdAVP'>, 'error_message': <class 'bromelia.avps.ErrorMessageAVP'>, 'failed_avp': <class 'bromelia.avps.FailedAvpAVP'>, 'supported_vendor_id': <class 'bromelia.avps.SupportedVendorIdAVP'>, 'auth_application_id': <class 'bromelia.avps.AuthApplicationIdAVP'>, 'inband_security_id': <class 'bromelia.avps.InbandSecurityIdAVP'>, 'acct_application_id': <class 'bromelia.avps.AcctApplicationIdAVP'>, 'vendor_specific_application_id': <class 'bromelia.avps.VendorSpecificApplicationIdAVP'>, 'firmware_revision': <class 'bromelia.avps.FirmwareRevisionAVP'>}
+{'origin_state_id': <class 'bromelia.avps.ietf.rfc6733.OriginStateIdAVP'>, 'error_message': <class 'bromelia.avps.ietf.rfc6733.ErrorMessageAVP'>, 'failed_avp': <class 'bromelia.avps.ietf.rfc6733.FailedAvpAVP'>, 'supported_vendor_id': <class 'bromelia.avps.ietf.rfc6733.SupportedVendorIdAVP'>, 'auth_application_id': <class 'bromelia.avps.ietf.rfc6733.AuthApplicationIdAVP'>, 'inband_security_id': <class 'bromelia.avps.ietf.rfc6733.InbandSecurityIdAVP'>, 'acct_application_id': <class 'bromelia.avps.ietf.rfc6733.AcctApplicationIdAVP'>, 'vendor_specific_application_id': <class 'bromelia.avps.ietf.rfc6733.VendorSpecificApplicationIdAVP'>, 'firmware_revision': <class 'bromelia.avps.ietf.rfc6733.FirmwareRevisionAVP'>}
 ```
 
 ### Creating a dictionary with simple AVPs
@@ -630,7 +630,7 @@ Below there are two examples on how to create a custom CEA message which applies
 In this example, we are going to create a dictionary `attrs` with one key from CEA's `mandatory` class attribute and one key from CEA's `optionals` class attribute. The value in each key will be the input argument with respective DiameterAVP subclass object. It applies to all DiameterAVP subclasses which inherint from all Diameter type classes except GroupedType.
 
 ```python
->>> from bromelia.messages import CapabilitiesExchangeAnswer as CEA
+>>> from bromelia.messages import CEA # CapabilitiesExchangeAnswer
 >>> from bromelia.constants import DIAMETER_MISSING_AVP
 >>> attrs = {
 ...   "result_code": DIAMETER_MISSING_AVP,
@@ -670,7 +670,7 @@ By the way, we could also let the `error_message` key.
 ```python
 >>> from bromelia.avps import DestinationHostAVP
 >>> from bromelia.avps import DestinationationRealmAVP
->>> from bromelia.messages import CapabilitiesExchangeAnswer as CEA
+>>> from bromelia.messages import CEA # CapabilitiesExchangeAnswer
 >>> from bromelia.constants import DIAMETER_INVALID_AVP_LENGTH
 >>> destination_host_error = DestinationHostAVP("your-remote-host.your-network.com")
 >>> destination_realm_error = DestinationHostAVP("your-network.com")
@@ -705,18 +705,18 @@ b'\x00\x00\x01%@\x00\x00)your-remote-host.your-network.com\x00\x00\x00\x00\x00\x
 The *bromelia* has implemented the standard Diameter Messages from RFC 6733. Take a look at `bromelia.messages` module and give a try the other classes. For sake of clarity, we encorage you to import those as per shown below. That way your code may be cleaner and readable.
 
 ```python
->>> from bromelia.messages import CapabilitiesExchangeRequest as CER
->>> from bromelia.messages import CapabilitiesExchangeAnswer as CEA
->>> from bromelia.messages import ReAuthRequest as RAR
->>> from bromelia.messages import ReAuthAnswer as RAA
->>> from bromelia.messages import AbortSessionRequest as ASR
->>> from bromelia.messages import AbortSessionAnswer as ASA
->>> from bromelia.messages import SessionTerminationRequest as STR
->>> from bromelia.messages import SessionTerminationAnswer as STA
->>> from bromelia.messages import DeviceWatchdogRequest as DWR
->>> from bromelia.messages import DeviceWatchdogAnswer as DWA
->>> from bromelia.messages import DisconnectPeerRequest as DPR
->>> from bromelia.messages import DisconnectPeerAnswer as DPA
+>>> from bromelia.messages import CER # CapabilitiesExchangeRequest
+>>> from bromelia.messages import CEA # CapabilitiesExchangeAnswer
+>>> from bromelia.messages import RAR # ReAuthRequest 
+>>> from bromelia.messages import RAA # ReAuthAnswer
+>>> from bromelia.messages import ASR # AbortSessionRequest
+>>> from bromelia.messages import ASA # AbortSessionAnswer
+>>> from bromelia.messages import STR # SessionTerminationRequest
+>>> from bromelia.messages import STA # SessionTerminationAnswer
+>>> from bromelia.messages import DWR # DeviceWatchdogRequest
+>>> from bromelia.messages import DWA # DeviceWatchdogAnswer
+>>> from bromelia.messages import DPR # DisconnectPeerRequest
+>>> from bromelia.messages import DPA # DisconnectPeerAnswer
 ```
 
 ### Customization with Standard Messages
@@ -724,7 +724,7 @@ The *bromelia* has implemented the standard Diameter Messages from RFC 6733. Tak
 It's nothing new that Standard Messages classes we just have seen are inherinted from DiameterMessage class. That means we may leverage the use of its instance methods during the creation of DiameterMessage to an application.
 
 ```python
->>> from bromelia.messages import DeviceWatchdogRequest as DWR
+>>> from bromelia.messages import DWR # DeviceWatchdogRequest
 >>> attrs = {
 ...   "origin_state_id": 1524733202
 ... }
@@ -760,14 +760,14 @@ However surely your endpoint will reject it, especially if it is RFC compliance.
 
 ```python
 >>> DWR.mandatory
-{'origin_host': <class 'bromelia.avps.OriginHostAVP'>, 'origin_realm': <class 'bromelia.avps.OriginRealmAVP'>}
+{'origin_host': <class 'bromelia.avps.ietf.rfc6733.OriginHostAVP'>, 'origin_realm': <class 'bromelia.avps.ietf.rfc6733.OriginRealmAVP'>}
 ```
 
 #### Optionals (DWR)
 
 ```python
 >>> DWR.optionals
-{'origin_state_id': <class 'bromelia.avps.OriginStateIdAVP'>}
+{'origin_state_id': <class 'bromelia.avps.ietf.rfc6733.OriginStateIdAVP'>}
 ```
 
 #### Checking AVPs
@@ -810,7 +810,7 @@ For some reason you realised you want to make the DiameterMessage object again f
 >>> dwr.cleanup()
 >>> dwr
 <Diameter Message: 280 [DWR] REQ, 0 [Diameter common message], 0 AVP(s)>
->>> from bromelia.avps import DiameterAVP
+>>> from bromelia.base import DiameterAVP
 >>> dwr.append(DiameterAVP(1, 40, 10415, "Mobile-Network"))
 >>> dwr
 <Diameter Message: 280 [DWR] REQ, 0 [Diameter common message], 1 AVP(s)>
@@ -836,7 +836,7 @@ We have discussed in previous [Creating a dictionary with simple AVPs](###creati
 Below we are going to use the exact same dictionary except the two new keys included (`subscription_id_type` and ). That means we may include the DiameterAVP in the first call, not only pos-instantion with `.append()` and `.extend()` methods.
 
 ```python
->>> from bromelia.messages import CapabilitiesExchangeAnswer as CEA
+>>> from bromelia.messages import CEA # CapabilitiesExchangeAnswer
 >>> from bromelia.constants import DIAMETER_MISSING_AVP
 >>> attrs = {
 ...   "result_code": DIAMETER_MISSING_AVP,
@@ -858,7 +858,7 @@ Both `bromelia.base` and `diameter.messages` modules have classes which implemen
 The `__add__()` is overwritten to make possible sum up two or more DiameterMessage objects to create byte streams.
 
 ```python
-from bromelia.messages import SessionTerminationRequest as STR
+from bromelia.messages import STR # SessionTerminationRequest
 str1 = STR(username="Alice")
 str2 = STR(username="Bob")
 dump = str1 + str2
@@ -874,7 +874,7 @@ There are two ways to verify the length of a given AVP represented as a Diameter
 Surely in your computer or your server the length will be different since Origin-Host and Origin-Realm AVPs will have a different content.
 
 ```python
->>> from bromelia.messages import DisconnectPeerRequest as DPR
+>>> from bromelia.messages import DPR # DisconnectPeerRequest
 >>> dpr = DPR()
 >>> dpr
 <Diameter Message: 282 [DPR] REQ, 0 [Diameter common message], 3 AVP(s)>
@@ -887,7 +887,7 @@ b'\x00\x00l'
 Second one, just use the `len()` Python built-in function.
 
 ```python
->>> from bromelia.messages import DisconnectPeerAnswer as DPA
+>>> from bromelia.messages import DPA # DisconnectPeerAnswer
 >>> dpa = DPA()
 >>> dpa
 <Diameter Message: 282 [DPA], 0 [Diameter common message], 3 AVP(s)>
@@ -949,7 +949,7 @@ What if you create it by using the `DiameterRequest` class in `bromelia.messages
 We already know the best way to create a standard Diameter Message using *bromelia* is by calling one of the classes from `bromelia.messages` module.
 
 ```python
->>> from bromelia.messages import AbortSessionRequest as ASR
+>>> from bromelia.messages import ASR # AbortSessionRequest
 >>> from bromelia import DIAMETER_APPLICATION_Rx
 >>> attrs = {
 ...   "session_id": "my-host.my-network.com",
@@ -1029,8 +1029,8 @@ It comes again because! This feature has already showed up in the previous `docs
 Basically the same dynamics work here. You may use byte streams as inputs argument in the `.load()` staticmethod to create DiameterMessage objects which represents that Diameter Message. Under the hood the staticmethod will parse that byte stream in order to create a more friendly data.
 
 ```python
->>> from bromelia.messages import CapabilitiesExchangeRequest as CER
->>> from bromelia.messages import CapabilitiesExchangeRequest as CEA
+>>> from bromelia.messages import CER # CapabilitiesExchangeRequest
+>>> from bromelia.messages import CEA # CapabilitiesExchangeAnswer
 >>> cer = CER()
 >>> cea = CEA()
 >>> dump = cer + cea
@@ -1107,7 +1107,6 @@ class ReAuthRequest(DiameterRequest):
         >>> from bromelia.messages import ReAuthRequest as RAR
         >>> from bromelia import DIAMETER_APPLICATION_Gx
         >>> from bromelia import AUTH_REQUEST_TYPE_AUTHENTICATE_ONLY
-        >>>
         >>> rar_avps = {
         ...     "auth_application_id": DIAMETER_APPLICATION_Gx,
         ...     "destination_realm": "example.com",
@@ -1237,7 +1236,7 @@ class MyDiameterRequest(DiameterRequest):
     """Implementation of My-Diameter-Request (MDR).
 
     The My-Diameter-Request is indicated by the Command Code 999 and
-  the Command Flags' 'R' bit and 'P' bit set.
+    the Command Flags' 'R' bit and 'P' bit set.
 
     Usage::
 

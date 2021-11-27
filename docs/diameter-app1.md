@@ -307,8 +307,8 @@ from bromelia.avps import OriginRealmAVP
 from bromelia.avps import SessionIdAVP
 from bromelia.avps import UserNameAVP
 from bromelia.base import DiameterRequest
-from bromelia.etsi_3gpp_s6a_s6d.avps import UlrFlagsAVP
-from bromelia.etsi_3gpp_swm.avps import RatTypeAVP
+from bromelia.lib.etsi_3gpp_s6a import UlrFlagsAVP
+from bromelia.lib.etsi_3gpp_swm import RatTypeAVP
 
 LOCAL_HOST_NAME = 'my-mme.epc.mynetwork.com'
 LOCAL_DOMAIN = 'epc.mynetwork.com'
@@ -361,9 +361,9 @@ from bromelia.avps import OriginHostAVP
 from bromelia.avps import OriginRealmAVP
 from bromelia.avps import SessionIdAVP
 from bromelia.avps import UserNameAVP
-from bromelia.base import DiameterRequest
-from bromelia.etsi_3gpp_s6a_s6d.avps import UlrFlagsAVP
-from bromelia.etsi_3gpp_swm.avps import RatTypeAVP
+from bromelia.base import DiameterR
+from bromelia.lib.etsi_3gpp_s6a import UlrFlagsAVP
+from bromelia.lib.etsi_3gpp_swm import RatTypeAVP
 
 LOCAL_HOST_NAME = 'my-mme.epc.mynetwork.com'
 LOCAL_DOMAIN = 'epc.mynetwork.com'
@@ -433,10 +433,10 @@ from bromelia.avps import UserNameAVP
 from bromelia.avps import VendorIdAVP
 from bromelia.avps import VendorSpecificApplicationIdAVP
 from bromelia.base import DiameterAnswer
-from bromelia.etsi_3gpp_s6a_s6d.avps import FeatureListAVP
-from bromelia.etsi_3gpp_s6a_s6d.avps import FeatureListIdAVP
-from bromelia.etsi_3gpp_s6a_s6d.avps import SupportedFeaturesAVP
-from bromelia.etsi_3gpp_swm.avps import RatTypeAVP
+from bromelia.lib.etsi_3gpp_s6a import FeatureListAVP
+from bromelia.lib.etsi_3gpp_s6a import FeatureListIdAVP
+from bromelia.lib.etsi_3gpp_s6a import SupportedFeaturesAVP
+from bromelia.lib.etsi_3gpp_swm import RatTypeAVP
 
 LOCAL_HOST_NAME = 'my-hss.epc.mynetwork.com'
 LOCAL_DOMAIN = 'epc.mynetwork.com'

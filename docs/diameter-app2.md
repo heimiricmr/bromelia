@@ -121,9 +121,9 @@ Below you may find two Python modules: [examples/bromelia_mme.py](../examples/di
 from bromelia import Bromelia
 from bromelia.avps import *
 from bromelia.constants import *
-from bromelia.etsi_3gpp_s6a_s6d.avps import *
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationAnswer as CLA
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationRequest as CLR
+from bromelia.lib.etsi_3gpp_s6a import *
+from bromelia.lib.etsi_3gpp_s6a import CLA # CancelLocationAnswer
+from bromelia.lib.etsi_3gpp_s6a import CLR # CancelLocationRequest
 
 #: Application initialization 
 config_file = os.path.join(basedir, "bromelia_mme_config.yaml")
@@ -148,9 +148,9 @@ if __name__ == "__main__":
 from bromelia import Bromelia
 from bromelia.avps import *
 from bromelia.constants import *
-from bromelia.etsi_3gpp_s6a_s6d.avps import *
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationAnswer as CLA
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationRequest as CLR
+from bromelia.lib.etsi_3gpp_s6a import *
+from bromelia.lib.etsi_3gpp_s6a import CLA # CancelLocationAnswer
+from bromelia.lib.etsi_3gpp_s6a import CLR # CancelLocationRequest
 
 #: Application initialization 
 config_file = os.path.join(basedir, "bromelia_hss_config.yaml")

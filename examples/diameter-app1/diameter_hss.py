@@ -6,7 +6,7 @@
     This module contains an example on how to setup a dummy HSS
 	by using the Diameter class features of bromelia library.
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -22,8 +22,8 @@ sys.path.insert(0, bromelia_dir)
 from bromelia import Diameter
 from bromelia import DiameterAnswer
 from bromelia.avps import *
-from bromelia.etsi_3gpp_s6a_s6d.avps import *
-from bromelia.etsi_3gpp_swm.avps import *
+from bromelia.lib.etsi_3gpp_s6a import *
+from bromelia.lib.etsi_3gpp_swm import *
 
 LOCAL_HOSTNAME = "hss.epc.mynetwork.com"
 LOCAL_REALM = "epc.mynetwork.com"
