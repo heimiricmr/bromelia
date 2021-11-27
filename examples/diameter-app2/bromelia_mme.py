@@ -6,7 +6,7 @@
     This module contains an example on how to setup a dummy MME
 	by using the Bromelia class features of bromelia library.
     
-    :copyright: (c) 2020 Henrique Marques Ribeiro.
+    :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -20,11 +20,9 @@ bromelia_dir = os.path.dirname(examples_dir)
 sys.path.insert(0, bromelia_dir)
 
 from bromelia import Bromelia
-from bromelia.avps import *
 from bromelia.constants import *
-from bromelia.etsi_3gpp_s6a_s6d.avps import *
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationAnswer as CLA
-from bromelia.etsi_3gpp_s6a_s6d.messages import CancelLocationRequest as CLR
+from bromelia.lib.etsi_3gpp_s6a import CLA # CancelLocationAnswer
+from bromelia.lib.etsi_3gpp_s6a import CLR # CancelLocationRequest
 
 #: Application initialization 
 config_file = os.path.join(basedir, "bromelia_mme_config.yaml")
