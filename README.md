@@ -53,7 +53,9 @@ Run unittests:
 
 ```bash
 python3 -m unittest tests/*.py
-python3 -m unittest tests/etsi_3gpp*/*.py
+python3 -m unittest tests/avps/etsi_3gpp*/*.py
+python3 -m unittest tests/avps/ietf*/*.py
+python3 -m unittest tests/lib/etsi_3gpp*/*.py
 ```
 
 Then after setting up the config file as per explained in the [Tutorials](#tutorials) section, you can run the Diameter application by issuing the Python interpreter. Keep in mind there are two ways to spin up a Diameter application: either with Diameter class or Bromelia class.
