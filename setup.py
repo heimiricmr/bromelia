@@ -30,7 +30,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url=__url__,
-    download_url="https://github.com/heimiricmr/bromelia/releases/tag/v0.3.0",
+    download_url=f"https://github.com/heimiricmr/bromelia/releases/tag/v{__version__}",
     packages=setuptools.find_packages(),
     include_package_data=True,
     keywords=[
