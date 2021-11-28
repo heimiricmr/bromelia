@@ -2,7 +2,15 @@ import os
 import pathlib
 import setuptools
 
-import bromelia
+from bromelia.__version__ import (
+        __title__,
+        __version__,
+        __license__,
+        __author__,
+        __author_email__,
+        __description__,
+        __url__
+)
 
 # The directory containing this file
 HERE = pathlib.Path(__file__).parent
@@ -13,16 +21,16 @@ with open(os.path.join(HERE, "README.md"), encoding="utf-8", mode="r") as fh:
 
 # This call to setup() does all the work
 setuptools.setup(
-    name=bromelia.__title__,
-    version=bromelia.__version__,
-    license=bromelia.__license__,
-    author=bromelia.__author__,
-    author_email=bromelia.__author_email__,
-    description=bromelia.__description__,
+    name=__title__,
+    version=__version__,
+    license=__license__,
+    author=__author__,
+    author_email=__author_email__,
+    description=__description__,
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url=bromelia.__url__,
-    download_url="https://github.com/heimiricmr/bromelia/releases/tag/v0.2.0",
+    url=__url__,
+    download_url="https://github.com/heimiricmr/bromelia/releases/tag/v0.3.0",
     packages=setuptools.find_packages(),
     include_package_data=True,
     keywords=[
