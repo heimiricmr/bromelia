@@ -10,10 +10,9 @@
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
-import base64
 import logging
 
-from .avps import *
+from .avps import AuthRequestTypeAVP
 from .constants import *
 from .exceptions import ProcessRequestException
 

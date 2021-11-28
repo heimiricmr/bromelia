@@ -16,12 +16,12 @@ from .constants import *
 from .avps import AuthApplicationIdAVP
 from .avps import VendorIdAVP
 from .avps import VendorSpecificApplicationIdAVP
-from .messages import CapabilitiesExchangeAnswer
-from .messages import CapabilitiesExchangeRequest
-from .messages import DeviceWatchdogAnswer
-from .messages import DeviceWatchdogRequest
-from .messages import DisconnectPeerAnswer
-from .messages import DisconnectPeerRequest
+from .messages import CEA
+from .messages import CER
+from .messages import DWA
+from .messages import DWR
+from .messages import DPA
+from .messages import DPR
 
 class BaseMessages:
     def __init__(self, cer, cea, dwr, dwa, dpr, dpa):
@@ -50,17 +50,17 @@ class DiameterBaseProxy:
     def get_custom_messages(self, msgs):
         base = dict()
         for msg in msgs:
-            if isinstance(msg, CapabilitiesExchangeRequest):
+            if isinstance(msg, CER):
                 base.update({"cer": msg})
-            elif isinstance(msg, CapabilitiesExchangeAnswer):
+            elif isinstance(msg, CEA):
                 base.update({"cea": msg})
-            elif isinstance(msg, DeviceWatchdogRequest):
+            elif isinstance(msg, DWR):
                 base.update({"dwr": msg})
-            elif isinstance(msg, DeviceWatchdogAnswer):
+            elif isinstance(msg, DWA):
                 base.update({"dwa": msg})
-            elif isinstance(msg, DisconnectPeerRequest):
+            elif isinstance(msg, DPR):
                 base.update({"dpr": msg})
-            elif isinstance(msg, DisconnectPeerAnswer):
+            elif isinstance(msg, DPA):
                 base.update({"dpa": msg})
 
         for key in base.keys():
@@ -91,7 +91,7 @@ class DiameterBaseProxy:
                     "vendor_id": VENDOR_ID_DEFAULT,
                     "auth_application_id": application["app_id"]
             }
-            cer = CapabilitiesExchangeRequest(**avps)
+            cer = CER(**avps)
 
         elif isinstance(connection.application_ids, list):
             avps = {
@@ -100,7 +100,7 @@ class DiameterBaseProxy:
                     "host_ip_address": connection.local_node.ip_address,
                     "vendor_id": VENDOR_ID_DEFAULT,
             }
-            cer = CapabilitiesExchangeRequest(**avps)
+            cer = CER(**avps)
 
             applications = connection.application_ids
             for application in applications:
@@ -127,7 +127,7 @@ class DiameterBaseProxy:
                     "vendor_id": VENDOR_ID_DEFAULT,
                     "auth_application_id": application["app_id"],
             }
-            cea = CapabilitiesExchangeAnswer(**avps)
+            cea = CEA(**avps)
 
         elif isinstance(connection.application_ids, list):
             avps = {
@@ -136,7 +136,7 @@ class DiameterBaseProxy:
                     "host_ip_address": connection.local_node.ip_address,
                     "vendor_id": VENDOR_ID_DEFAULT,
             }
-            cea = CapabilitiesExchangeAnswer(**avps)
+            cea = CEA(**avps)
 
             applications = connection.application_ids
             for application in applications:
@@ -159,7 +159,7 @@ class DiameterBaseProxy:
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
         }            
-        return DeviceWatchdogRequest(**avps)
+        return DWR(**avps)
 
 
     @staticmethod
@@ -168,7 +168,7 @@ class DiameterBaseProxy:
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
         }
-        return DeviceWatchdogAnswer(**avps)
+        return DWA(**avps)
 
 
     @staticmethod
@@ -177,7 +177,7 @@ class DiameterBaseProxy:
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
         }            
-        return DisconnectPeerRequest(**avps)
+        return DPR(**avps)
 
 
     @staticmethod
@@ -186,4 +186,4 @@ class DiameterBaseProxy:
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
         }
-        return DisconnectPeerAnswer(**avps)
+        return DPA(**avps)

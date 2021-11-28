@@ -261,8 +261,8 @@ def _convert_file_to_config(filepath=None, variables_dictionary=globals()):
 
     try:
         if os.path.exists(filepath):
-            config_file = open(filepath, "r")
-            from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
+            with open(filepath, "r") as config_file:
+                from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
 
     except Exception as e:
         logging.exception(f"_convert_file_to_config - exception: {e}")
@@ -312,8 +312,8 @@ def get_app_name(filepath=None):
 
     try:
         if os.path.exists(filepath):
-            config_file = open(filepath, "r")
-            from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
+            with open(filepath, "r") as config_file:
+                from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
 
     except Exception as e:
         logging.exception(f"_convert_file_to_config - exception: {e}")

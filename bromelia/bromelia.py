@@ -21,7 +21,12 @@ from types import SimpleNamespace
 from ._internal_utils import _convert_file_to_config
 from ._internal_utils import application_id_look_up
 from ._internal_utils import get_app_name
-from .avps import *
+from .avps import DestinationHostAVP
+from .avps import DestinationRealmAVP
+from .avps import OriginHostAVP
+from .avps import OriginRealmAVP
+from .avps import ResultCodeAVP
+from .avps import SessionIdAVP
 from .base import DiameterAnswer
 from .base import DiameterRequest
 from .config import *

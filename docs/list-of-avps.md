@@ -1,7 +1,7 @@
 # List of DiameterAVP objects
 
-|name|code|type|spec|section|path|#|class_name
-|----|----|----|----|-------|----|-|----------
+|#|name|code|type|spec|section|path|class_name
+|-|----|----|----|----|-------|----|----------
 |1|`Subscription-Id-Data`|444|UTF8String|IETF RFC 4006|8.48|[avps.ietf.rfc4006](../bromelia/avps/ietf/rfc4006.py#L17)|SubscriptionIdDataAVP
 |2|`Subscription-Id-Type`|450|Enumerated|IETF RFC 4006|8.47|[avps.ietf.rfc4006](../bromelia/avps/ietf/rfc4006.py#L32)|SubscriptionIdTypeAVP
 |3|`Subscription-Id`|443|Grouped|IETF RFC 4006|8.46|[avps.ietf.rfc4006](../bromelia/avps/ietf/rfc4006.py#L55)|SubscriptionIdAVP
