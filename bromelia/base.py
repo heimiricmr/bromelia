@@ -16,6 +16,8 @@ from copy import deepcopy
 
 from ._internal_utils import avp_look_up
 from ._internal_utils import header_representation
+from ._internal_utils import get_avp_name_formatted
+from ._internal_utils import SessionHandler
 from .constants import *
 from .exceptions import AVPAttributeValueError
 from .exceptions import AVPParsingError
@@ -1439,8 +1441,6 @@ class DiameterMessage:
 
         kwargs = dict()
         for avp_name, avp_value in avps_info:
-            _name = f"{avp_name}_avp"
-
             if avp_name in self.mandatory and avp_value is None:
                 raise DiameterMessageError(f"missing mandatory AVP "\
                                            f"argument avp_value: '{avp_name}'")
@@ -1487,7 +1487,7 @@ class DiameterMessage:
     def avps(self):
         """Getter to avps attribute.
         """
-        return tuple(self._avps)
+        return list(self._avps)
 
 
     @avps.setter
@@ -1532,8 +1532,9 @@ class DiameterMessage:
         self._loaded = value            
 
 
-    #: TO-DO: review it
     def refresh(self):
+        """Updates the length field of Diameter Header.
+        """
         real_length = 20
         for avp in self.avps:
             real_length += len(avp)
@@ -1560,7 +1561,7 @@ class DiameterMessage:
     def get_length(self):
         """Returns the Diameter Header Length field value in Integer format.
         """
-        return int.from_bytes(self.length, byteorder="big")
+        return int.from_bytes(self.header.length, byteorder="big")
 
 
     def get_flags(self):
@@ -1622,6 +1623,71 @@ class DiameterMessage:
         for avp in self.avps:
             dump += avp.dump()
         return dump
+
+
+    def update_avps(self, avps, silent_errors=True):
+        """Updates DiameterAVP objects data of a given DiameterMessage object.
+        By default, it silences errors in case an unknown keys has been found.
+        It means the matching keys will be used to update the data of 
+        DiameterAVP objects found.
+        """
+        if not silent_errors:
+            unknown_avps = self._get_unknown_avps(avps)
+            if unknown_avps:
+                if len(unknown_avps) == 1:
+                    raise DiameterAvpError(f"Diameter Message does not have "\
+                                           f"the Diameter AVP under key: "\
+                                           f"`{unknown_avps[0]}`")
+                elif len(unknown_avps) > 1:
+                    raise DiameterAvpError(f"Diameter Message does not have "\
+                                           f"the Diameter AVPs under keys: "\
+                                           f"`{unknown_avps}`")
+
+
+        for key in avps.keys():
+            avp_name = get_avp_name_formatted(key)
+            if self.has_avp(avp_name):
+                self.update_avp(avp_name, avps[key])
+
+
+        if self.has_avp("session_id_avp"):
+            if "session_id" not in avps.keys() and "origin_host" in avps.keys():
+                previous = self.session_id_avp.data.decode("utf-8")
+                data = SessionHandler.get_session_id(avps["origin_host"], previous)
+                self.session_id_avp.data = data
+
+        self.refresh()
+
+
+    def _get_unknown_avps(self, avps):
+        unknown_avps = list()
+        for key in avps.keys():
+            avp_name = f"{key}_avp"
+            if not self.has_avp(avp_name):
+                unknown_avps.append(key)
+        return unknown_avps
+
+
+    def _lookup_avp_index(self, avp):
+        for index, _avp in enumerate(self.avps):
+            if id(_avp) == id(avp):
+                return index
+
+
+    def update_avp(self, avp_name, avp_value):
+        avp = getattr(self, avp_name)
+        index = self._lookup_avp_index(avp)
+
+        _avp_class = loader.get_avp_class(avp)
+
+        setattr(self, avp_name, _avp_class(avp_value))
+        self[index] = _avp_class(avp_value)
+
+        new_avp_att = getattr(self, avp_name)
+        new_avp_arr = self[index]
+
+        new_avp_att.flags = new_avp_arr.flags = avp.flags
+        new_avp_att.vendor_id = new_avp_arr.vendor_id = avp.vendor_id
 
 
 class DiameterRequest(DiameterMessage):

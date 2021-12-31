@@ -10,6 +10,7 @@
 """
 
 from .._internal_utils import convert_to_1_byte
+from .._internal_utils import convert_to_3_bytes
 from .._internal_utils import convert_to_4_bytes
 
 #: General constants.
@@ -21,6 +22,9 @@ FIRMWARE_VERSION = convert_to_4_bytes(1)
 #: Diameter Agent Types.
 DIAMETER_AGENT_CLIENT_MODE = "CLIENT"
 DIAMETER_AGENT_SERVER_MODE = "SERVER"
+
+#: Unknown Diameter message.
+DIAMETER_UNKNOWN_COMMAND_CODE = convert_to_3_bytes(0)
 
 #: Basic AVP Data Formats.
 AVP_LENGTH_UNSIGNED32 = 12

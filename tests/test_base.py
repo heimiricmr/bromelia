@@ -18,9 +18,12 @@ base_dir = os.path.dirname(testing_dir)
 
 sys.path.insert(0, base_dir)
 
+from bromelia.__version__ import __version__
+from bromelia._internal_utils import _convert_config_to_connection_obj
 from bromelia.avps import *
 from bromelia.base import *
 from bromelia.constants import *
+from bromelia.proxy import DiameterBaseProxy
 
 
 class TestDiameterAVP(unittest.TestCase):
@@ -1337,6 +1340,1377 @@ class TestDiameterMessage(unittest.TestCase):
             message.update_key("firmware1", "firmware0")
         
         self.assertEqual(cm.exception.args[0], "`firmware0` key already defined")
+
+    def test_diameter_message__refresh_method__1(self):
+        header = DiameterHeader()
+
+        origin_host_avp = OriginHostAVP("host.example.com")
+        origin_realm_avp = OriginRealmAVP("example.com")
+        avps = [origin_host_avp, origin_realm_avp]
+
+        message = DiameterMessage(header, avps)
+
+        #: Check Diameter Header
+        self.assertEqual(message.dump().hex(), "01000040000000000000000000000000000000000000010840000018686f73742e6578616d706c652e636f6d00000128400000136578616d706c652e636f6d00")
+        self.assertEqual(message.header.version, DIAMETER_VERSION)
+        self.assertEqual(message.header.flags, FLAG_RESPONSE)
+        self.assertEqual(message.header.get_length(), 64)
+        self.assertEqual(message.header.command_code, DIAMETER_UNKNOWN_COMMAND_CODE)
+        self.assertEqual(message.header.application_id, DIAMETER_APPLICATION_DEFAULT)
+
+        #: Origin-Host AVP
+        self.assertEqual(message.avps[0].dump().hex(), "0000010840000018686f73742e6578616d706c652e636f6d")
+        self.assertEqual(message.avps[0].get_length(), 24)
+        self.assertEqual(message.avps[0].data, b"host.example.com")
+
+        #: Origin-Realm AVP
+        self.assertEqual(message.avps[1].dump().hex(), "00000128400000136578616d706c652e636f6d00")
+        self.assertEqual(message.avps[1].get_length(), 19)
+        self.assertEqual(message.avps[1].data, b"example.com")
+
+        #: Update Origin-Host & Origin-Realm AVPs
+        message.origin_host_avp.data = "new_host.new_example.com"
+        message.origin_realm_avp.data = "new_example.com"
+
+        #: Origin-Host AVP updated
+        self.assertEqual(message.avps[0].dump().hex(), "00000108400000206e65775f686f73742e6e65775f6578616d706c652e636f6d")
+        self.assertEqual(message.avps[0].get_length(), 32)
+        self.assertEqual(message.avps[0].data, b"new_host.new_example.com")
+
+        #: Origin-Realm AVP updated
+        self.assertEqual(message.avps[1].dump().hex(), "00000128400000176e65775f6578616d706c652e636f6d00")
+        self.assertEqual(message.avps[1].get_length(), 23)
+        self.assertEqual(message.avps[1].data, b"new_example.com")
+
+        #: In order to update the length field with the new value
+        message.refresh()
+        self.assertEqual(message.header.get_length(), 76) # instead the previous 64
+        self.assertEqual(len(message), 76) # instead the previous 64
+
+        #: If pop a given DiameterAVP object, there is no need to refresh
+        message.pop("origin_host_avp")
+        self.assertEqual(message.header.get_length(), 44)
+        self.assertEqual(len(message), 44)
+
+        #: If append a given DiameterAVP object, there is no need to refresh
+        message.append(origin_host_avp)
+        self.assertEqual(message.header.get_length(), 76)
+        self.assertEqual(len(message), 76)
+
+        #: If cleanup all DiameterAVP objects, there is no need to refresh
+        message.cleanup()
+        self.assertEqual(message.header.get_length(), 20)
+        self.assertEqual(len(message), 20)
+
+        #: If extend DiameterAVP objects, there is no need to refresh
+        message.extend([origin_host_avp, origin_realm_avp])
+        self.assertEqual(message.header.get_length(), 76)
+        self.assertEqual(len(message), 76)
+
+    def test_diameter_message__refresh_method__2(self):
+        stream = bytes.fromhex("01000040000000000000000000000000000000000000010840000018686f73742e6578616d706c652e636f6d00000128400000136578616d706c652e636f6d00")
+        messages = DiameterMessage.load(stream)
+        message = messages[0]
+
+        #: Check Diameter Header
+        self.assertEqual(message.dump().hex(), "01000040000000000000000000000000000000000000010840000018686f73742e6578616d706c652e636f6d00000128400000136578616d706c652e636f6d00")
+        self.assertEqual(message.header.version, DIAMETER_VERSION)
+        self.assertEqual(message.header.flags, FLAG_RESPONSE)
+        self.assertEqual(message.header.get_length(), 64)
+        self.assertEqual(message.header.command_code, DIAMETER_UNKNOWN_COMMAND_CODE)
+        self.assertEqual(message.header.application_id, DIAMETER_APPLICATION_DEFAULT)
+
+        #: Origin-Host AVP
+        self.assertEqual(message.avps[0].dump().hex(), "0000010840000018686f73742e6578616d706c652e636f6d")
+        self.assertEqual(message.avps[0].get_length(), 24)
+        self.assertEqual(message.avps[0].data, b"host.example.com")
+
+        #: Origin-Realm AVP
+        self.assertEqual(message.avps[1].dump().hex(), "00000128400000136578616d706c652e636f6d00")
+        self.assertEqual(message.avps[1].get_length(), 19)
+        self.assertEqual(message.avps[1].data, b"example.com")
+
+        #: Update Origin-Host & Origin-Realm AVPs
+        message.origin_host_avp.data = "new_host.new_example.com"
+        message.origin_realm_avp.data = "new_example.com"
+
+        #: Origin-Host & Origin-Realm AVPs
+        origin_host_avp = message.origin_host_avp
+        origin_realm_avp = message.origin_realm_avp
+
+        #: Origin-Host AVP updated
+        self.assertEqual(message.avps[0].dump().hex(), "00000108400000206e65775f686f73742e6e65775f6578616d706c652e636f6d")
+        self.assertEqual(message.avps[0].get_length(), 32)
+        self.assertEqual(message.avps[0].data, b"new_host.new_example.com")
+
+        #: Origin-Realm AVP updated
+        self.assertEqual(message.avps[1].dump().hex(), "00000128400000176e65775f6578616d706c652e636f6d00")
+        self.assertEqual(message.avps[1].get_length(), 23)
+        self.assertEqual(message.avps[1].data, b"new_example.com")
+
+        #: In order to update the length field with the new value
+        message.refresh()
+        self.assertEqual(message.header.get_length(), 76) # instead the previous 64
+        self.assertEqual(len(message), 76) # instead the previous 64
+
+        #: If pop a given DiameterAVP object, there is no need to refresh
+        message.pop("origin_host_avp")
+        self.assertEqual(message.header.get_length(), 44)
+        self.assertEqual(len(message), 44)
+
+        #: If append a given DiameterAVP object, there is no need to refresh
+        message.append(origin_host_avp)
+        self.assertEqual(message.header.get_length(), 76)
+        self.assertEqual(len(message), 76)
+
+        #: If cleanup all DiameterAVP objects, there is no need to refresh
+        message.cleanup()
+        self.assertEqual(message.header.get_length(), 20)
+        self.assertEqual(len(message), 20)
+
+        #: If extend DiameterAVP objects, there is no need to refresh
+        message.extend([origin_host_avp, origin_realm_avp])
+        self.assertEqual(message.header.get_length(), 76)
+        self.assertEqual(len(message), 76)
+
+    def test_diameter_message__refresh_method__3(self):
+        stream = bytes.fromhex("010001a0c000013e01000023116846741168467400000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000000001154000000c00000001000001084000002d6d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f726700000000000128400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+        messages = DiameterMessage.load(stream)
+        message = messages[0]
+
+        #: Check Diameter Header
+        self.assertEqual(message.dump().hex(), "010001a0c000013e01000023116846741168467400000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000000001154000000c00000001000001084000002d6d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f726700000000000128400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+        self.assertEqual(message.header.version, DIAMETER_VERSION)
+        self.assertEqual(message.header.flags, FLAG_REQUEST_AND_PROXYABLE)
+        self.assertEqual(message.header.length.hex(), "0001a0")
+        self.assertEqual(message.header.get_length(), 416)
+        self.assertEqual(message.header.command_code, AUTHENTICATION_INFORMATION_MESSAGE)
+        self.assertEqual(message.header.application_id, DIAMETER_APPLICATION_S6a)
+
+        #: Session-Id AVP
+        self.assertEqual(message.session_id_avp.dump().hex(), "00000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000")
+        self.assertEqual(message.avps[0].dump().hex(), "00000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000")
+        self.assertEqual(message.avps[0].code, SESSION_ID_AVP_CODE)
+        self.assertEqual(message.avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[0].vendor_id)
+        self.assertEqual(message.avps[0].length.hex(), "000051")
+        self.assertEqual(message.avps[0].get_length(), 81)
+        self.assertEqual(message.avps[0].data, b"mme.epc.mnc000.mcc724.3gppnetwork.org;1559529822;356549175;2.17;940463984")
+        self.assertEqual(message.avps[0].get_padding_length(), 3)
+
+        #: Auth-Session-State AVP
+        self.assertEqual(message.auth_session_state_avp.dump().hex(), "000001154000000c00000001")
+        self.assertEqual(message.avps[1].dump().hex(), "000001154000000c00000001")
+        self.assertEqual(message.avps[1].code, AUTH_SESSION_STATE_AVP_CODE)
+        self.assertEqual(message.avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[1].vendor_id)
+        self.assertEqual(message.avps[1].length.hex(), "00000c")
+        self.assertEqual(message.avps[1].get_length(), 12)
+        self.assertEqual(message.avps[1].data, NO_STATE_MAINTAINED)
+        self.assertIsNone(message.avps[1].get_padding_length())
+
+        #: Origin-Host AVP
+        self.assertEqual(message.origin_host_avp.dump().hex(), "000001084000002d6d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f7267000000")
+        self.assertEqual(message.avps[2].dump().hex(), "000001084000002d6d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f7267000000")
+        self.assertEqual(message.avps[2].code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(message.avps[2].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[2].vendor_id)
+        self.assertEqual(message.avps[2].length.hex(), "00002d")
+        self.assertEqual(message.avps[2].get_length(), 45)
+        self.assertEqual(message.avps[2].data, b"mme.epc.mnc000.mcc724.3gppnetwork.org")
+        self.assertEqual(message.avps[2].get_padding_length(), 3)
+
+        #: Origin-Realm AVP
+        self.assertEqual(message.origin_realm_avp.dump().hex(), "00000128400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f7267000000")
+        self.assertEqual(message.avps[3].dump().hex(), "00000128400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f7267000000")
+        self.assertEqual(message.avps[3].code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(message.avps[3].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[3].vendor_id)
+        self.assertEqual(message.avps[3].length.hex(), "000029")
+        self.assertEqual(message.avps[3].get_length(), 41)
+        self.assertEqual(message.avps[3].data, b"epc.mnc000.mcc724.3gppnetwork.org")
+        self.assertEqual(message.avps[3].get_padding_length(), 3)
+
+        #: Destination-Realm AVP
+        self.assertEqual(message.destination_realm_avp.dump().hex(), "0000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f7267000000")
+        self.assertEqual(message.avps[4].dump().hex(), "0000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f7267000000")
+        self.assertEqual(message.avps[4].code, DESTINATION_REALM_AVP_CODE)
+        self.assertEqual(message.avps[4].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[4].vendor_id)
+        self.assertEqual(message.avps[4].length.hex(), "000029")
+        self.assertEqual(message.avps[4].get_length(), 41)
+        self.assertEqual(message.avps[4].data, b"epc.mnc000.mcc724.3gppnetwork.org")
+        self.assertEqual(message.avps[4].get_padding_length(), 3)
+
+        #: User-Name AVP
+        self.assertEqual(message.user_name_avp.dump().hex(), "000000014000001737323430303131313131313131313100")
+        self.assertEqual(message.avps[5].dump().hex(), "000000014000001737323430303131313131313131313100")
+        self.assertEqual(message.avps[5].code, USER_NAME_AVP_CODE)
+        self.assertEqual(message.avps[5].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[5].vendor_id)
+        self.assertEqual(message.avps[5].length.hex(), "000017")
+        self.assertEqual(message.avps[5].get_length(), 23)
+        self.assertEqual(message.avps[5].data, b"724001111111111")
+        self.assertEqual(message.avps[5].get_padding_length(), 1)
+
+        #: Visited-PLMN-Id AVP
+        self.assertEqual(message.visited_plmn_id_avp.dump().hex(), "0000057fc000000f000028af27f45000")
+        self.assertEqual(message.avps[6].dump().hex(), "0000057fc000000f000028af27f45000")
+        self.assertEqual(message.avps[6].code, VISITED_PLMN_ID_AVP_CODE)
+        self.assertEqual(message.avps[6].flags, FLAG_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertEqual(message.avps[6].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(message.avps[6].length.hex(), "00000f")
+        self.assertEqual(message.avps[6].get_length(), 15)
+        self.assertEqual(message.avps[6].data.hex(), "27f450")
+        self.assertEqual(message.avps[6].get_padding_length(), 1)
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(message.vendor_specific_application_id_avp.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000023")
+        self.assertEqual(message.avps[7].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000023")
+        self.assertEqual(message.avps[7].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(message.avps[7].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[7].vendor_id)
+        self.assertEqual(message.avps[7].length.hex(), "000020")
+        self.assertEqual(message.avps[7].get_length(), 32)
+        self.assertEqual(message.avps[7].data.hex(), "0000010a4000000c000028af000001024000000c01000023")
+        self.assertIsNone(message.avps[7].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(message.avps[7].vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(message.avps[7].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(message.avps[7].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(message.avps[7].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[7].avps[0].vendor_id)
+        self.assertEqual(message.avps[7].avps[0].length.hex(), "00000c")
+        self.assertEqual(message.avps[7].avps[0].get_length(), 12)
+        self.assertEqual(message.avps[7].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(message.avps[7].avps[0].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(message.avps[7].auth_application_id_avp.dump().hex(), "000001024000000c01000023")
+        self.assertEqual(message.avps[7].avps[1].dump().hex(), "000001024000000c01000023")
+        self.assertEqual(message.avps[7].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(message.avps[7].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[7].avps[1].vendor_id)
+        self.assertEqual(message.avps[7].avps[0].length.hex(), "00000c")
+        self.assertEqual(message.avps[7].avps[1].get_length(), 12)
+        self.assertEqual(message.avps[7].avps[1].data, DIAMETER_APPLICATION_S6a)
+        self.assertIsNone(message.avps[7].avps[1].get_padding_length())
+
+        #: Destination-Host AVP
+        self.assertEqual(message.destination_host_avp.dump().hex(), "0000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f7267")
+        self.assertEqual(message.avps[8].dump().hex(), "0000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f7267")
+        self.assertEqual(message.avps[8].code, DESTINATION_HOST_AVP_CODE)
+        self.assertEqual(message.avps[8].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[8].vendor_id)
+        self.assertEqual(message.avps[8].length.hex(), "000030")
+        self.assertEqual(message.avps[8].get_length(), 48)
+        self.assertEqual(message.avps[8].data, b"hsssm2.epc.mnc005.mcc724.3gppnetwork.org")
+        self.assertIsNone(message.avps[8].get_padding_length())
+
+        #: Request-EUTRAN-Authentication-Info AVP
+        self.assertEqual(message.requested_eutran_authentication_info_avp.dump().hex(), "00000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+        self.assertEqual(message.avps[9].dump().hex(), "00000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+        self.assertEqual(message.avps[9].code, REQUESTED_EUTRAN_AUTHENTICATION_INFO_AVP_CODE)
+        self.assertEqual(message.avps[9].flags, FLAG_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertEqual(message.avps[9].vendor_id, VENDOR_ID_3GPP)
+        self.assertEqual(message.avps[9].length.hex(), "00002c")
+        self.assertEqual(message.avps[9].get_length(), 44)
+        self.assertEqual(message.avps[9].data.hex(), "00000582c0000010000028af0000000200000584c0000010000028af00000001")
+        self.assertIsNone(message.avps[9].get_padding_length())
+
+        ##: Now we are going to make a few changes
+
+        #: Update Origin-Host AVP
+        message.origin_host_avp.data = "mme.epc.3gppnetwork.org"
+
+        self.assertEqual(message.origin_host_avp.dump().hex(), "000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(message.avps[2].dump().hex(), "000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(message.avps[2].code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(message.avps[2].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[2].vendor_id)
+        self.assertEqual(message.avps[2].length.hex(), "00001f")
+        self.assertEqual(message.avps[2].get_length(), 31)
+        self.assertEqual(message.avps[2].data, b"mme.epc.3gppnetwork.org")
+        self.assertEqual(message.avps[2].get_padding_length(), 1)
+
+        #: See the needed to refresh it. Before call it the length is wrong if 
+        #: you try to access through the Header object
+        self.assertEqual(message.header.length.hex(), "0001a0")
+        self.assertEqual(message.header.get_length(), 416)
+        self.assertEqual(len(message.header), 416)
+        self.assertEqual(message.dump().hex(), "010001a0c000013e01000023116846741168467400000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f72670000000128400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+        message.refresh()
+
+        self.assertEqual(message.header.length.hex(), "000190")
+        self.assertEqual(message.header.get_length(), 400)
+        self.assertEqual(len(message.header), 400)
+        self.assertEqual(message.dump().hex(), "01000190c000013e01000023116846741168467400000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f72670000000128400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+
+        #: Update Origin-Realm AVP
+        message.origin_realm_avp.data = "epc.3gppnetwork.org"
+
+        self.assertEqual(message.origin_realm_avp.dump().hex(), "000001284000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(message.avps[3].dump().hex(), "000001284000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(message.avps[3].code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(message.avps[3].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[3].vendor_id)
+        self.assertEqual(message.avps[3].length.hex(), "00001b")
+        self.assertEqual(message.avps[3].get_length(), 27)
+        self.assertEqual(message.avps[3].data, b"epc.3gppnetwork.org")
+        self.assertEqual(message.avps[3].get_padding_length(), 1)
+
+        #: See the needed to refresh it. Before call it the length is wrong if 
+        #: you try to access through the Header object
+        self.assertEqual(message.header.length.hex(), "000190")
+        self.assertEqual(message.header.get_length(), 400)
+        self.assertEqual(len(message.header), 400)
+        self.assertEqual(message.dump().hex(), "01000190c000013e01000023116846741168467400000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+        message.refresh()
+
+        self.assertEqual(message.header.length.hex(), "000180")
+        self.assertEqual(message.header.get_length(), 384)
+        self.assertEqual(len(message.header), 384)
+        self.assertEqual(message.dump().hex(), "01000180c000013e01000023116846741168467400000107400000516d6d652e6570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b393430343633393834000000000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+
+        #: Update Session-Id AVP
+        message.session_id_avp.data = "mme.epc.3gppnetwork.org;1559529822;356549175;2.17;940463984"
+
+        self.assertEqual(message.session_id_avp.dump().hex(), "00000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400")
+        self.assertEqual(message.avps[0].dump().hex(), "00000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400")
+        self.assertEqual(message.avps[0].code, SESSION_ID_AVP_CODE)
+        self.assertEqual(message.avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[0].vendor_id)
+        self.assertEqual(message.avps[0].length.hex(), "000043")
+        self.assertEqual(message.avps[0].get_length(), 67)
+        self.assertEqual(message.avps[0].data, b"mme.epc.3gppnetwork.org;1559529822;356549175;2.17;940463984")
+        self.assertEqual(message.avps[0].get_padding_length(), 1)
+
+        #: See the needed to refresh it. Before call it the length is wrong if 
+        #: you try to access through the Header object
+        self.assertEqual(message.header.length.hex(), "000180")
+        self.assertEqual(message.header.get_length(), 384)
+        self.assertEqual(len(message.header), 384)
+        self.assertEqual(message.dump().hex(), "01000180c000013e01000023116846741168467400000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+        message.refresh()
+
+        self.assertEqual(message.header.length.hex(), "000170")
+        self.assertEqual(message.header.get_length(), 368)
+        self.assertEqual(len(message.header), 368)
+        self.assertEqual(message.dump().hex(), "01000170c000013e01000023116846741168467400000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b400000296570632e6d6e633030302e6d63633732342e336770706e6574776f726b2e6f72670000000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+
+        #: Update Destination-Realm AVP
+        message.destination_realm_avp.data = "epc.3gppnetwork.org"
+
+        self.assertEqual(message.destination_realm_avp.dump().hex(), "0000011b4000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(message.avps[4].dump().hex(), "0000011b4000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(message.avps[4].code, DESTINATION_REALM_AVP_CODE)
+        self.assertEqual(message.avps[4].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[4].vendor_id)
+        self.assertEqual(message.avps[4].length.hex(), "00001b")
+        self.assertEqual(message.avps[4].get_length(), 27)
+        self.assertEqual(message.avps[4].data, b"epc.3gppnetwork.org")
+        self.assertEqual(message.avps[4].get_padding_length(), 1)
+
+        #: See the needed to refresh it. Before call it the length is wrong if 
+        #: you try to access through the Header object
+        self.assertEqual(message.header.length.hex(), "000170")
+        self.assertEqual(message.header.get_length(), 368)
+        self.assertEqual(len(message.header), 368)
+        self.assertEqual(message.dump().hex(), "01000170c000013e01000023116846741168467400000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b4000001b6570632e336770706e6574776f726b2e6f7267000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+        message.refresh()
+
+        self.assertEqual(message.header.length.hex(), "000160")
+        self.assertEqual(message.header.get_length(), 352)
+        self.assertEqual(len(message.header), 352)
+        self.assertEqual(message.dump().hex(), "01000160c000013e01000023116846741168467400000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b4000001b6570632e336770706e6574776f726b2e6f7267000000000140000017373234303031313131313131313131000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+
+        #: Update User-Name AVP
+        message.user_name_avp.data = "frodo"
+
+        self.assertEqual(message.user_name_avp.dump().hex(), "000000014000000d66726f646f000000")
+        self.assertEqual(message.avps[5].dump().hex(), "000000014000000d66726f646f000000")
+        self.assertEqual(message.avps[5].code, USER_NAME_AVP_CODE)
+        self.assertEqual(message.avps[5].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(message.avps[5].vendor_id)
+        self.assertEqual(message.avps[5].length.hex(), "00000d")
+        self.assertEqual(message.avps[5].get_length(), 13)
+        self.assertEqual(message.avps[5].data, b"frodo")
+        self.assertEqual(message.avps[5].get_padding_length(), 3)
+
+        #: See the needed to refresh it. Before call it the length is wrong if 
+        #: you try to access through the Header object
+        self.assertEqual(message.header.length.hex(), "000160")
+        self.assertEqual(message.header.get_length(), 352)
+        self.assertEqual(len(message.header), 352)
+        self.assertEqual(message.dump().hex(), "01000160c000013e01000023116846741168467400000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b4000001b6570632e336770706e6574776f726b2e6f726700000000014000000d66726f646f0000000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+        message.refresh()
+
+        self.assertEqual(message.header.length.hex(), "000158")
+        self.assertEqual(message.header.get_length(), 344)
+        self.assertEqual(len(message.header), 344)
+        self.assertEqual(message.dump().hex(), "01000158c000013e01000023116846741168467400000107400000436d6d652e6570632e336770706e6574776f726b2e6f72673b313535393532393832323b3335363534393137353b322e31373b39343034363339383400000001154000000c00000001000001084000001f6d6d652e6570632e336770706e6574776f726b2e6f726700000001284000001b6570632e336770706e6574776f726b2e6f7267000000011b4000001b6570632e336770706e6574776f726b2e6f726700000000014000000d66726f646f0000000000057fc000000f000028af27f4500000000104400000200000010a4000000c000028af000001024000000c010000230000012540000030687373736d322e6570632e6d6e633030352e6d63633732342e336770706e6574776f726b2e6f726700000580c000002c000028af00000582c0000010000028af0000000200000584c0000010000028af00000001")
+
+    def test_diameter_message__update_avps_method__1(self):
+        #: Initial Setup
+        config = {
+                "MODE": "CLIENT",
+                "APPLICATIONS": [
+                                    {
+                                        "vendor_id": VENDOR_ID_3GPP, 
+                                        "app_id": DIAMETER_APPLICATION_Cx
+                                    },
+                                    {
+                                        "vendor_id": VENDOR_ID_3GPP,
+                                        "app_id": DIAMETER_APPLICATION_Rx
+                                    }
+                ],
+                "LOCAL_NODE_HOSTNAME": "client.network",
+                "LOCAL_NODE_REALM": "network",
+                "LOCAL_NODE_IP_ADDRESS": "127.0.0.1",
+                "LOCAL_NODE_PORT": None,
+                "PEER_NODE_HOSTNAME": "server.network",
+                "PEER_NODE_REALM": "network",
+                "PEER_NODE_IP_ADDRESS": "127.0.0.1",
+                "PEER_NODE_PORT": None,
+                "WATCHDOG_TIMEOUT": 30
+            }
+        connection = _convert_config_to_connection_obj(config)
+        cea = DiameterBaseProxy.load_cea(connection)
+
+        cea.append(OriginStateIdAVP(64))
+        cea.append(SupportedVendorIdAVP(VENDOR_ID_ETSI))
+
+        #: Check Diameter Header
+        self.assertEqual(cea.header.version, DIAMETER_VERSION)
+        self.assertEqual(cea.header.flags, FLAG_RESPONSE)
+        self.assertEqual(cea.header.length.hex(), "0000e0")
+        self.assertEqual(cea.header.get_length(), 224)
+        self.assertEqual(cea.header.command_code, CAPABILITIES_EXCHANGE_MESSAGE)
+        self.assertEqual(cea.header.application_id, DIAMETER_APPLICATION_DEFAULT)
+
+        self.assertEqual(cea.__repr__(), "<Diameter Message: 257 [CEA], 0 [Diameter common message], 11 AVP(s)>")
+
+        #: Result-Code AVP
+        self.assertEqual(cea.avps[0].dump().hex(), "0000010c4000000c000007d1")
+        self.assertEqual(cea.avps[0].code, RESULT_CODE_AVP_CODE)
+        self.assertEqual(cea.avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[0].vendor_id)
+        self.assertEqual(cea.avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[0].data, DIAMETER_SUCCESS)
+        self.assertIsNone(cea.avps[0].get_padding_length())
+
+        #: Origin-Host AVP
+        self.assertEqual(cea.origin_host_avp.dump().hex(), "0000010840000016636c69656e742e6e6574776f726b0000")
+        self.assertEqual(cea.avps[1].code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(cea.avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[1].vendor_id)
+        self.assertEqual(cea.avps[1].length.hex(), "000016")
+        self.assertEqual(cea.avps[1].get_length(), 22)
+        self.assertEqual(cea.avps[1].data, b"client.network")
+        self.assertEqual(cea.avps[1].get_padding_length(), 2)
+
+        #: Origin-Realm AVP
+        self.assertEqual(cea.origin_realm_avp.dump().hex(), "000001284000000f6e6574776f726b00")
+        self.assertEqual(cea.avps[2].dump().hex(), "000001284000000f6e6574776f726b00")
+        self.assertEqual(cea.avps[2].code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(cea.avps[2].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[2].vendor_id)
+        self.assertEqual(cea.avps[2].length.hex(), "00000f")
+        self.assertEqual(cea.avps[2].get_length(), 15)
+        self.assertEqual(cea.avps[2].data, b"network")
+        self.assertEqual(cea.avps[2].get_padding_length(), 1)
+
+        #: Host-IP-Address AVP
+        self.assertEqual(cea.host_ip_address_avp.dump().hex(), "000001014000000e00017f0000010000")
+        self.assertEqual(cea.avps[3].dump().hex(), "000001014000000e00017f0000010000")
+        self.assertEqual(cea.avps[3].code, HOST_IP_ADDRESS_AVP_CODE)
+        self.assertEqual(cea.avps[3].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[3].vendor_id)
+        self.assertEqual(cea.avps[3].length.hex(), "00000e")
+        self.assertEqual(cea.avps[3].get_length(), 14)
+        self.assertEqual(cea.avps[3].data.hex(), "00017f000001")
+        self.assertEqual(cea.avps[3].get_ip_address(), "127.0.0.1")
+        self.assertEqual(cea.avps[3].get_padding_length(), 2)
+
+        #: Vendor-Id AVP
+        self.assertEqual(cea.vendor_id_avp.dump().hex(), "0000010a4000000c00000000")
+        self.assertEqual(cea.avps[4].dump().hex(), "0000010a4000000c00000000")
+        self.assertEqual(cea.avps[4].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[4].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[4].vendor_id)
+        self.assertEqual(cea.avps[4].length.hex(), "00000c")
+        self.assertEqual(cea.avps[4].get_length(), 12)
+        self.assertEqual(cea.avps[4].data, VENDOR_ID_DEFAULT)
+        self.assertIsNone(cea.avps[4].get_padding_length())
+
+        #: Product-Name AVP
+        self.assertEqual(cea.product_name_avp.dump().hex(), "0000010d00000017507974686f6e2062726f6d656c696100")
+        self.assertEqual(cea.avps[5].dump().hex(), "0000010d00000017507974686f6e2062726f6d656c696100")
+        self.assertEqual(cea.avps[5].code, PRODUCT_NAME_AVP_CODE)
+        self.assertEqual(cea.avps[5].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[5].vendor_id)
+        self.assertEqual(cea.avps[5].length.hex(), "000017")
+        self.assertEqual(cea.avps[5].get_length(), 23)
+        self.assertEqual(cea.avps[5].data, b"Python bromelia")
+        self.assertEqual(cea.avps[5].get_padding_length(), 1)
+
+        #: Auth-Application-Id AVP
+        self.assertEqual(cea.auth_application_id_avp.dump().hex(), "000001024000000c00000000")
+        self.assertEqual(cea.avps[6].dump().hex(), "000001024000000c00000000")
+        self.assertEqual(cea.avps[6].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[6].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[6].vendor_id)
+        self.assertEqual(cea.avps[6].length.hex(), "00000c")
+        self.assertEqual(cea.avps[6].get_length(), 12)
+        self.assertEqual(cea.avps[6].data, DIAMETER_APPLICATION_DEFAULT)
+        self.assertIsNone(cea.avps[6].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000000")
+        self.assertEqual(cea.avps[7].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000000")
+        self.assertEqual(cea.avps[7].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].vendor_id)
+        self.assertEqual(cea.avps[7].length.hex(), "000020")
+        self.assertEqual(cea.avps[7].get_length(), 32)
+        self.assertEqual(cea.avps[7].data.hex(), "0000010a4000000c000028af000001024000000c01000000")
+        self.assertIsNone(cea.avps[7].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[7].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[7].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[0].vendor_id)
+        self.assertEqual(cea.avps[7].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.avps[7].avps[0].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.dump().hex(), "000001024000000c01000000")
+        self.assertEqual(cea.avps[7].avps[1].dump().hex(), "000001024000000c01000000")
+        self.assertEqual(cea.avps[7].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[1].vendor_id)
+        self.assertEqual(cea.avps[7].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[1].data, DIAMETER_APPLICATION_Cx)
+        self.assertIsNone(cea.avps[7].avps[1].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000014")
+        self.assertEqual(cea.avps[8].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000014")
+        self.assertEqual(cea.avps[8].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].vendor_id)
+        self.assertEqual(cea.avps[8].length.hex(), "000020")
+        self.assertEqual(cea.avps[8].get_length(), 32)
+        self.assertEqual(cea.avps[8].data.hex(), "0000010a4000000c000028af000001024000000c01000014")
+        self.assertIsNone(cea.avps[8].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[8].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[8].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[0].vendor_id)
+        self.assertEqual(cea.avps[8].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.avps[8].avps[0].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.dump().hex(), "000001024000000c01000014")
+        self.assertEqual(cea.avps[8].avps[1].dump().hex(), "000001024000000c01000014")
+        self.assertEqual(cea.avps[8].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[1].vendor_id)
+        self.assertEqual(cea.avps[8].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[1].data, DIAMETER_APPLICATION_Rx)
+        self.assertIsNone(cea.avps[8].avps[1].get_padding_length())        
+
+
+        #: Update all AVPs
+        avps = {
+            "result_code": DIAMETER_MULTI_ROUND_AUTH,
+            "origin_host": "hss.ims.3gppnetwork.org",
+            "origin_realm": "ims.3gppnetwork.org",
+            "host_ip_address": "10.129.241.235",
+            "vendor_id": VENDOR_ID_ETSI,
+            "product_name": f"Python Bromelia vX.Y.Z",
+            "auth_application_id": DIAMETER_APPLICATION_Gx,
+        }
+        cea.update_avps(avps)
+
+        #: Result-Code AVP
+        self.assertEqual(cea.avps[0].dump().hex(), "0000010c4000000c000003e9")
+        self.assertEqual(cea.avps[0].code, RESULT_CODE_AVP_CODE)
+        self.assertEqual(cea.avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[0].vendor_id)
+        self.assertEqual(cea.avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[0].data, DIAMETER_MULTI_ROUND_AUTH)
+        self.assertIsNone(cea.avps[0].get_padding_length())
+
+        self.assertEqual(cea.result_code_avp.dump().hex(), "0000010c4000000c000003e9")
+        self.assertEqual(cea.result_code_avp.code, RESULT_CODE_AVP_CODE)
+        self.assertEqual(cea.result_code_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.result_code_avp.vendor_id)
+        self.assertEqual(cea.result_code_avp.length.hex(), "00000c")
+        self.assertEqual(cea.result_code_avp.get_length(), 12)
+        self.assertEqual(cea.result_code_avp.data, DIAMETER_MULTI_ROUND_AUTH)
+        self.assertIsNone(cea.result_code_avp.get_padding_length())
+
+        #: Origin-Host AVP
+        self.assertEqual(cea.avps[1].dump().hex(), "000001084000001f6873732e696d732e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.avps[1].code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(cea.avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[1].vendor_id)
+        self.assertEqual(cea.avps[1].length.hex(), "00001f")
+        self.assertEqual(cea.avps[1].get_length(), 31)
+        self.assertEqual(cea.avps[1].data, b"hss.ims.3gppnetwork.org")
+        self.assertEqual(cea.avps[1].get_padding_length(), 1)
+
+        self.assertEqual(cea.origin_host_avp.dump().hex(), "000001084000001f6873732e696d732e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.origin_host_avp.code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(cea.origin_host_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.origin_host_avp.vendor_id)
+        self.assertEqual(cea.origin_host_avp.length.hex(), "00001f")
+        self.assertEqual(cea.origin_host_avp.get_length(), 31)
+        self.assertEqual(cea.origin_host_avp.data, b"hss.ims.3gppnetwork.org")
+        self.assertEqual(cea.origin_host_avp.get_padding_length(), 1)
+
+        #: Origin-Realm AVP
+        self.assertEqual(cea.avps[2].dump().hex(), "000001284000001b696d732e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.avps[2].code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(cea.avps[2].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[2].vendor_id)
+        self.assertEqual(cea.avps[2].length.hex(), "00001b")
+        self.assertEqual(cea.avps[2].get_length(), 27)
+        self.assertEqual(cea.avps[2].data, b"ims.3gppnetwork.org")
+        self.assertEqual(cea.avps[2].get_padding_length(), 1)
+
+        self.assertEqual(cea.origin_realm_avp.dump().hex(), "000001284000001b696d732e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.origin_realm_avp.code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(cea.origin_realm_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.origin_realm_avp.vendor_id)
+        self.assertEqual(cea.origin_realm_avp.length.hex(), "00001b")
+        self.assertEqual(cea.origin_realm_avp.get_length(), 27)
+        self.assertEqual(cea.origin_realm_avp.data, b"ims.3gppnetwork.org")
+        self.assertEqual(cea.origin_realm_avp.get_padding_length(), 1)
+
+        # #: Host-IP-Address AVP
+        self.assertEqual(cea.avps[3].dump().hex(), "000001014000000e00010a81f1eb0000")
+        self.assertEqual(cea.avps[3].code, HOST_IP_ADDRESS_AVP_CODE)
+        self.assertEqual(cea.avps[3].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[3].vendor_id)
+        self.assertEqual(cea.avps[3].length.hex(), "00000e")
+        self.assertEqual(cea.avps[3].get_length(), 14)
+        self.assertEqual(cea.avps[3].data.hex(), "00010a81f1eb")
+        self.assertEqual(cea.avps[3].get_ip_address(), "10.129.241.235")
+        self.assertEqual(cea.avps[3].get_padding_length(), 2)
+
+        self.assertEqual(cea.host_ip_address_avp.dump().hex(), "000001014000000e00010a81f1eb0000")
+        self.assertEqual(cea.host_ip_address_avp.code, HOST_IP_ADDRESS_AVP_CODE)
+        self.assertEqual(cea.host_ip_address_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.host_ip_address_avp.vendor_id)
+        self.assertEqual(cea.host_ip_address_avp.length.hex(), "00000e")
+        self.assertEqual(cea.host_ip_address_avp.get_length(), 14)
+        self.assertEqual(cea.host_ip_address_avp.data.hex(), "00010a81f1eb")
+        self.assertEqual(cea.host_ip_address_avp.get_ip_address(), "10.129.241.235")
+        self.assertEqual(cea.host_ip_address_avp.get_padding_length(), 2)
+
+        #: Vendor-Id AVP
+        self.assertEqual(cea.avps[4].dump().hex(), "0000010a4000000c000032db")
+        self.assertEqual(cea.avps[4].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[4].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[4].vendor_id)
+        self.assertEqual(cea.avps[4].length.hex(), "00000c")
+        self.assertEqual(cea.avps[4].get_length(), 12)
+        self.assertEqual(cea.avps[4].data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.avps[4].get_padding_length())
+
+        self.assertEqual(cea.vendor_id_avp.dump().hex(), "0000010a4000000c000032db")
+        self.assertEqual(cea.vendor_id_avp.code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_id_avp.data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.vendor_id_avp.get_padding_length())
+
+        #: Product-Name AVP
+        self.assertEqual(cea.avps[5].dump().hex(), "0000010d0000001e507974686f6e2042726f6d656c69612076582e592e5a0000")
+        self.assertEqual(cea.avps[5].code, PRODUCT_NAME_AVP_CODE)
+        self.assertEqual(cea.avps[5].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[5].vendor_id)
+        self.assertEqual(cea.avps[5].length.hex(), "00001e")
+        self.assertEqual(cea.avps[5].get_length(), 30)
+        self.assertEqual(cea.avps[5].data, b"Python Bromelia vX.Y.Z")
+        self.assertEqual(cea.avps[5].get_padding_length(), 2)
+
+        self.assertEqual(cea.product_name_avp.dump().hex(), "0000010d0000001e507974686f6e2042726f6d656c69612076582e592e5a0000")
+        self.assertEqual(cea.product_name_avp.code, PRODUCT_NAME_AVP_CODE)
+        self.assertEqual(cea.product_name_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.product_name_avp.vendor_id)
+        self.assertEqual(cea.product_name_avp.length.hex(), "00001e")
+        self.assertEqual(cea.product_name_avp.get_length(), 30)
+        self.assertEqual(cea.product_name_avp.data, b"Python Bromelia vX.Y.Z")
+        self.assertEqual(cea.product_name_avp.get_padding_length(), 2)
+
+        #: Auth-Application-Id AVP
+        self.assertEqual(cea.avps[6].dump().hex(), "000001024000000c01000016")
+        self.assertEqual(cea.avps[6].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[6].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[6].vendor_id)
+        self.assertEqual(cea.avps[6].length.hex(), "00000c")
+        self.assertEqual(cea.avps[6].get_length(), 12)
+        self.assertEqual(cea.avps[6].data, DIAMETER_APPLICATION_Gx)
+        self.assertIsNone(cea.avps[6].get_padding_length())
+
+        self.assertEqual(cea.auth_application_id_avp.dump().hex(), "000001024000000c01000016")
+        self.assertEqual(cea.auth_application_id_avp.code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.auth_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.auth_application_id_avp.vendor_id)
+        self.assertEqual(cea.auth_application_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.auth_application_id_avp.get_length(), 12)
+        self.assertEqual(cea.auth_application_id_avp.data, DIAMETER_APPLICATION_Gx)
+        self.assertIsNone(cea.auth_application_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.avps[7].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000000")
+        self.assertEqual(cea.avps[7].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].vendor_id)
+        self.assertEqual(cea.avps[7].length.hex(), "000020")
+        self.assertEqual(cea.avps[7].get_length(), 32)
+        self.assertEqual(cea.avps[7].data.hex(), "0000010a4000000c000028af000001024000000c01000000")
+        self.assertIsNone(cea.avps[7].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000000")
+        self.assertEqual(cea.vendor_specific_application_id_avp.code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp.length.hex(), "000020")
+        self.assertEqual(cea.vendor_specific_application_id_avp.get_length(), 32)
+        self.assertEqual(cea.vendor_specific_application_id_avp.data.hex(), "0000010a4000000c000028af000001024000000c01000000")
+        self.assertIsNone(cea.vendor_specific_application_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.avps[7].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[7].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[0].vendor_id)
+        self.assertEqual(cea.avps[7].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.avps[7].avps[0].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.vendor_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.vendor_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.avps[7].avps[1].dump().hex(), "000001024000000c01000000")
+        self.assertEqual(cea.avps[7].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[1].vendor_id)
+        self.assertEqual(cea.avps[7].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[1].data, DIAMETER_APPLICATION_Cx)
+        self.assertIsNone(cea.avps[7].avps[1].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.dump().hex(), "000001024000000c01000000")
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.auth_application_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.data, DIAMETER_APPLICATION_Cx)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.auth_application_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.avps[8].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000014")
+        self.assertEqual(cea.avps[8].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].vendor_id)
+        self.assertEqual(cea.avps[8].length.hex(), "000020")
+        self.assertEqual(cea.avps[8].get_length(), 32)
+        self.assertEqual(cea.avps[8].data.hex(), "0000010a4000000c000028af000001024000000c01000014")
+        self.assertIsNone(cea.avps[8].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000014")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.length.hex(), "000020")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.get_length(), 32)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.data.hex(), "0000010a4000000c000028af000001024000000c01000014")
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.avps[8].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[8].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[0].vendor_id)
+        self.assertEqual(cea.avps[8].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.avps[8].avps[0].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.vendor_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.vendor_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.avps[8].avps[1].dump().hex(), "000001024000000c01000014")
+        self.assertEqual(cea.avps[8].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[1].vendor_id)
+        self.assertEqual(cea.avps[8].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[1].data, DIAMETER_APPLICATION_Rx)
+        self.assertIsNone(cea.avps[8].avps[1].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.dump().hex(), "000001024000000c01000014")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.data, DIAMETER_APPLICATION_Rx)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.get_padding_length())
+
+        #: Origin-State-Id AVP
+        self.assertEqual(cea.avps[9].dump().hex(), "000001164000000c00000040")
+        self.assertEqual(cea.avps[9].code, ORIGIN_STATE_ID_AVP_CODE)
+        self.assertEqual(cea.avps[9].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[9].vendor_id)
+        self.assertEqual(cea.avps[9].length.hex(), "00000c")
+        self.assertEqual(cea.avps[9].get_length(), 12)
+        self.assertEqual(cea.avps[9].data.hex(), "00000040")
+        self.assertIsNone(cea.avps[9].get_padding_length())
+
+        self.assertEqual(cea.origin_state_id_avp.dump().hex(), "000001164000000c00000040")
+        self.assertEqual(cea.origin_state_id_avp.code, ORIGIN_STATE_ID_AVP_CODE)
+        self.assertEqual(cea.origin_state_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.origin_state_id_avp.vendor_id)
+        self.assertEqual(cea.origin_state_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.origin_state_id_avp.get_length(), 12)
+        self.assertEqual(cea.origin_state_id_avp.data.hex(), "00000040")
+        self.assertIsNone(cea.origin_state_id_avp.get_padding_length())
+
+        #: Supported-Vendor-Id AVP
+        self.assertEqual(cea.avps[10].dump().hex(), "000001094000000c000032db")
+        self.assertEqual(cea.avps[10].code, SUPPORTED_VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[10].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[10].vendor_id)
+        self.assertEqual(cea.avps[10].length.hex(), "00000c")
+        self.assertEqual(cea.avps[10].get_length(), 12)
+        self.assertEqual(cea.avps[10].data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.avps[10].get_padding_length())
+
+        self.assertEqual(cea.supported_vendor_id_avp.dump().hex(), "000001094000000c000032db")
+        self.assertEqual(cea.supported_vendor_id_avp.code, SUPPORTED_VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.supported_vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.supported_vendor_id_avp.vendor_id)
+        self.assertEqual(cea.supported_vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.supported_vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.supported_vendor_id_avp.data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.supported_vendor_id_avp.get_padding_length())
+
+    def test_diameter_message__update_avps_method__2(self):
+        stream = bytes.fromhex("010000e0000001010000000000000000000000000000010c4000000c000007d10000010840000016636c69656e742e6e6574776f726b0000000001284000000f6e6574776f726b00000001014000000e00017f00000100000000010a4000000c000000000000010d00000017507974686f6e2062726f6d656c696100000001024000000c0000000000000104400000200000010a4000000c000028af000001024000000c0100000000000104400000200000010a4000000c000028af000001024000000c01000014000001164000000c00000040000001094000000c000032db")
+        msgs = DiameterMessage.load(stream)
+        cea = msgs[0]
+
+        #: Check Diameter Header
+        self.assertEqual(cea.header.version, DIAMETER_VERSION)
+        self.assertEqual(cea.header.flags, FLAG_RESPONSE)
+        self.assertEqual(cea.header.length.hex(), "0000e0")
+        self.assertEqual(cea.header.get_length(), 224)
+        self.assertEqual(cea.header.command_code, CAPABILITIES_EXCHANGE_MESSAGE)
+        self.assertEqual(cea.header.application_id, DIAMETER_APPLICATION_DEFAULT)
+
+        self.assertEqual(cea.__repr__(), "<Diameter Message: 257 [CEA], 0 [Diameter common message], 11 AVP(s)>")
+
+        #: Result-Code AVP
+        self.assertEqual(cea.avps[0].dump().hex(), "0000010c4000000c000007d1")
+        self.assertEqual(cea.avps[0].code, RESULT_CODE_AVP_CODE)
+        self.assertEqual(cea.avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[0].vendor_id)
+        self.assertEqual(cea.avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[0].data, DIAMETER_SUCCESS)
+        self.assertIsNone(cea.avps[0].get_padding_length())
+
+        #: Origin-Host AVP
+        self.assertEqual(cea.origin_host_avp.dump().hex(), "0000010840000016636c69656e742e6e6574776f726b0000")
+        self.assertEqual(cea.avps[1].code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(cea.avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[1].vendor_id)
+        self.assertEqual(cea.avps[1].length.hex(), "000016")
+        self.assertEqual(cea.avps[1].get_length(), 22)
+        self.assertEqual(cea.avps[1].data, b"client.network")
+        self.assertEqual(cea.avps[1].get_padding_length(), 2)
+
+        #: Origin-Realm AVP
+        self.assertEqual(cea.origin_realm_avp.dump().hex(), "000001284000000f6e6574776f726b00")
+        self.assertEqual(cea.avps[2].dump().hex(), "000001284000000f6e6574776f726b00")
+        self.assertEqual(cea.avps[2].code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(cea.avps[2].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[2].vendor_id)
+        self.assertEqual(cea.avps[2].length.hex(), "00000f")
+        self.assertEqual(cea.avps[2].get_length(), 15)
+        self.assertEqual(cea.avps[2].data, b"network")
+        self.assertEqual(cea.avps[2].get_padding_length(), 1)
+
+        #: Host-IP-Address AVP
+        self.assertEqual(cea.host_ip_address_avp.dump().hex(), "000001014000000e00017f0000010000")
+        self.assertEqual(cea.avps[3].dump().hex(), "000001014000000e00017f0000010000")
+        self.assertEqual(cea.avps[3].code, HOST_IP_ADDRESS_AVP_CODE)
+        self.assertEqual(cea.avps[3].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[3].vendor_id)
+        self.assertEqual(cea.avps[3].length.hex(), "00000e")
+        self.assertEqual(cea.avps[3].get_length(), 14)
+        self.assertEqual(cea.avps[3].data.hex(), "00017f000001")
+        self.assertEqual(cea.avps[3].get_ip_address(), "127.0.0.1")
+        self.assertEqual(cea.avps[3].get_padding_length(), 2)
+
+        #: Vendor-Id AVP
+        self.assertEqual(cea.vendor_id_avp.dump().hex(), "0000010a4000000c00000000")
+        self.assertEqual(cea.avps[4].dump().hex(), "0000010a4000000c00000000")
+        self.assertEqual(cea.avps[4].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[4].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[4].vendor_id)
+        self.assertEqual(cea.avps[4].length.hex(), "00000c")
+        self.assertEqual(cea.avps[4].get_length(), 12)
+        self.assertEqual(cea.avps[4].data, VENDOR_ID_DEFAULT)
+        self.assertIsNone(cea.avps[4].get_padding_length())
+
+        #: Product-Name AVP
+        self.assertEqual(cea.product_name_avp.dump().hex(), "0000010d00000017507974686f6e2062726f6d656c696100")
+        self.assertEqual(cea.avps[5].dump().hex(), "0000010d00000017507974686f6e2062726f6d656c696100")
+        self.assertEqual(cea.avps[5].code, PRODUCT_NAME_AVP_CODE)
+        self.assertEqual(cea.avps[5].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[5].vendor_id)
+        self.assertEqual(cea.avps[5].length.hex(), "000017")
+        self.assertEqual(cea.avps[5].get_length(), 23)
+        self.assertEqual(cea.avps[5].data, b"Python bromelia")
+        self.assertEqual(cea.avps[5].get_padding_length(), 1)
+
+        #: Auth-Application-Id AVP
+        self.assertEqual(cea.auth_application_id_avp.dump().hex(), "000001024000000c00000000")
+        self.assertEqual(cea.avps[6].dump().hex(), "000001024000000c00000000")
+        self.assertEqual(cea.avps[6].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[6].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[6].vendor_id)
+        self.assertEqual(cea.avps[6].length.hex(), "00000c")
+        self.assertEqual(cea.avps[6].get_length(), 12)
+        self.assertEqual(cea.avps[6].data, DIAMETER_APPLICATION_DEFAULT)
+        self.assertIsNone(cea.avps[6].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000000")
+        self.assertEqual(cea.avps[7].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000000")
+        self.assertEqual(cea.avps[7].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].vendor_id)
+        self.assertEqual(cea.avps[7].length.hex(), "000020")
+        self.assertEqual(cea.avps[7].get_length(), 32)
+        self.assertEqual(cea.avps[7].data.hex(), "0000010a4000000c000028af000001024000000c01000000")
+        self.assertIsNone(cea.avps[7].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[7].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[7].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[0].vendor_id)
+        self.assertEqual(cea.avps[7].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.avps[7].avps[0].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.dump().hex(), "000001024000000c01000000")
+        self.assertEqual(cea.avps[7].avps[1].dump().hex(), "000001024000000c01000000")
+        self.assertEqual(cea.avps[7].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[1].vendor_id)
+        self.assertEqual(cea.avps[7].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[1].data, DIAMETER_APPLICATION_Cx)
+        self.assertIsNone(cea.avps[7].avps[1].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000014")
+        self.assertEqual(cea.avps[8].dump().hex(), "00000104400000200000010a4000000c000028af000001024000000c01000014")
+        self.assertEqual(cea.avps[8].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].vendor_id)
+        self.assertEqual(cea.avps[8].length.hex(), "000020")
+        self.assertEqual(cea.avps[8].get_length(), 32)
+        self.assertEqual(cea.avps[8].data.hex(), "0000010a4000000c000028af000001024000000c01000014")
+        self.assertIsNone(cea.avps[8].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[8].avps[0].dump().hex(), "0000010a4000000c000028af")
+        self.assertEqual(cea.avps[8].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[0].vendor_id)
+        self.assertEqual(cea.avps[8].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[0].data, VENDOR_ID_3GPP)
+        self.assertIsNone(cea.avps[8].avps[0].get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.dump().hex(), "000001024000000c01000014")
+        self.assertEqual(cea.avps[8].avps[1].dump().hex(), "000001024000000c01000014")
+        self.assertEqual(cea.avps[8].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[1].vendor_id)
+        self.assertEqual(cea.avps[8].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[1].data, DIAMETER_APPLICATION_Rx)
+        self.assertIsNone(cea.avps[8].avps[1].get_padding_length())        
+
+        #: Update all AVPs
+        avps = {
+            "result_code": DIAMETER_LIMITED_SUCCESS,
+            "origin_host": "aaa.s6b.epc.3gppnetwork.org",
+            "origin_realm": "epc.3gppnetwork.org",
+            "host_ip_address": "10.129.241.214",
+            "vendor_id": VENDOR_ID_DEFAULT,
+            "product_name": f"Bromelia-AAA",
+            "auth_application_id": DIAMETER_APPLICATION_S6b,
+            "vendor_specific_application_id": [
+                                                VendorIdAVP(VENDOR_ID_ETSI), 
+                                                AuthApplicationIdAVP(DIAMETER_APPLICATION_SWm)
+            ],
+            "vendor_specific_application_id__1": [
+                                                VendorIdAVP(VENDOR_ID_ETSI), 
+                                                AuthApplicationIdAVP(DIAMETER_APPLICATION_SWx)
+            ],
+            "origin_state_id": 42,
+            "supported_vendor_id": VENDOR_ID_DEFAULT
+        }
+        cea.update_avps(avps)
+
+        #: Result-Code AVP
+        self.assertEqual(cea.avps[0].dump().hex(), "0000010c4000000c000007d2")
+        self.assertEqual(cea.avps[0].code, RESULT_CODE_AVP_CODE)
+        self.assertEqual(cea.avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[0].vendor_id)
+        self.assertEqual(cea.avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[0].data, DIAMETER_LIMITED_SUCCESS)
+        self.assertIsNone(cea.avps[0].get_padding_length())
+
+        self.assertEqual(cea.result_code_avp.dump().hex(), "0000010c4000000c000007d2")
+        self.assertEqual(cea.result_code_avp.code, RESULT_CODE_AVP_CODE)
+        self.assertEqual(cea.result_code_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.result_code_avp.vendor_id)
+        self.assertEqual(cea.result_code_avp.length.hex(), "00000c")
+        self.assertEqual(cea.result_code_avp.get_length(), 12)
+        self.assertEqual(cea.result_code_avp.data, DIAMETER_LIMITED_SUCCESS)
+        self.assertIsNone(cea.result_code_avp.get_padding_length())
+
+        #: Origin-Host AVP
+        self.assertEqual(cea.avps[1].dump().hex(), "00000108400000236161612e7336622e6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.avps[1].code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(cea.avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[1].vendor_id)
+        self.assertEqual(cea.avps[1].length.hex(), "000023")
+        self.assertEqual(cea.avps[1].get_length(), 35)
+        self.assertEqual(cea.avps[1].data, b"aaa.s6b.epc.3gppnetwork.org")
+        self.assertEqual(cea.avps[1].get_padding_length(), 1)
+
+        self.assertEqual(cea.origin_host_avp.dump().hex(), "00000108400000236161612e7336622e6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.origin_host_avp.code, ORIGIN_HOST_AVP_CODE)
+        self.assertEqual(cea.origin_host_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.origin_host_avp.vendor_id)
+        self.assertEqual(cea.origin_host_avp.length.hex(), "000023")
+        self.assertEqual(cea.origin_host_avp.get_length(), 35)
+        self.assertEqual(cea.origin_host_avp.data, b"aaa.s6b.epc.3gppnetwork.org")
+        self.assertEqual(cea.origin_host_avp.get_padding_length(), 1)
+
+        #: Origin-Realm AVP
+        self.assertEqual(cea.avps[2].dump().hex(), "000001284000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.avps[2].dump().hex(), "000001284000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.avps[2].code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(cea.avps[2].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[2].vendor_id)
+        self.assertEqual(cea.avps[2].length.hex(), "00001b")
+        self.assertEqual(cea.avps[2].get_length(), 27)
+        self.assertEqual(cea.avps[2].data, b"epc.3gppnetwork.org")
+        self.assertEqual(cea.avps[2].get_padding_length(), 1)
+
+        self.assertEqual(cea.origin_realm_avp.dump().hex(), "000001284000001b6570632e336770706e6574776f726b2e6f726700")
+        self.assertEqual(cea.origin_realm_avp.code, ORIGIN_REALM_AVP_CODE)
+        self.assertEqual(cea.origin_realm_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.origin_realm_avp.vendor_id)
+        self.assertEqual(cea.origin_realm_avp.length.hex(), "00001b")
+        self.assertEqual(cea.origin_realm_avp.get_length(), 27)
+        self.assertEqual(cea.origin_realm_avp.data, b"epc.3gppnetwork.org")
+        self.assertEqual(cea.origin_realm_avp.get_padding_length(), 1)
+
+        # #: Host-IP-Address AVP
+        self.assertEqual(cea.avps[3].dump().hex(), "000001014000000e00010a81f1d60000")
+        self.assertEqual(cea.avps[3].code, HOST_IP_ADDRESS_AVP_CODE)
+        self.assertEqual(cea.avps[3].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[3].vendor_id)
+        self.assertEqual(cea.avps[3].length.hex(), "00000e")
+        self.assertEqual(cea.avps[3].get_length(), 14)
+        self.assertEqual(cea.avps[3].data.hex(), "00010a81f1d6")
+        self.assertEqual(cea.avps[3].get_ip_address(), "10.129.241.214")
+        self.assertEqual(cea.avps[3].get_padding_length(), 2)
+
+        self.assertEqual(cea.host_ip_address_avp.dump().hex(), "000001014000000e00010a81f1d60000")
+        self.assertEqual(cea.host_ip_address_avp.code, HOST_IP_ADDRESS_AVP_CODE)
+        self.assertEqual(cea.host_ip_address_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.host_ip_address_avp.vendor_id)
+        self.assertEqual(cea.host_ip_address_avp.length.hex(), "00000e")
+        self.assertEqual(cea.host_ip_address_avp.get_length(), 14)
+        self.assertEqual(cea.host_ip_address_avp.data.hex(), "00010a81f1d6")
+        self.assertEqual(cea.host_ip_address_avp.get_ip_address(), "10.129.241.214")
+        self.assertEqual(cea.host_ip_address_avp.get_padding_length(), 2)
+
+        #: Vendor-Id AVP
+        self.assertEqual(cea.avps[4].dump().hex(), "0000010a4000000c00000000")
+        self.assertEqual(cea.avps[4].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[4].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[4].vendor_id)
+        self.assertEqual(cea.avps[4].length.hex(), "00000c")
+        self.assertEqual(cea.avps[4].get_length(), 12)
+        self.assertEqual(cea.avps[4].data, VENDOR_ID_DEFAULT)
+        self.assertIsNone(cea.avps[4].get_padding_length())
+
+        self.assertEqual(cea.vendor_id_avp.dump().hex(), "0000010a4000000c00000000")
+        self.assertEqual(cea.vendor_id_avp.code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_id_avp.data, VENDOR_ID_DEFAULT)
+        self.assertIsNone(cea.vendor_id_avp.get_padding_length())
+
+        #: Product-Name AVP
+        self.assertEqual(cea.avps[5].dump().hex(), "0000010d0000001442726f6d656c69612d414141")
+        self.assertEqual(cea.avps[5].dump().hex(), "0000010d0000001442726f6d656c69612d414141")
+        self.assertEqual(cea.avps[5].code, PRODUCT_NAME_AVP_CODE)
+        self.assertEqual(cea.avps[5].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[5].vendor_id)
+        self.assertEqual(cea.avps[5].length.hex(), "000014")
+        self.assertEqual(cea.avps[5].get_length(), 20)
+        self.assertEqual(cea.avps[5].data, b"Bromelia-AAA")
+        self.assertIsNone(cea.avps[5].get_padding_length())
+
+        self.assertEqual(cea.product_name_avp.dump().hex(), "0000010d0000001442726f6d656c69612d414141")
+        self.assertEqual(cea.product_name_avp.code, PRODUCT_NAME_AVP_CODE)
+        self.assertEqual(cea.product_name_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.product_name_avp.vendor_id)
+        self.assertEqual(cea.product_name_avp.length.hex(), "000014")
+        self.assertEqual(cea.product_name_avp.get_length(), 20)
+        self.assertEqual(cea.product_name_avp.data, b"Bromelia-AAA")
+        self.assertIsNone(cea.product_name_avp.get_padding_length())
+
+        #: Auth-Application-Id AVP
+        self.assertEqual(cea.avps[6].dump().hex(), "000001024000000c01000038")
+        self.assertEqual(cea.avps[6].dump().hex(), "000001024000000c01000038")
+        self.assertEqual(cea.avps[6].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[6].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[6].vendor_id)
+        self.assertEqual(cea.avps[6].length.hex(), "00000c")
+        self.assertEqual(cea.avps[6].get_length(), 12)
+        self.assertEqual(cea.avps[6].data, DIAMETER_APPLICATION_S6b)
+        self.assertIsNone(cea.avps[6].get_padding_length())
+
+        self.assertEqual(cea.auth_application_id_avp.dump().hex(), "000001024000000c01000038")
+        self.assertEqual(cea.auth_application_id_avp.code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.auth_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.auth_application_id_avp.vendor_id)
+        self.assertEqual(cea.auth_application_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.auth_application_id_avp.get_length(), 12)
+        self.assertEqual(cea.auth_application_id_avp.data, DIAMETER_APPLICATION_S6b)
+        self.assertIsNone(cea.auth_application_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.avps[7].dump().hex(), "00000104400000200000010a4000000c000032db000001024000000c01000030")
+        self.assertEqual(cea.avps[7].dump().hex(), "00000104400000200000010a4000000c000032db000001024000000c01000030")
+        self.assertEqual(cea.avps[7].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].vendor_id)
+        self.assertEqual(cea.avps[7].length.hex(), "000020")
+        self.assertEqual(cea.avps[7].get_length(), 32)
+        self.assertEqual(cea.avps[7].data.hex(), "0000010a4000000c000032db000001024000000c01000030")
+        self.assertIsNone(cea.avps[7].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp.dump().hex(), "00000104400000200000010a4000000c000032db000001024000000c01000030")
+        self.assertEqual(cea.vendor_specific_application_id_avp.code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp.length.hex(), "000020")
+        self.assertEqual(cea.vendor_specific_application_id_avp.get_length(), 32)
+        self.assertEqual(cea.vendor_specific_application_id_avp.data.hex(), "0000010a4000000c000032db000001024000000c01000030")
+        self.assertIsNone(cea.vendor_specific_application_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.avps[7].avps[0].dump().hex(), "0000010a4000000c000032db")
+        self.assertEqual(cea.avps[7].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[0].vendor_id)
+        self.assertEqual(cea.avps[7].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[0].data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.avps[7].avps[0].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.dump().hex(), "0000010a4000000c000032db")
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.vendor_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp.vendor_id_avp.data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.vendor_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.avps[7].avps[1].dump().hex(), "000001024000000c01000030")
+        self.assertEqual(cea.avps[7].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[7].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[7].avps[1].vendor_id)
+        self.assertEqual(cea.avps[7].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[7].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[7].avps[1].data, DIAMETER_APPLICATION_SWm)
+        self.assertIsNone(cea.avps[7].avps[1].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.dump().hex(), "000001024000000c01000030")
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.auth_application_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp.auth_application_id_avp.data, DIAMETER_APPLICATION_SWm)
+        self.assertIsNone(cea.vendor_specific_application_id_avp.auth_application_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP
+        self.assertEqual(cea.avps[8].dump().hex(), "00000104400000200000010a4000000c000032db000001024000000c01000031")
+        self.assertEqual(cea.avps[8].code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].vendor_id)
+        self.assertEqual(cea.avps[8].length.hex(), "000020")
+        self.assertEqual(cea.avps[8].get_length(), 32)
+        self.assertEqual(cea.avps[8].data.hex(), "0000010a4000000c000032db000001024000000c01000031")
+        self.assertIsNone(cea.avps[8].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.dump().hex(), "00000104400000200000010a4000000c000032db000001024000000c01000031")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.code, VENDOR_SPECIFIC_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.length.hex(), "000020")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.get_length(), 32)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.data.hex(), "0000010a4000000c000032db000001024000000c01000031")
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Vendor-Id AVP
+        self.assertEqual(cea.avps[8].avps[0].dump().hex(), "0000010a4000000c000032db")
+        self.assertEqual(cea.avps[8].avps[0].code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[0].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[0].vendor_id)
+        self.assertEqual(cea.avps[8].avps[0].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[0].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[0].data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.avps[8].avps[0].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.dump().hex(), "0000010a4000000c000032db")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.code, VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.vendor_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.vendor_id_avp.data, VENDOR_ID_ETSI)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.vendor_id_avp.get_padding_length())
+
+        #: Vendor-Specific-Application-Id AVP > Auth-Application-Id AVP
+        self.assertEqual(cea.avps[8].avps[1].dump().hex(), "000001024000000c01000031")
+        self.assertEqual(cea.avps[8].avps[1].code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.avps[8].avps[1].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[8].avps[1].vendor_id)
+        self.assertEqual(cea.avps[8].avps[1].length.hex(), "00000c")
+        self.assertEqual(cea.avps[8].avps[1].get_length(), 12)
+        self.assertEqual(cea.avps[8].avps[1].data, DIAMETER_APPLICATION_SWx)
+        self.assertIsNone(cea.avps[8].avps[1].get_padding_length())
+
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.dump().hex(), "000001024000000c01000031")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.code, AUTH_APPLICATION_ID_AVP_CODE)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.vendor_id)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.get_length(), 12)
+        self.assertEqual(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.data, DIAMETER_APPLICATION_SWx)
+        self.assertIsNone(cea.vendor_specific_application_id_avp__1.auth_application_id_avp.get_padding_length())
+
+        #: Origin-State-Id AVP
+        self.assertEqual(cea.avps[9].dump().hex(), "000001164000000c0000002a")
+        self.assertEqual(cea.avps[9].code, ORIGIN_STATE_ID_AVP_CODE)
+        self.assertEqual(cea.avps[9].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[9].vendor_id)
+        self.assertEqual(cea.avps[9].length.hex(), "00000c")
+        self.assertEqual(cea.avps[9].get_length(), 12)
+        self.assertEqual(cea.avps[9].data.hex(), "0000002a")
+        self.assertIsNone(cea.avps[9].get_padding_length())
+
+        self.assertEqual(cea.origin_state_id_avp.dump().hex(), "000001164000000c0000002a")
+        self.assertEqual(cea.origin_state_id_avp.code, ORIGIN_STATE_ID_AVP_CODE)
+        self.assertEqual(cea.origin_state_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.origin_state_id_avp.vendor_id)
+        self.assertEqual(cea.origin_state_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.origin_state_id_avp.get_length(), 12)
+        self.assertEqual(cea.origin_state_id_avp.data.hex(), "0000002a")
+        self.assertIsNone(cea.origin_state_id_avp.get_padding_length())
+
+        #: Supported-Vendor-Id AVP
+        self.assertEqual(cea.avps[10].dump().hex(), "000001094000000c00000000")
+        self.assertEqual(cea.avps[10].code, SUPPORTED_VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.avps[10].flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.avps[10].vendor_id)
+        self.assertEqual(cea.avps[10].length.hex(), "00000c")
+        self.assertEqual(cea.avps[10].get_length(), 12)
+        self.assertEqual(cea.avps[10].data, VENDOR_ID_DEFAULT)
+        self.assertIsNone(cea.avps[10].get_padding_length())
+
+        self.assertEqual(cea.supported_vendor_id_avp.dump().hex(), "000001094000000c00000000")
+        self.assertEqual(cea.supported_vendor_id_avp.code, SUPPORTED_VENDOR_ID_AVP_CODE)
+        self.assertEqual(cea.supported_vendor_id_avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertIsNone(cea.supported_vendor_id_avp.vendor_id)
+        self.assertEqual(cea.supported_vendor_id_avp.length.hex(), "00000c")
+        self.assertEqual(cea.supported_vendor_id_avp.get_length(), 12)
+        self.assertEqual(cea.supported_vendor_id_avp.data, VENDOR_ID_DEFAULT)
+        self.assertIsNone(cea.supported_vendor_id_avp.get_padding_length())
 
 
 if __name__ == "__main__":
