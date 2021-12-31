@@ -810,7 +810,6 @@ class TestDiameterMessage(unittest.TestCase):
         message = DiameterMessage()
         self.assertEqual(message.__str__(), "<Diameter Message: Unknown [], 0 [Diameter common message], 0 AVP(s)>")
 
-
     def test_diameter_message__repr_dunder_default(self):
         header = DiameterHeader()
 
@@ -1159,7 +1158,6 @@ class TestDiameterMessage(unittest.TestCase):
         self.assertTrue(message.has_avp("origin_host_avp"))
         self.assertTrue(message.has_avp("origin_realm_avp"))
 
-
     def test_diameter_message__has_avp_method__valid_way_to_call__2(self):
         auth_session_state_avp = AuthSessionStateAVP(STATE_MAINTAINED)
         auth_request_type_avp = AuthRequestTypeAVP(AUTH_REQUEST_TYPE_AUTHENTICATE_ONLY)
@@ -1311,7 +1309,6 @@ class TestDiameterMessage(unittest.TestCase):
         with self.assertRaises(AttributeError) as cm:
             message.vendor_id_avp
             self.assertEqual(cm.exception.args[0], "'DiameterMessage' object has no attribute 'vendor_id_avp'")
-
 
     def test_diameter_message__update_key_method__invalid_way_to_call(self):
         firmware_revision_avp = FirmwareRevisionAVP(1234)

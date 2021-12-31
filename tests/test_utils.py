@@ -3,7 +3,7 @@
     test.test_utils
     ~~~~~~~~~~~~~~~
 
-    This module contains the Bromelia utils functions.
+    This module contains the Bromelia utils unittests.
     
     :copyright: (c) 2021 Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
@@ -109,3 +109,6 @@ class TestDecodeFromTbcd(unittest.TestCase):
         decoded = decode_from_tbcd("551299999999f9")
         self.assertEqual(decoded, "5521999999999")
 
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1026,3 +1026,6 @@ class TestEnumeratedType(unittest.TestCase):
         elif sys.version_info[1] == 9:
             self.assertEqual(cm.exception.args[0], "Can't instantiate abstract class EnumeratedType with abstract method __init__")
 
+
+if __name__ == "__main__":
+    unittest.main()

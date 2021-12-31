@@ -23,6 +23,7 @@ from .messages import DWR
 from .messages import DPA
 from .messages import DPR
 
+
 class BaseMessages:
     def __init__(self, cer, cea, dwr, dwa, dpr, dpa):
         self.cer = cer
@@ -47,36 +48,42 @@ class DiameterBaseProxy:
                             dpa=DiameterBaseProxy.load_dpa(self.connection))
 
 
-    def get_custom_messages(self, msgs):
+    def get_custom_messages(self, msgs=None):
         base = dict()
-        for msg in msgs:
-            if isinstance(msg, CER):
-                base.update({"cer": msg})
-            elif isinstance(msg, CEA):
-                base.update({"cea": msg})
-            elif isinstance(msg, DWR):
-                base.update({"dwr": msg})
-            elif isinstance(msg, DWA):
-                base.update({"dwa": msg})
-            elif isinstance(msg, DPR):
-                base.update({"dpr": msg})
-            elif isinstance(msg, DPA):
-                base.update({"dpa": msg})
 
-        for key in base.keys():
-            if key == "cer":
-                base.update({"cer": DiameterBaseProxy.load_cer(self.connection)})
-            elif key == "cea":
-                base.update({"cea": DiameterBaseProxy.load_cea(self.connection)})
-            elif key == "dwr":
-                base.update({"dwr": DiameterBaseProxy.load_dwr(self.connection)})
-            elif key == "dwa":
-                base.update({"dwa": DiameterBaseProxy.load_dwa(self.connection)})
-            elif key == "dpr":
-                base.update({"dpr": DiameterBaseProxy.load_dpr(self.connection)})
-            elif key == "dpa":
-                base.update({"dpa": DiameterBaseProxy.load_dpa(self.connection)})
-        
+        if msgs is not None:
+            for msg in msgs:
+                if isinstance(msg, CER):
+                    base.update({"cer": msg})
+                elif isinstance(msg, CEA):
+                    base.update({"cea": msg})
+                elif isinstance(msg, DWR):
+                    base.update({"dwr": msg})
+                elif isinstance(msg, DWA):
+                    base.update({"dwa": msg})
+                elif isinstance(msg, DPR):
+                    base.update({"dpr": msg})
+                elif isinstance(msg, DPA):
+                    base.update({"dpa": msg})
+
+        if "cea" not in base.keys():
+            base.update({"cea": DiameterBaseProxy.load_cea(self.connection)})
+
+        if "cer" not in base.keys():
+            base.update({"cer": DiameterBaseProxy.load_cer(self.connection)})
+
+        if "dwa" not in base.keys():
+            base.update({"dwa": DiameterBaseProxy.load_dwa(self.connection)})
+
+        if "dwr" not in base.keys():
+            base.update({"dwr": DiameterBaseProxy.load_dwr(self.connection)})
+
+        if "dpa" not in base.keys():
+            base.update({"dpa": DiameterBaseProxy.load_dpa(self.connection)})
+
+        if "dpr" not in base.keys():
+            base.update({"dpr": DiameterBaseProxy.load_dpr(self.connection)})
+
         return BaseMessages(**base)
 
 
@@ -115,6 +122,7 @@ class DiameterBaseProxy:
                 cer.append(avp)
 
         return cer
+
 
     @staticmethod
     def load_cea(connection):
