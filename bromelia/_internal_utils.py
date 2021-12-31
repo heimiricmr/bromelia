@@ -12,6 +12,7 @@
 import datetime
 import ipaddress
 import logging
+import re
 import os
 import struct
 import yaml
@@ -365,3 +366,61 @@ def show_warn(module, _path, _except=None):
              f"bromelia.lib.{_except} instead bromelia.{_path}.{module}. "\
              f"The latter one will be deprecated in the next release",
              DeprecationWarning, stacklevel=5)
+
+
+def get_avp_name_formatted(key):
+    pattern = re.findall(r"(.*)__(\d*)", key)
+    if pattern:
+        key = pattern[0][0]
+        idx = pattern[0][1]
+        return f"{key}_avp__{idx}"
+
+    return f"{key}_avp"
+
+
+class SessionHandler:
+    init = 0
+    id = 0
+    optional = "bromelia"
+
+
+    def __init__(self):
+        SessionHandler.reset()
+
+
+    @staticmethod
+    def get_session_id(data, previous=None):
+        #: Returns high, low and optional values in order to fulfill the 
+        #: recommended format: 
+        #: <DiameterIdentity>;<high 32 bits>;<low 32 bits>[;<optional value>]
+
+        SessionHandler._verify_session_id(previous, current=data)
+
+        high = SessionHandler.init
+        low = SessionHandler.id
+        optional = SessionHandler.optional
+
+        return f"{data};{high};{low};{optional}"
+
+
+    @staticmethod
+    def reset():
+        diff = datetime.datetime.utcnow() - datetime.datetime(1900, 1, 1, 0, 0, 0)
+        SessionHandler.init = diff.days*24*60*60 + diff.seconds
+        SessionHandler.id = 0
+
+
+    @staticmethod
+    def _verify_session_id(previous, current):
+        if previous is not None:
+            _previous = previous.split(";")
+
+            if _previous:
+                if current == _previous[0]:
+                    SessionHandler.id += 1
+                    return
+
+            SessionHandler.reset()
+
+
+SessionHandler()
