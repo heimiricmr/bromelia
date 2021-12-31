@@ -13,6 +13,7 @@ import datetime
 
 from ...__version__ import __version__
 
+from ..._internal_utils import SessionHandler
 from ...base import DiameterAVP
 from ...constants.ietf.rfc6733 import *
 from ...types import *
@@ -45,7 +46,6 @@ class ClassAVP(DiameterAVP, OctetStringType):
     def __init__(self, data):
         DiameterAVP.__init__(self, ClassAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
-
         OctetStringType.__init__(self, data=data)
 
 
@@ -91,7 +91,6 @@ class AcctSessionIdAVP(DiameterAVP, OctetStringType):
         OctetStringType.__init__(self, data=data)
 
 
-""" REVIEW """
 class AcctMultiSessionIdAVP(DiameterAVP, UTF8StringType):
     """Implementation of Acct-Multi-Session-Id AVP in Section 9.8.5 of 
     IETF RFC 6733.
@@ -103,10 +102,7 @@ class AcctMultiSessionIdAVP(DiameterAVP, UTF8StringType):
 
     def __init__(self, data):
         if isinstance(data, str):
-            high = "403292"
-            low = "403292"
-            optional = "403292"
-            data = f"{data};{high};{low};{optional}"
+            data = SessionHandler.get_session_id(data)
         elif isinstance(data, bytes):
             data = data
 
@@ -273,31 +269,15 @@ class SessionIdAVP(DiameterAVP, UTF8StringType):
     code = SESSION_ID_AVP_CODE
     vendor_id = None
 
-    diff = datetime.datetime.utcnow() - datetime.datetime(1900, 1, 1, 0, 0, 0)
-    init = diff.days*24*60*60 + diff.seconds
-    id = 0
-
     def __init__(self, data):
         if isinstance(data, str):
-            high = SessionIdAVP.init
-            low = SessionIdAVP.id
-            optional = "bromelia"
-            data = f"{data};{high};{low};{optional}"
-            SessionIdAVP.id += 1
-            
+            data = SessionHandler.get_session_id(data)
         elif isinstance(data, bytes):
             data = data
 
         DiameterAVP.__init__(self, SessionIdAVP.code)
         DiameterAVP.set_mandatory_bit(self, True)
         UTF8StringType.__init__(self, data=data)
-
-
-    @staticmethod
-    def _init():
-        diff = datetime.datetime.utcnow() - datetime.datetime(1900, 1, 1, 0, 0, 0)
-        SessionIdAVP.init = diff.days*24*60*60 + diff.seconds
-
 
 
 class OriginHostAVP(DiameterAVP, DiameterIdentityType):

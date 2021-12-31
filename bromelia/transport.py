@@ -101,8 +101,7 @@ class TcpConnection():
         if not self.is_connected:
             raise ConnectionError(f"[Socket-{self.sock_id}] There is no "\
                                   f"transport connection up for this Peer")
-
-        threading.Thread(name="transport_layer_bootstrapper", 
+        threading.Thread(name="transport_layer_thread", 
                          target=self._run).start()
 
 

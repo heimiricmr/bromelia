@@ -19,6 +19,7 @@ from .config import *
 from .process import process_answer
 from .process import process_capability_exchange
 from .process import process_device_watchdog
+from .process import process_disconnect_peer
 from .process import process_request
 from .utils import is_answer_message
 from .utils import is_client_mode
@@ -410,7 +411,7 @@ class Open(State):
         open_logger.debug("Event has been triggered.")
 
         dpr = self.msg
-        process = process_device_watchdog(self.association, dpr)
+        process = process_disconnect_peer(self.association, dpr)
 
         if process.is_valid:
             dpa = self.association.base.dpa
@@ -559,7 +560,7 @@ class PeerStateMachine():
     def start(self):
         statemachine_logger.debug("Starting PeerStateMachine's thread.")
 
-        threading.Thread(name="peer_state_machine_bootstrapper", 
+        threading.Thread(name=f"{self.association.connection.mode.lower()}_psm_thread", 
                          target=self.__start).start()
 
 

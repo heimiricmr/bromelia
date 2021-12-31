@@ -19,6 +19,7 @@ base_dir = os.path.dirname(testing_dir)
 
 sys.path.insert(0, base_dir)
 
+from bromelia._internal_utils import SessionHandler
 from bromelia.avps.ietf.rfc6733 import *
 from bromelia.exceptions import *
 
@@ -1510,13 +1511,29 @@ class TestAcctMultiSessionIdAVP(unittest.TestCase):
 
     def test_acct_multi_session_id_avp__1(self):
         avp = AcctMultiSessionIdAVP("es2")
-        ref = "00000032400000206573323b3430333239323b3430333239323b343033323932"
-        self.assertEqual(avp.dump().hex(), ref)
+        hostname, high, low, optional = avp.data.decode("utf-8").split(";")
+
+        self.assertEqual(avp.code, ACCT_MULTI_SESSION_ID_AVP_CODE)
+        self.assertEqual(avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertEqual(avp.get_length(), 33)
+
+        self.assertEqual(hostname, "es2")
+        self.assertEqual(high, str(SessionHandler.init))
+        self.assertEqual(low, "0")
+        self.assertEqual(optional, "bromelia")
 
     def test_acct_multi_session_id_avp__2(self):
         avp = AcctMultiSessionIdAVP("my-diameter-server.my-network")
-        ref = "000000324000003a6d792d6469616d657465722d7365727665722e6d792d6e6574776f726b3b3430333239323b3430333239323b3430333239320000"
-        self.assertEqual(avp.dump().hex(), ref)
+        hostname, high, low, optional = avp.data.decode("utf-8").split(";")
+
+        self.assertEqual(avp.code, ACCT_MULTI_SESSION_ID_AVP_CODE)
+        self.assertEqual(avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertEqual(avp.get_length(), 59)
+
+        self.assertEqual(hostname, "my-diameter-server.my-network")
+        self.assertEqual(high, str(SessionHandler.init))
+        self.assertEqual(low, "0")
+        self.assertEqual(optional, "bromelia")
 
 
 class TestEventTimestampAVP(unittest.TestCase):
@@ -1848,6 +1865,32 @@ class TestSessionIdAVP(unittest.TestCase):
         self.assertEqual(custom.vendor_id, avp.vendor_id)
         self.assertEqual(custom.data, avp.data)
         self.assertEqual(custom._padding, avp._padding)
+
+    def test_session_id_avp__1(self):
+        avp = SessionIdAVP("es2")
+        hostname, high, low, optional = avp.data.decode("utf-8").split(";")
+
+        self.assertEqual(avp.code, SESSION_ID_AVP_CODE)
+        self.assertEqual(avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertEqual(avp.get_length(), 33)
+
+        self.assertEqual(hostname, "es2")
+        self.assertEqual(high, str(SessionHandler.init))
+        self.assertEqual(low, "0")
+        self.assertEqual(optional, "bromelia")
+
+    def test_session_id_avp__2(self):
+        avp = SessionIdAVP("my-diameter-server.my-network")
+        hostname, high, low, optional = avp.data.decode("utf-8").split(";")
+
+        self.assertEqual(avp.code, SESSION_ID_AVP_CODE)
+        self.assertEqual(avp.flags, FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED)
+        self.assertEqual(avp.get_length(), 59)
+
+        self.assertEqual(hostname, "my-diameter-server.my-network")
+        self.assertEqual(high, str(SessionHandler.init))
+        self.assertEqual(low, "0")
+        self.assertEqual(optional, "bromelia")
 
 
 class TestOriginHostAVP(unittest.TestCase):

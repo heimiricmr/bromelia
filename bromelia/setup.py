@@ -109,7 +109,7 @@ class DiameterAssociation(object):
         self.transport.start()
         self.transport.run()
 
-        threading.Thread(name="recv_message_from_queue",
+        threading.Thread(name="recv_message_monitor",
                          target=self.recv_message_from_queue).start()
 
 
@@ -124,9 +124,12 @@ class DiameterAssociation(object):
 
     def recv_message_from_queue(self):
         while not self._stop_threads and self.transport:
-            self.transport._recv_data_available.wait()
+            self.transport._recv_data_available.wait(timeout=1)
 
             self.lock.acquire()
+
+            if self.transport is None:
+                break
 
             data_stream = copy.copy(self.transport._recv_data_stream)
             self.transport._recv_data_stream = b""
@@ -338,6 +341,8 @@ class Diameter:
         self.logging = DiameterLogging(debug, is_logging, app_name)
         
         self.config = self.make_config(config)
+        self._connection = _convert_config_to_connection_obj(self.config)
+        self._base = self.get_base_messages()
         self._association = None
         self._peer_state_machine = None
 
@@ -369,9 +374,6 @@ class Diameter:
             raise DiameterApplicationError("Cannot start the application. "\
                                            "Peer State Machine is already "\
                                            "running")
-
-        self._connection = _convert_config_to_connection_obj(self.config)
-        self._base = self.get_base_messages()
 
         self._association = DiameterAssociation(self._connection, self._base)
         self._peer_state_machine = PeerStateMachine(self._association)
