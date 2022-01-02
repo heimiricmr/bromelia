@@ -12,6 +12,9 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from typing import Any, List
+
+from ._internal_utils import Connection
 from .constants import *
 from .avps import AuthApplicationIdAVP
 from .avps import VendorIdAVP
@@ -25,7 +28,13 @@ from .messages import DPR
 
 
 class BaseMessages:
-    def __init__(self, cer, cea, dwr, dwa, dpr, dpa):
+    def __init__(self,
+                 cer: CER,
+                 cea: CEA,
+                 dwr: DWR,
+                 dwa: DWA,
+                 dpr: DPR,
+                 dpa: DPA) -> None:
         self.cer = cer
         self.cea = cea
         self.dwr = dwr
@@ -35,11 +44,11 @@ class BaseMessages:
 
 
 class DiameterBaseProxy:
-    def __init__(self, connection):
+    def __init__(self, connection: Connection) -> None:
         self.connection = connection
 
 
-    def get_default_messages(self):
+    def get_default_messages(self) -> BaseMessages:
         return BaseMessages(cer=DiameterBaseProxy.load_cer(self.connection),
                             cea=DiameterBaseProxy.load_cea(self.connection), 
                             dwr=DiameterBaseProxy.load_dwr(self.connection), 
@@ -48,7 +57,7 @@ class DiameterBaseProxy:
                             dpa=DiameterBaseProxy.load_dpa(self.connection))
 
 
-    def get_custom_messages(self, msgs=None):
+    def get_custom_messages(self, msgs: List[Any] = None) -> BaseMessages:
         base = dict()
 
         if msgs is not None:
@@ -88,7 +97,7 @@ class DiameterBaseProxy:
 
 
     @staticmethod
-    def load_cer(connection):
+    def load_cer(connection: Connection) -> CER:
         if isinstance(connection.application_ids, dict):
             application = connection.application_ids
             avps = {
@@ -125,7 +134,7 @@ class DiameterBaseProxy:
 
 
     @staticmethod
-    def load_cea(connection):
+    def load_cea(connection: Connection) -> CEA:
         if isinstance(connection.application_ids, dict):
             application = connection.application_ids
             avps = {
@@ -162,7 +171,7 @@ class DiameterBaseProxy:
 
 
     @staticmethod
-    def load_dwr(connection):
+    def load_dwr(connection: Connection) -> DWR:
         avps = {
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
@@ -171,7 +180,7 @@ class DiameterBaseProxy:
 
 
     @staticmethod
-    def load_dwa(connection):
+    def load_dwa(connection: Connection) -> DWA:
         avps = {
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
@@ -180,7 +189,7 @@ class DiameterBaseProxy:
 
 
     @staticmethod
-    def load_dpr(connection):
+    def load_dpr(connection: Connection) -> DPR:
         avps = {
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,
@@ -189,7 +198,7 @@ class DiameterBaseProxy:
 
 
     @staticmethod
-    def load_dpa(connection):
+    def load_dpa(connection: Connection) -> DPA:
         avps = {
                 "origin_host": connection.local_node.host_name,
                 "origin_realm": connection.local_node.realm,

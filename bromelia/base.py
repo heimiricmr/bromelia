@@ -9,10 +9,12 @@
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
+from __future__ import annotations
 
 import os
 import re
 from copy import deepcopy
+from typing import Any, List, Type
 
 from ._internal_utils import avp_look_up
 from ._internal_utils import header_representation
@@ -43,18 +45,18 @@ class DiameterAvpLoader:
     exposed to third-party.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.avps = None
 
 
-    def has_updated(self):
+    def has_updated(self) -> bool:
         avps = DiameterAVP.__subclasses__()
         if len(self.avps) == len(avps):
             return False
         return True
 
 
-    def _get_load_avps_dictionary(self):
+    def _get_load_avps_dictionary(self) -> dict:
         avps = DiameterAVP.__subclasses__()
         loaded_avps = dict()
         for avp in avps:
@@ -72,7 +74,7 @@ class DiameterAvpLoader:
         return loaded_avps
 
 
-    def get_avp_class(self, avp):
+    def get_avp_class(self, avp: DiameterAVP) -> str:
         if self.avps is not None:
             if self.has_updated():
                 self.avps = self._get_load_avps_dictionary()
@@ -85,7 +87,7 @@ class DiameterAvpLoader:
         return self.avps[VENDOR_ID_DEFAULT][avp.code]
 
 
-    def get_avp_class_name(self, avp):
+    def get_avp_class_name(self, avp: DiameterAVP) -> str:
         try: 
             avp_name = self.get_avp_class(avp).__name__[:-3]
             if len(avp_name.split("-")) == 1:
@@ -95,7 +97,7 @@ class DiameterAvpLoader:
             return "Unknown"    
 
 
-    def _get_avp_class_name(self, avp):
+    def _get_avp_class_name(self, avp: DiameterAVP) -> str:
         try: 
             avp_name = self.get_avp_class(avp).__name__[:-3]
             if len(avp_name.split("-")) == 1:
@@ -134,7 +136,7 @@ class DiameterAVP(object):
         <Diameter AVP: 0 [Diameter]>
     """
 
-    __slots__ = ("_code", "_flags", "_length", 
+    __slots__ = ("_code", "_flags", "_length",
                  "_vendor_id", "_data", "_padding")
 
     flag_vendor_id_bit = convert_to_1_byte(0x80)
@@ -146,12 +148,12 @@ class DiameterAVP(object):
     flag_reserved2_bit = convert_to_1_byte(0x02)
     flag_reserved1_bit = convert_to_1_byte(0x01)
 
-    def __init__(self, 
-                 code=0, 
-                 vendor_id=None, 
-                 flags=0, 
-                 data=None, 
-                 padding=None):
+    def __init__(self,
+                 code: Any = 0,
+                 vendor_id: Any = None,
+                 flags: Any = 0,
+                 data: Any = None,
+                 padding: Any = None) -> None:
         self.code = code
         self.vendor_id = vendor_id
         self.flags = flags
@@ -159,7 +161,7 @@ class DiameterAVP(object):
         self._padding = padding
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a DiameterAVP object representation in a format which 
         identify the Diameter AVP code and the Diameter AVP name.
         """
@@ -182,42 +184,42 @@ class DiameterAVP(object):
                 f"{flag_representation[:-1]}>"
 
 
-    def __add__(self, other):
+    def __add__(self, other) -> bytes:
         """Dunder method to concatenate two DiameterAVP objects and return 
         a byte stream representing those two DiameterAVP objects.
         """
         return self.dump() + other.dump()
 
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Dunder method to get the length of a DiameterAVP object as per 
         the AVP Length field.
         """
         return self.get_length()
 
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Dunder method to check if the byte stream of two DiameterAVP objects 
         are equal.
         """
         return self.dump() == other.dump()
 
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         """Dunder method to return the byte stream of a DiameterAVP object. It
         is the dump() method used in another way.
         """
         return self.dump()
 
 
-    def copy(self):
+    def copy(self) -> Type[DiameterAVP]:
         """Creates a deepcopy of a DiameterAVP object.
         """
         return deepcopy(self)
 
 
     @classmethod
-    def convert(cls, avp):
+    def convert(cls, avp: Type[DiameterAVP]) -> DiameterAVP:
         """Used to convert a specialized DiameterAVP object into a generic 
         DiameterAVP object.
         """
@@ -234,14 +236,14 @@ class DiameterAVP(object):
 
 
     @property
-    def code(self):
+    def code(self) -> bytes:
         """Getter to AVP Code field.
         """
         return self._code
 
 
     @code.setter
-    def code(self, value):
+    def code(self, value: Any) -> None:
         """Setter to AVP Code field.
         """
         if isinstance(value, int) and (value >= 0 and value <= 4294967295):
@@ -263,14 +265,14 @@ class DiameterAVP(object):
 
 
     @property
-    def flags(self):
+    def flags(self) -> bytes:
         """Getter to AVP Flags field.
         """
         return self._flags
 
 
     @flags.setter
-    def flags(self, value):
+    def flags(self, value: Any) -> None:
         """Setter to AVP Flags field.
         """
         if isinstance(value, int) and (value >= 0 and value <= 255):
@@ -292,7 +294,7 @@ class DiameterAVP(object):
 
 
     @property
-    def length(self):
+    def length(self) -> bytes:
         """Getter to AVP Length field.
         """
         try:
@@ -311,7 +313,7 @@ class DiameterAVP(object):
 
 
     @length.setter
-    def length(self, value):
+    def length(self, value: Any) -> None:
         """Setter to AVP Length field.
         """
         if value is None:
@@ -334,15 +336,16 @@ class DiameterAVP(object):
         elif not isinstance(value, bytes) and not isinstance(value, int):
             raise AVPAttributeValueError("invalid length attribute value")
 
+
     @property
-    def vendor_id(self):
+    def vendor_id(self) -> bytes:
         """Getter to AVP Vendor Id field.
         """
         return self._vendor_id
 
 
     @vendor_id.setter
-    def vendor_id(self, value):
+    def vendor_id(self, value: Any) -> None:
         """Setter to AVP Vendor Id field.
         """
         if value is None:
@@ -367,14 +370,14 @@ class DiameterAVP(object):
 
 
     @property
-    def data(self):
+    def data(self) -> bytes:
         """Getter to AVP Data content.
         """
         return self._data
 
 
     @data.setter
-    def data(self, value):
+    def data(self, value: Any) -> None:
         """Setter to AVP Data content.
         """
         data = value
@@ -394,7 +397,7 @@ class DiameterAVP(object):
 
 
     @property
-    def padding(self):
+    def padding(self) -> bytes:
         """Getter to AVP padding. It calculates the AVP padding if needed. 
         Otherwise it returns None.
         """
@@ -407,7 +410,7 @@ class DiameterAVP(object):
 
 
     @staticmethod
-    def load(stream):
+    def load(stream: bytes) -> list:
         """Load a byte stream which represents Diameter AVPs and returns a 
         list of specialized DiameterAVP objects. In case it is not possible
         to identify the Diameter AVP represented by the byte stream, it should
@@ -475,7 +478,7 @@ class DiameterAVP(object):
         return avps
 
 
-    def set_vendor_id_bit(self, state):
+    def set_vendor_id_bit(self, state: bool) -> None:
         """Set / unset the vendor id bit in DiameterAVP object.
         """
         if not isinstance(state, bool):
@@ -498,14 +501,14 @@ class DiameterAVP(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_vendor_id(self):
+    def is_vendor_id(self) -> bool:
         """Function to check if DiameterAVP object has vendor id bit enabled.
         """
         return (self.get_flags() & 
                 DiameterAVP.get_flags_bit(DiameterAVP.flag_vendor_id_bit) != 0)
 
 
-    def set_mandatory_bit(self, state):
+    def set_mandatory_bit(self, state: bool) -> None:
         """Set / unset the mandatory bit in DiameterAVP object.
         """
         if not isinstance(state, bool):
@@ -527,14 +530,14 @@ class DiameterAVP(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_mandatory(self):
+    def is_mandatory(self) -> bool:
         """Function to check if DiameterAVP object has mandatory bit enabled.
         """
         return (self.get_flags() & 
                 DiameterAVP.get_flags_bit(DiameterAVP.flag_mandatory_bit) != 0)
 
 
-    def set_protected_bit(self, state):
+    def set_protected_bit(self, state: bool) -> None:
         """Set / unset the protected bit in DiameterAVP object.
         """
         if not isinstance(state, bool):
@@ -556,32 +559,32 @@ class DiameterAVP(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_protected(self):
+    def is_protected(self) -> bool:
         """Function to check if DiameterAVP object has protected bit enabled.
         """
         return (self.get_flags() & 
                 DiameterAVP.get_flags_bit(DiameterAVP.flag_protected_bit) != 0)
 
 
-    def get_code(self):
+    def get_code(self) -> int:
         """Returns the Diameter AVP code bit in Integer format.
         """
         return int.from_bytes(self.code, byteorder="big")
 
 
-    def get_flags(self):
+    def get_flags(self) -> int:
         """Returns the Diameter AVP flags bit in Integer format.
         """
         return int.from_bytes(self.flags, byteorder="big")
 
 
-    def get_length(self):
+    def get_length(self) -> int:
         """Returns the Diameter AVP length bit in Integer format.
         """
         return int.from_bytes(self.length, byteorder="big")
 
 
-    def get_vendor_id(self):
+    def get_vendor_id(self) -> int:
         """Returns the Diameter AVP vendor id bit in Integer format in case 
         there is vendor id. Otherwise it returns None.
         """
@@ -590,7 +593,7 @@ class DiameterAVP(object):
         return None
 
 
-    def get_padding_length(self):
+    def get_padding_length(self) -> int:
         """Returns the Diameter AVP padding in Integer format in case there is
         padding. Otherwise it returns None.
         """
@@ -600,14 +603,14 @@ class DiameterAVP(object):
 
 
     @staticmethod
-    def get_flags_bit(flag_bit):
+    def get_flags_bit(flag_bit) -> int:
         """Returns the Diameter AVP flags bit in Integer format of a given
         flag bit in hexadecimal value.
         """
         return int.from_bytes(flag_bit, byteorder="big")
 
 
-    def dump(self):
+    def dump(self) -> bytes:
         """Dump a byte stream which represents a DiameterAVP object serialized.
         """
         stream = self.code + self.flags + self.length
@@ -652,7 +655,7 @@ class DiameterHeader(object):
         <Diameter Header: Unknown [], 0 [Diameter common message]>
     """
 
-    __slots__ = ("_version", "_length", "_flags", "_command_code", 
+    __slots__ = ("_version", "_length", "_flags", "_command_code",
                  "_application_id", "_hop_by_hop", "_end_to_end")
 
     flag_request_bit = convert_to_1_byte(0x80)
@@ -665,13 +668,13 @@ class DiameterHeader(object):
     flag_reserved1_bit = convert_to_1_byte(0x01)
 
 
-    def __init__(self, 
-                 version=DIAMETER_VERSION,
-                 flags=0,
-                 command_code=0,
-                 application_id=0,
-                 hop_by_hop=0,
-                 end_to_end=0,
+    def __init__(self,
+                 version: Any = DIAMETER_VERSION,
+                 flags: Any = 0,
+                 command_code: Any = 0,
+                 application_id: Any = 0,
+                 hop_by_hop: Any = 0,
+                 end_to_end: Any = 0,
                  length=20):
                 
         self.version = version
@@ -683,7 +686,7 @@ class DiameterHeader(object):
         self.end_to_end = end_to_end
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Returns a DiameterHeader object representation in a format which 
         identify the Diameter code and the Diameter AVP name.
         """
@@ -695,42 +698,42 @@ class DiameterHeader(object):
                 "{app_id_int} [{app_id_str}]>".format(**representations)
 
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Dunder method to get the length of a DiameterHeader object as per 
         the Diameter Message Length field.
         """
         return self.get_length()
 
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Dunder method to check if the byte stream of two DiameterHeader 
         objects are equal.
         """
         return self.dump() == other.dump()
 
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         """Dunder method to return the byte stream of a DiameterHeader object. 
         It is the dump() method used in another way.
         """
         return self.dump()
 
 
-    def copy(self):
+    def copy(self) -> DiameterHeader:
         """Creates a deepcopy of a DiameterHeader object.
         """
         return deepcopy(self)
 
 
     @property
-    def version(self):
+    def version(self) -> bytes:
         """Getter to Diameter Header Version field.
         """
         return self._version
 
 
     @version.setter
-    def version(self, value):
+    def version(self, value: Any) -> None:
         """Setter to Diameter Header Version field.
         """
         if isinstance(value, int) and (value >= 0 and value <= 255):
@@ -753,14 +756,14 @@ class DiameterHeader(object):
 
 
     @property
-    def length(self):
+    def length(self) -> bytes:
         """Getter to Diameter Header Length field.
         """
         return self._length
 
 
     @length.setter
-    def length(self, value):
+    def length(self, value: Any) -> None:
         """Setter to Diameter Header Length field.
         """
         if value is None:
@@ -786,14 +789,14 @@ class DiameterHeader(object):
 
 
     @property
-    def flags(self):
+    def flags(self) -> bytes:
         """Getter to Diameter Header Command Flags field.
         """
         return self._flags
 
 
     @flags.setter
-    def flags(self, value):
+    def flags(self, value: Any) -> None:
         """Setter to Diameter Header Command Flags field.
         """
         if isinstance(value, int) and (value >= 0 and value <= 255):
@@ -816,14 +819,14 @@ class DiameterHeader(object):
 
 
     @property
-    def command_code(self):
+    def command_code(self) -> bytes:
         """Getter to Diameter Header Command Code field.
         """
         return self._command_code
 
 
     @command_code.setter
-    def command_code(self, value):
+    def command_code(self, value: Any) -> None:
         """Setter to Diameter Header Command Code field.
         """
         if value is None:
@@ -849,14 +852,14 @@ class DiameterHeader(object):
 
 
     @property
-    def application_id(self):
+    def application_id(self) -> bytes:
         """Getter to Diameter Header Application-ID field.
         """
         return self._application_id
 
 
     @application_id.setter
-    def application_id(self, value):
+    def application_id(self, value: Any) -> None:
         """Setter to Diameter Header Application-ID field.
         """
         if value is None:
@@ -882,14 +885,14 @@ class DiameterHeader(object):
 
 
     @property
-    def hop_by_hop(self):
+    def hop_by_hop(self) -> bytes:
         """Getter to Diameter Header Hop-by-Hop Identifier field.
         """
         return self._hop_by_hop
 
 
     @hop_by_hop.setter
-    def hop_by_hop(self, value):
+    def hop_by_hop(self, value: Any) -> None:
         """Setter to Diameter Header Hop-by-Hop Identifier field.
         """
         if value is None:
@@ -915,14 +918,14 @@ class DiameterHeader(object):
 
 
     @property
-    def end_to_end(self):
+    def end_to_end(self) -> bytes:
         """Getter to Diameter Header End-to-End Identifier field.
         """
         return self._end_to_end
 
 
     @end_to_end.setter
-    def end_to_end(self, value):
+    def end_to_end(self, value: Any) -> None:
         """Setter to Diameter Header End-to-End Identifier field.
         """
         if value is None:
@@ -947,7 +950,7 @@ class DiameterHeader(object):
                                                     "attribute value")
 
 
-    def set_request_bit(self, state):
+    def set_request_bit(self, state: bool) -> None:
         """Set / unset the request bit in Command Flags bit.
         """
         if not isinstance(state, bool):
@@ -973,14 +976,14 @@ class DiameterHeader(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_request(self):
+    def is_request(self) -> bool:
         """Checks if request bit is set / unset in Command Flags bit.
         """
         return (self.get_flags() & 
                 DiameterHeader.get_flags_bit(DiameterHeader.flag_request_bit) != 0)
 
 
-    def set_proxiable_bit(self, state):
+    def set_proxiable_bit(self, state: bool) -> None:
         """Set / unset the proxiable bit in Command Flags bit.
         """
         if not isinstance(state, bool):
@@ -1002,14 +1005,14 @@ class DiameterHeader(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_proxiable(self):
+    def is_proxiable(self) -> bool:
         """Checks if proxiable bit is set / unset in Command Flags bit.
         """
         return (self.get_flags() & 
                 DiameterHeader.get_flags_bit(DiameterHeader.flag_proxiable_bit) != 0)
 
 
-    def set_error_bit(self, state):
+    def set_error_bit(self, state: bool) -> None:
         """Set / unset the error bit in Command Flags bit.
         """
         if not isinstance(state, bool):
@@ -1035,14 +1038,14 @@ class DiameterHeader(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_error(self):
+    def is_error(self) -> bool:
         """Checks if error bit is set / unset in Command Flags bit.
         """
         return (self.get_flags() & 
                 DiameterHeader.get_flags_bit(DiameterHeader.flag_error_bit) != 0)
 
 
-    def set_retransmitted_bit(self, state):
+    def set_retransmitted_bit(self, state: bool) -> None:
         """Set / unset the retransmitted bit in Command Flags bit.
         """
         if not isinstance(state, bool):
@@ -1065,54 +1068,54 @@ class DiameterHeader(object):
         self.flags = convert_to_1_byte(flags)
 
 
-    def is_retransmitted(self):
+    def is_retransmitted(self) -> bool:
         """Checks if retransmitted bit is set / unset in Command Flags bit.
         """
         return (self.get_flags() & 
                 DiameterHeader.get_flags_bit(DiameterHeader.flag_retransmitted) != 0)
 
 
-    def get_version(self):
+    def get_version(self) -> int:
         """Returns the Diameter Header Version field value in Integer format.
         """
         return int.from_bytes(self.version, byteorder="big")
 
 
-    def get_length(self):
+    def get_length(self) -> int:
         """Returns the Diameter Header Length field value in Integer format.
         """
         return int.from_bytes(self.length, byteorder="big")
 
 
-    def get_flags(self):
+    def get_flags(self) -> int:
         """Returns the Diameter Header Command Flags field value in Integer 
         format.
         """
         return int.from_bytes(self.flags, byteorder="big")
 
 
-    def get_command_code(self):
+    def get_command_code(self) -> int:
         """Returns the Diameter Header Command Code field value in Integer 
         format.
         """
         return int.from_bytes(self.command_code, byteorder="big")
 
 
-    def get_application_id(self):
+    def get_application_id(self) -> int:
         """Returns the Diameter Header Application-ID field value in Integer 
         format.
         """
         return int.from_bytes(self.application_id, byteorder="big")
 
 
-    def get_hop_by_hop(self):
+    def get_hop_by_hop(self) -> int:
         """Returns the Diameter Header Hop-by-Hop Identifier field value in 
         Integer format.
         """
         return int.from_bytes(self.hop_by_hop, byteorder="big")
 
 
-    def get_end_to_end(self):
+    def get_end_to_end(self) -> int:
         """Returns the Diameter Header End-to-End Identifier field value in 
         Integer format.
         """
@@ -1120,14 +1123,14 @@ class DiameterHeader(object):
 
 
     @staticmethod
-    def get_flags_bit(flag_bit):
+    def get_flags_bit(flag_bit) -> int:
         """Returns the Diameter Header Command Flags bit in Integer format of a 
         given flag bit in hexadecimal value.
         """
         return int.from_bytes(flag_bit, byteorder="big")
 
 
-    def dump(self):
+    def dump(self) -> bytes:
         """Dump a byte stream which represents a DiameterHeader object.
         """
         dump = self.version + self.length + self.flags
@@ -1144,7 +1147,7 @@ class DiameterHeader(object):
 
 
     @classmethod
-    def load(cls, stream):
+    def load(cls, stream: bytes) -> DiameterHeader:
         """Load a byte stream which represents Diameter Headers and returns a 
         list of DiameterHeader objects.
         """
@@ -1189,7 +1192,10 @@ class DiameterMessage:
         <Diameter Message: Unknown [], 0 [Diameter common message], 0 AVP(s)>
     """
 
-    def __init__(self, header=None, avps=None, loaded=False):
+    def __init__(self,
+                 header: DiameterHeader = None, 
+                 avps: List[DiameterAVP] = None,
+                 loaded: bool = False) -> None:
         self.header = header
         self.avps = list()
         self._loaded = loaded
@@ -1212,7 +1218,7 @@ class DiameterMessage:
             self._loaded = False
 
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         representations = header_representation(self.header)
         representations.update({"num_of_avps": len(self.avps)})
     
@@ -1221,42 +1227,42 @@ class DiameterMessage:
                 "{num_of_avps} AVP(s)>".format(**representations)
 
 
-    def __add__(self, other):
+    def __add__(self, other) -> bytes:
         """Dunder method to concatenate two DiameterMessage objects and return 
         a byte stream representing those two DiameterMessage objects.
         """
         return self.dump() + other.dump()
 
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Dunder method to get the length of a DiameterMessage object as per 
         the Diameter Message Length field.
         """
         return self.get_length()
 
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         """Dunder method to check if the byte stream of two DiameterMessage 
         objects are equal.
         """
         return self.dump() == other.dump()
 
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         """Dunder method to return the byte stream of a DiameterMessage object. 
         It is the dump() method used in another way.
         """
         return self.dump()
 
 
-    def copy(self):
+    def copy(self) -> Type[DiameterMessage]:
         """Creates a deepcopy of a DiameterMessage object.
         """
         return deepcopy(self)
 
 
     @classmethod
-    def convert(cls, msg):
+    def convert(cls, msg: Type[DiameterMessage]) -> DiameterMessage:
         """Used to convert a specialized DiameterMessage object into a generic 
         DiameterMessage object.
         """
@@ -1269,7 +1275,7 @@ class DiameterMessage:
                    avps=msg.avps)
 
 
-    def append(self, avp):
+    def append(self, avp: DiameterAVP) -> None:
         """Appends a DiameterAVP object into a DiameterMessage object. It 
         creates a new brand DiameterMessage attribute with the name of the 
         DiameterAVP object. It updates the Diameter Message Length field as 
@@ -1318,7 +1324,7 @@ class DiameterMessage:
             self.header.length = convert_to_3_bytes(header_length)
 
 
-    def extend(self, avps):
+    def extend(self, avps: List[DiameterAVP]) -> None:
         """Extends the DiameterMessage object by appending several DiameterAVP 
         objects defined in a Python list.
         """
@@ -1326,7 +1332,7 @@ class DiameterMessage:
             self.append(avp)
 
 
-    def has_avp(self, avp_key):
+    def has_avp(self, avp_key: str) -> bool:
         """Checks if a given Diameter AVP is defined in the DiameterMessage 
         object. Once DiameterMessage objects have attributes with the 
         DiameterAVP objects name, it checks the key inside the __dict__ 
@@ -1337,12 +1343,21 @@ class DiameterMessage:
 
         if not self.avps:
             return False
-        elif avp_key in self.__dict__:
+        
+        #: In case a key has been provided as such defined in attribute name
+        if avp_key in self.__dict__:
             return True
+
+        #: In case a key has been provided as such defined by the AVP name in
+        #: lower case
+        avp_name = get_avp_name_formatted(avp_key)
+        if avp_name in self.__dict__:
+            return True
+
         return False
 
 
-    def pop(self, avp_key):
+    def pop(self, avp_key: str) -> None:
         """Remove a DiameterAVP object from a DiameterMessage object based on
         Diameter AVP name.
         """
@@ -1364,7 +1379,7 @@ class DiameterMessage:
         self.header.length = convert_to_3_bytes(header_length)
 
 
-    def update_key(self, old_avp_key, new_avp_key):
+    def update_key(self, old_avp_key: str, new_avp_key: str) -> None:
         """Updates the DiameterMessage attribute which refer to a given 
         DiameterAVP object.
         """
@@ -1377,7 +1392,7 @@ class DiameterMessage:
         self.__dict__[new_avp_key] = self.__dict__.pop(old_avp_key)
 
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Cleanup all the DiameterMessage attributes and its respective 
         DiameterAVP objects.
         """
@@ -1404,7 +1419,7 @@ class DiameterMessage:
 
 
     @staticmethod
-    def load(stream):
+    def load(stream: bytes) -> list:
         """Load a byte stream which represents Diameter Message and returns a 
         list of DiameterMessage objects.
         """
@@ -1429,7 +1444,7 @@ class DiameterMessage:
         return messages
 
 
-    def _load(self, values):
+    def _load(self, values: dict) -> None:
         _kwargs = values.get("kwargs", None)
         if _kwargs:
             values.update(_kwargs)
@@ -1467,14 +1482,14 @@ class DiameterMessage:
 
 
     @property
-    def header(self):
+    def header(self) -> DiameterHeader:
         """Getter to header attribute.
         """
         return self._header
 
 
     @header.setter
-    def header(self, value):
+    def header(self, value: Any) -> None:
         """Setter to header attribute.
         """
         if value is None:
@@ -1484,14 +1499,14 @@ class DiameterMessage:
 
 
     @property
-    def avps(self):
+    def avps(self) -> List[DiameterAVP]:
         """Getter to avps attribute.
         """
         return list(self._avps)
 
 
     @avps.setter
-    def avps(self, value):
+    def avps(self, value: List[DiameterAVP]) -> None:
         """Setter to avps attribute. It calls either the append or the extend
         methods depending on the number of DiameterAVP objects inside the list. 
         """
@@ -1507,23 +1522,23 @@ class DiameterMessage:
             self.extend(value)
 
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> DiameterAVP:
         return self._avps[idx]
 
 
-    def __setitem__(self, idx, value):
+    def __setitem__(self, idx: int, value: DiameterAVP) -> None:
         self._avps[idx] = value
 
 
     @property
-    def loaded(self):
+    def loaded(self) -> bool:
         """Getter to loaded attribute.
         """
         return self._loaded
 
 
     @loaded.setter
-    def loaded(self, value):
+    def loaded(self, value: bool) -> None:
         """Setter to loaded attribute.
         """
         if not isinstance(value, bool):
@@ -1532,7 +1547,7 @@ class DiameterMessage:
         self._loaded = value            
 
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Updates the length field of Diameter Header.
         """
         real_length = 20
@@ -1547,59 +1562,59 @@ class DiameterMessage:
 
         
     @property
-    def length(self):
+    def length(self) -> bytes:
         self.refresh()
         return self.header.length
 
 
-    def get_version(self):
+    def get_version(self) -> int:
         """Returns the Diameter Header Version field value in Integer format.
         """
         return int.from_bytes(self.header.version, byteorder="big")
 
 
-    def get_length(self):
+    def get_length(self) -> int:
         """Returns the Diameter Header Length field value in Integer format.
         """
         return int.from_bytes(self.header.length, byteorder="big")
 
 
-    def get_flags(self):
+    def get_flags(self) -> int:
         """Returns the Diameter Header Command Flags field value in Integer 
         format.
         """
         return int.from_bytes(self.header.flags, byteorder="big")
 
 
-    def get_command_code(self):
+    def get_command_code(self) -> int:
         """Returns the Diameter Header Command Code field value in Integer 
         format.
         """
         return int.from_bytes(self.header.command_code, byteorder="big")
 
 
-    def get_application_id(self):
+    def get_application_id(self) -> int:
         """Returns the Diameter Header Application-ID field value in Integer 
         format.
         """
         return int.from_bytes(self.header.application_id, byteorder="big")
 
 
-    def get_hop_by_hop(self):
+    def get_hop_by_hop(self) -> int:
         """Returns the Diameter Header Hop-by-Hop Identifier field value in 
         Integer format.
         """
         return int.from_bytes(self.header.hop_by_hop, byteorder="big")
 
 
-    def get_end_to_end(self):
+    def get_end_to_end(self) -> int:
         """Returns the Diameter Header End-to-End Identifier field value in 
         Integer format.
         """
         return int.from_bytes(self.header.end_to_end, byteorder="big")
     
 
-    def set_flag_by_app_id(self, app_id):
+    def set_flag_by_app_id(self, app_id: bytes) -> None:
         """Set / unset the Command Flags bit as per Application-ID field value.
         """
         if app_id == DIAMETER_APPLICATION_DEFAULT:
@@ -1616,7 +1631,7 @@ class DiameterMessage:
                 self.header.set_request_bit(False)
 
 
-    def dump(self):
+    def dump(self) -> bytes:
         """Dump a byte stream which represents a DiameterMessage object.
         """
         dump = self.header.dump()
@@ -1625,7 +1640,7 @@ class DiameterMessage:
         return dump
 
 
-    def update_avps(self, avps, silent_errors=True):
+    def update_avps(self, avps: dict, silent_errors: bool = True) -> None:
         """Updates DiameterAVP objects data of a given DiameterMessage object.
         By default, it silences errors in case an unknown keys has been found.
         It means the matching keys will be used to update the data of 
@@ -1659,7 +1674,7 @@ class DiameterMessage:
         self.refresh()
 
 
-    def _get_unknown_avps(self, avps):
+    def _get_unknown_avps(self, avps: dict) -> List[str]:
         unknown_avps = list()
         for key in avps.keys():
             avp_name = f"{key}_avp"
@@ -1668,13 +1683,13 @@ class DiameterMessage:
         return unknown_avps
 
 
-    def _lookup_avp_index(self, avp):
+    def _lookup_avp_index(self, avp: DiameterAVP) -> int:
         for index, _avp in enumerate(self.avps):
             if id(_avp) == id(avp):
                 return index
 
 
-    def update_avp(self, avp_name, avp_value):
+    def update_avp(self, avp_name: str, avp_value: Any) -> None:
         avp = getattr(self, avp_name)
         index = self._lookup_avp_index(avp)
 
@@ -1712,34 +1727,34 @@ class DiameterRequest(DiameterMessage):
     hop_by_hop_identifiers = list()
     end_to_end_identifiers = list()
 
-    def __init__(self, 
-                 version=DIAMETER_VERSION, 
-                 command_code=0, 
-                 application_id=0,
-                 header=None,
-                 avps=None):
+    def __init__(self,
+                 version: Any = DIAMETER_VERSION,
+                 command_code: Any = 0,
+                 application_id: Any = 0,
+                 header: DiameterHeader = None,
+                 avps: List[DiameterAVP] = None) -> None:
 
         if header:
             _header = DiameterHeader(version=header.version,
-                                    command_code=header.command_code,
-                                    application_id=header.application_id,
-                                    hop_by_hop=header.hop_by_hop,
-                                    end_to_end=header.end_to_end)
+                                     command_code=header.command_code,
+                                     application_id=header.application_id,
+                                     hop_by_hop=header.hop_by_hop,
+                                     end_to_end=header.end_to_end)
         else:
             hop_by_hop = self.__set_hop_by_hop_identifier()
             end_to_end = self.__set_end_to_end_identifier()
 
             _header = DiameterHeader(version=version,
-                                    command_code=command_code,
-                                    application_id=application_id,
-                                    hop_by_hop=hop_by_hop,
-                                    end_to_end=end_to_end)
+                                     command_code=command_code,
+                                     application_id=application_id,
+                                     hop_by_hop=hop_by_hop, 
+                                     end_to_end=end_to_end)
 
         DiameterMessage.__init__(self, _header, avps)
         DiameterMessage.set_flag_by_app_id(self, application_id)        
 
 
-    def __set_hop_by_hop_identifier(self):
+    def __set_hop_by_hop_identifier(self) -> None:
         """Sets the Hop-by-Hop Identifier field in Diameter Header"""
         while True:
             random_identifier = os.urandom(4)
@@ -1748,7 +1763,7 @@ class DiameterRequest(DiameterMessage):
                 return random_identifier
 
 
-    def __set_end_to_end_identifier(self):
+    def __set_end_to_end_identifier(self) -> None:
         """Sets the End-to-End Identifier field in Diameter Header"""
         while True:
             random_identifier = os.urandom(4)
@@ -1785,12 +1800,12 @@ class DiameterAnswer(DiameterMessage):
         <Diameter Message: Unknown [], 0 [Diameter common message], 0 AVP(s)>
     """
 
-    def __init__(self, 
-                 version=DIAMETER_VERSION, 
-                 command_code=0, 
-                 application_id=0,
-                 header=None,
-                 avps=None):
+    def __init__(self,
+                 version: Any = DIAMETER_VERSION,
+                 command_code: Any = 0,
+                 application_id: Any = 0,
+                 header: DiameterHeader = None,
+                 avps: List[DiameterAVP] = None) -> None:
 
         if header:
             _header = DiameterHeader(version=header.version,

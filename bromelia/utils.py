@@ -9,53 +9,55 @@
     :license: MIT, see LICENSE for more details.
 """
 
+from typing import Any
+
 from ._internal_utils import convert_to_integer_from_bytes
 from .constants import *
 
 FLAG_VENDOR_BIT = FLAG_VENDOR_SPECIFIC_AND_NOT_MANDATORY_AND_NOT_PROTECTED
 
 
-def is_result_code_family_1xxx(result_code):
+def is_result_code_family_1xxx(result_code: int) -> bool:
     if result_code >= 1001 and result_code < 2000:
         return True
     else:
         return False
 
 
-def is_result_code_family_2xxx(result_code):
+def is_result_code_family_2xxx(result_code: int) -> bool:
     if result_code >= 2001 and result_code < 3000:
         return True
     else:
         return False
 
 
-def is_result_code_family_3xxx(result_code):
+def is_result_code_family_3xxx(result_code: int) -> bool:
     if result_code >= 3001 and result_code < 4000:
         return True
     else:
         return False
 
 
-def is_result_code_family_4xxx(result_code):
+def is_result_code_family_4xxx(result_code: int) -> bool:
     if result_code >= 4001 and result_code < 5000:
         return True
     else:
         return False
 
 
-def is_result_code_family_5xxx(result_code):
+def is_result_code_family_5xxx(result_code: int) -> bool:
     if result_code >= 5001 and result_code < 6000:
         return True
     else:
         return False
 
 
-def is_vendor_id(flag):
+def is_vendor_id(flag: bytes) -> bool:
     return (convert_to_integer_from_bytes(flag) & 
             convert_to_integer_from_bytes(FLAG_VENDOR_BIT) != 0)
 
 
-def is_base_request(msg):
+def is_base_request(msg: Any) -> bool:
     if is_cer_message(msg):
         return True
 
@@ -66,7 +68,7 @@ def is_base_request(msg):
         return True
 
 
-def is_base_answer(msg):
+def is_base_answer(msg: Any) -> bool:
     if is_cea_message(msg):
         return True
 
@@ -77,112 +79,112 @@ def is_base_answer(msg):
         return True
 
 
-def is_dwr_message(msg):
+def is_dwr_message(msg: Any) -> bool:
     if (msg.header.is_request() 
             and msg.header.command_code == DEVICE_WATCHDOG_MESSAGE):
         return True
     return False
 
 
-def is_dwa_message(msg):
+def is_dwa_message(msg: Any) -> bool:
     if (not msg.header.is_request() 
             and msg.header.command_code == DEVICE_WATCHDOG_MESSAGE):
         return True
     return False    
 
 
-def is_dpr_message(msg):
+def is_dpr_message(msg: Any) -> bool:
     if (msg.header.is_request() 
             and msg.header.command_code == DISCONNECT_PEER_MESSAGE):
         return True
     return False
 
 
-def is_dpa_message(msg):
+def is_dpa_message(msg: Any) -> bool:
     if (not msg.header.is_request() 
             and msg.header.command_code == DISCONNECT_PEER_MESSAGE):
         return True
     return False
 
 
-def is_cer_message(msg):
+def is_cer_message(msg: Any) -> bool:
     if (msg.header.is_request() 
             and msg.header.command_code == CAPABILITIES_EXCHANGE_MESSAGE):
         return True
     return False
 
 
-def is_cea_message(msg):
+def is_cea_message(msg: Any) -> bool:
     if (not msg.header.is_request() 
             and msg.header.command_code == CAPABILITIES_EXCHANGE_MESSAGE):
         return True
     return False
 
 
-def is_answer_message(msg):
+def is_answer_message(msg: Any) -> bool:
     if (not msg.header.is_request() or 
             (not msg.header.is_request() and msg.header.is_proxiable())):
         return True
     return False
 
 
-def is_request_message(msg):
+def is_request_message(msg: Any) -> bool:
     if (msg.header.is_request() or 
             (msg.header.is_request() and msg.header.is_proxiable())):
         return True
     return False
 
 
-def is_client_mode(association):
+def is_client_mode(association) -> bool:
     if association.connection.mode == DIAMETER_AGENT_CLIENT_MODE:
         return True
     return False
 
 
-def is_server_mode(association):
+def is_server_mode(association) -> bool:
     if association.connection.mode == DIAMETER_AGENT_SERVER_MODE:
         return True
     return False
 
 
-def is_1xxx_informational(answer):
+def is_1xxx_informational(answer: Any) -> bool:
     if answer.has_avp("result_code_avp"):
         code = answer.result_code_avp.data
         return bytes([m & n for m, n in zip(DIAMETER_ERROR_1XXX, code)]) == DIAMETER_ERROR_1XXX
 
 
-def is_2xxx_success(answer):
+def is_2xxx_success(answer: Any) -> bool:
     if answer.has_avp("result_code_avp"):
         code = answer.result_code_avp.data
         return bytes([m & n for m, n in zip(DIAMETER_ERROR_2XXX, code)]) == DIAMETER_ERROR_2XXX
 
 
-def is_3xxx_failure(answer):
+def is_3xxx_failure(answer: Any) -> bool:
     if answer.has_avp("result_code_avp"):
         code = answer.result_code_avp.data
         return bytes([m & n for m, n in zip(DIAMETER_ERROR_3XXX, code)]) == DIAMETER_ERROR_3XXX
 
 
-def is_4xxx_failure(answer):
+def is_4xxx_failure(answer: Any) -> bool:
     if answer.has_avp("result_code_avp"):
         code = answer.result_code_avp.data
         return bytes([m & n for m, n in zip(DIAMETER_ERROR_4XXX, code)]) == DIAMETER_ERROR_4XXX
 
 
-def is_5xxx_failure(answer):
+def is_5xxx_failure(answer: Any) -> bool:
     if answer.has_avp("result_code_avp"):
         code = answer.result_code_avp.data
         return bytes([m & n for m, n in zip(DIAMETER_ERROR_5XXX, code)]) == DIAMETER_ERROR_5XXX
 
 
-def is_result_code_error(answer):
+def is_result_code_error(answer: Any) -> bool:
     if answer.has_avp("result_code_avp"):
         if answer.header.is_error():
             return True
         return False
 
 
-def convert_to_4_length_bit(input):
+def convert_to_4_length_bit(input: int) -> str:
     try:
         return "{:04b}".format(int(input))
     except ValueError:
@@ -198,26 +200,26 @@ special_chars = {
 }
 
 
-def encode_special_chars_to_tbcd(input):
+def encode_special_chars_to_tbcd(input: Any) -> str:
     encoded = special_chars.get(input)
     return encoded if encoded is not None else convert_to_4_length_bit(input)
 
 
-def get_two_bits(input, offset):
+def get_two_bits(input: str, offset: int) -> str:
     return input[offset:offset+2]
 
 
-def transform_bits(bits):
+def transform_bits(bits: str) -> str:
     new_bits = str(encode_special_chars_to_tbcd(bits[0]))
     new_bits += str(encode_special_chars_to_tbcd(bits[1]))    
     return str(int(new_bits, 2))
 
 
-def is_special_char(bits):
+def is_special_char(bits: str) -> bool:
     return any(char in bits for char in special_chars.keys())
 
 
-def encode_to_tbcd(input):
+def encode_to_tbcd(input: Any) -> str:
     offset, output = 0, ""
     input = str(input) if isinstance(input, int) else input
     
@@ -235,7 +237,7 @@ def encode_to_tbcd(input):
             return output
 
 
-def decode_from_tbcd(input):
+def decode_from_tbcd(input: str) -> str:
     offset, output = 0, ""
 
     while offset < len(input):

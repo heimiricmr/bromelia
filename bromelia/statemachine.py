@@ -14,6 +14,8 @@ import logging
 import threading
 import time
 
+from typing import Any
+
 from ._internal_utils import application_id_look_up
 from .config import *
 from .process import process_answer
@@ -78,18 +80,18 @@ statemachine_logger = logging.getLogger("PeerStateMachine")
 
 
 class State():
-    def __init__(self, diameter_association):
+    def __init__(self, diameter_association) -> None:
         self.association = diameter_association
 
-    def run(self):
+    def run(self) -> None:
         assert(0, "Function not implemented.")
 
-    def next(self):
+    def next(self) -> None:
         assert(0, "Function not implemented.")
 
 
 class Closed(State):
-    def run(self):
+    def run(self) -> None:
         self.next_state = CLOSED
         self.name = self.next_state
 
@@ -111,13 +113,13 @@ class Closed(State):
                     self.event_responder_conn_cer()
 
 
-    def event_start(self):
+    def event_start(self) -> None:
         closed_logger.debug("Event has been triggered.")
 
         self.next_state = WAIT_CONN_ACK
 
 
-    def event_responder_conn_cer(self):
+    def event_responder_conn_cer(self) -> None:
         closed_logger.debug("Event has been triggered.")
 
         cer = self.msg
@@ -136,7 +138,7 @@ class Closed(State):
 
 
 class WaitConnAck(State):
-    def run(self):
+    def run(self) -> None:
         self.next_state = WAIT_CONN_ACK
         self.name = self.next_state
 
@@ -161,7 +163,7 @@ class WaitConnAck(State):
                 self.event_responder_conn_cer()            
 
 
-    def event_initiator_rcv_conn_ack(self):
+    def event_initiator_rcv_conn_ack(self) -> None:
         wait_conn_ack_logger.debug("Event has been triggered.")
 
         cer = self.association.base.cer
@@ -171,13 +173,13 @@ class WaitConnAck(State):
         self.next_state = WAIT_I_CEA
 
 
-    def event_initiator_rcv_conn_nack(self):
+    def event_initiator_rcv_conn_nack(self) -> None:
         wait_conn_ack_logger.debug("Event has been triggered.")
 
         self.next_state = CLOSED
 
 
-    def event_responder_conn_cer(self):
+    def event_responder_conn_cer(self) -> None:
         wait_conn_ack_logger.debug("Event has been triggered.")
 
         cer = self.msg
@@ -188,7 +190,7 @@ class WaitConnAck(State):
             self.next_state = WAIT_CONN_ACK_ELECT
 
 
-    def event_timeout(self):
+    def event_timeout(self) -> None:
         """ It needs to be coded """
         wait_conn_ack_logger.debug("Event has been triggered.")
 
@@ -196,7 +198,7 @@ class WaitConnAck(State):
 
 
 class WaitInitiatorCEA(State):
-    def run(self):
+    def run(self) -> None:
         self.next_state = WAIT_I_CEA
         self.name = self.next_state
 
@@ -221,7 +223,7 @@ class WaitInitiatorCEA(State):
                 self.event_initiator_rcv_non_cea()
 
 
-    def event_open_rcv_cea(self):
+    def event_open_rcv_cea(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
         cea = self.msg
@@ -232,7 +234,7 @@ class WaitInitiatorCEA(State):
             self.next_state = OPEN
 
 
-    def event_responder_conn_cer(self):
+    def event_responder_conn_cer(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
         cer = self.msg
@@ -243,20 +245,20 @@ class WaitInitiatorCEA(State):
             self.next_state = WAIT_RETURNS
 
 
-    def event_initiator_peer_disc(self):
+    def event_initiator_peer_disc(self) -> None:
         """ It needs to be coded """
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
         self.next_state = CLOSED
 
     
-    def event_initiator_rcv_non_cea(self):
+    def event_initiator_rcv_non_cea(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
         self.next_state = CLOSED
 
 
-    def event_timeout(self):
+    def event_timeout(self) -> None:
         """ It needs to be coded """
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
@@ -264,7 +266,7 @@ class WaitInitiatorCEA(State):
 
 
 class Open(State):
-    def run(self):
+    def run(self) -> None:
         self.next_state = OPEN
         self.name = self.next_state
 
@@ -316,7 +318,7 @@ class Open(State):
             self.msg = None
 
 
-    def event_send_message(self):
+    def event_send_message(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         self.association.send_message_from_queue()
@@ -324,7 +326,7 @@ class Open(State):
         self.next_state = OPEN
 
 
-    def event_open_rcv_message(self):
+    def event_open_rcv_message(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         if is_answer_message(self.msg):
@@ -362,7 +364,7 @@ class Open(State):
         self.next_state = OPEN
 
 
-    def event_open_rcv_dwr(self):
+    def event_open_rcv_dwr(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         dwr = self.msg
@@ -379,7 +381,7 @@ class Open(State):
             self.next_state = OPEN
 
     
-    def event_open_rcv_dwa(self):
+    def event_open_rcv_dwa(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         dwa = self.msg
@@ -391,13 +393,13 @@ class Open(State):
             self.next_state = CLOSING
 
     
-    def event_responder_conn_cer(self):
+    def event_responder_conn_cer(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         self.next_state = OPEN
 
 
-    def event_stop(self):
+    def event_stop(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         dpr = self.association.base.dpr
@@ -407,7 +409,7 @@ class Open(State):
         self.next_state = CLOSING
 
 
-    def event_open_rcv_dpr(self):
+    def event_open_rcv_dpr(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         dpr = self.msg
@@ -429,13 +431,13 @@ class Open(State):
         self.next_state = CLOSED
         
 
-    def event_open_peer_disc(self):
+    def event_open_peer_disc(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         self.next_state = CLOSED
 
 
-    def event_open_rcv_cer(self):
+    def event_open_rcv_cer(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         cer = self.msg
@@ -452,7 +454,7 @@ class Open(State):
         self.next_state = OPEN
 
 
-    def event_open_rcv_cea(self):
+    def event_open_rcv_cea(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         cea = self.msg
@@ -463,19 +465,19 @@ class Open(State):
 
 
 class WaitReturns(State):
-    def run(self):
+    def run(self) -> None:
         self.next_state = WAIT_RETURNS
         self.name = self.next_state
     
 
 class WaitConnAckElect(State):
-    def run(self):
+    def run(self) -> None:
         self.next_state = WAIT_CONN_ACK_ELECT
         self.name = self.next_state
 
 
 class Closing(State):   
-    def run(self):
+    def run(self) -> None:
         self.next_state = CLOSING
         self.name = self.next_state
 
@@ -498,7 +500,7 @@ class Closing(State):
                                      f"Diameter Message(s).")
 
 
-    def event_rcv_dpa(self):
+    def event_rcv_dpa(self) -> None:
         open_logger.debug("Event has been triggered.")
 
         self.association.send_message_from_queue()
@@ -508,37 +510,29 @@ class Closing(State):
 
 
 class PeerStateMachine():
-    def __init__(self, diameter_association):
+    def __init__(self, diameter_association) -> None:
         statemachine_logger.debug("PeerStateMachine has been called.")
         self.association = diameter_association
         self._load_states()
 
 
-    def _load_states(self):
+    def _load_states(self) -> None:
         statemachine_logger.debug("Loading available states.")
-        self.__closed = Closed(self.association)
-        self.__wait_conn_ack = WaitConnAck(self.association)
-        self.__wait_initiator_cea = WaitInitiatorCEA(self.association)
-        self.__open = Open(self.association)
-        self.__wait_returns = WaitReturns(self.association)
-        self.__wait_conn_ack_elect = WaitConnAckElect(self.association)
-        self.__closing = Closing(self.association)
-
         self.states = {
-                        CLOSED: self.__closed,
-                        WAIT_CONN_ACK: self.__wait_conn_ack,
-                        WAIT_I_CEA: self.__wait_initiator_cea,
-                        OPEN: self.__open,
-                        WAIT_RETURNS: self.__wait_returns,
-                        WAIT_CONN_ACK_ELECT: self.__wait_conn_ack_elect,
-                        CLOSING: self.__closing,
+                        CLOSED: Closed(self.association),
+                        WAIT_CONN_ACK: WaitConnAck(self.association),
+                        WAIT_I_CEA: WaitInitiatorCEA(self.association),
+                        OPEN: Open(self.association),
+                        WAIT_RETURNS: WaitReturns(self.association),
+                        WAIT_CONN_ACK_ELECT: WaitConnAckElect(self.association),
+                        CLOSING: Closing(self.association),
         }
 
         self.current_state = self.states[CLOSED]
         self.is_running = False
 
 
-    def get_next_state(self, next_state):
+    def get_next_state(self, next_state: str) -> Any:
         if next_state == CLOSED and self.current_state.name == CLOSED:
             return self.states[CLOSED]
 
@@ -557,14 +551,14 @@ class PeerStateMachine():
             raise TypeError("Input not supported for current state.")        
 
 
-    def start(self):
+    def start(self) -> None:
         statemachine_logger.debug("Starting PeerStateMachine's thread.")
 
         threading.Thread(name=f"{self.association.connection.mode.lower()}_psm_thread", 
                          target=self.__start).start()
 
 
-    def __start(self):
+    def __start(self) -> None:
         if not self.is_running:
             self.is_running = True
 
@@ -576,12 +570,12 @@ class PeerStateMachine():
             self.current_state = self.get_next_state(_state)
 
 
-    def close(self):
+    def close(self) -> None:
         statemachine_logger.debug("Closing PeerStateMachine's thread.")
         self.association.state_is_active = False
 
 
-    def get_current_state(self):
+    def get_current_state(self) -> str:
         if isinstance(self.current_state, Closed):
             return CLOSED
         elif isinstance(self.current_state, WaitConnAck):

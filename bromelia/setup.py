@@ -21,17 +21,21 @@ import sys
 import threading
 import time
 from contextlib import contextmanager
+from typing import Any, List, Type
 
 from ._internal_utils import _convert_config_to_connection_obj
 from ._internal_utils import get_app_ids
 from ._internal_utils import application_id_look_up
+from ._internal_utils import Connection
 from .base import DiameterMessage
 from .config import Config
 from .config import DiameterLogging
-from .config import LISTENING_TICKER
-from .config import SEND_BUFFER_MAXIMUM_SIZE
-from .config import SLEEP_TIMER
-from .config import WAITING_CONN_TIMER
+from .config import (SLEEP_TIMER, WAITING_CONN_TIMER,
+                     LISTENING_TICKER, SEND_BUFFER_MAXIMUM_SIZE)
+from .config import (CLOSED, CLOSING,
+                     I_OPEN, R_OPEN,
+                     WAIT_CONN_ACK, WAIT_I_CEA,
+                     WAIT_CONN_ACK_ELECT, WAIT_RETURNS)
 from .constants import DIAMETER_AGENT_CLIENT_MODE
 from .constants import DIAMETER_AGENT_SERVER_MODE
 from .exceptions import AVPParsingError
@@ -39,6 +43,7 @@ from .exceptions import DiameterApplicationError
 from .exceptions import DiameterAssociationError
 from .messages import DiameterAnswer
 from .messages import DiameterRequest
+from .proxy import BaseMessages
 from .proxy import DiameterBaseProxy
 from .statemachine import PeerStateMachine
 from .statemachine import CLOSED, I_OPEN, R_OPEN
@@ -52,7 +57,7 @@ diameter_logger = logging.getLogger("Diameter")
 
 
 class DiameterAssociation(object):
-    def __init__(self, connection, base):
+    def __init__(self, connection: Connection, base: BaseMessages) -> None:
         self.connection = connection
         self.base = base
 
@@ -79,20 +84,20 @@ class DiameterAssociation(object):
         self.lock = threading.Lock()
 
 
-    def is_connected(self):
+    def is_connected(self) -> bool:
         if self.transport:
            return self.transport.is_connected
         
         return False
 
 
-    def __is_connected(self):
+    def __is_connected(self) -> bool:
         if not self.is_connected():
             raise DiameterAssociationError("There is no transport "\
                                            "connection up for this PeerNode.")
 
 
-    def start(self):
+    def start(self) -> None:
         self._stop_threads = False
 
         if self.connection.mode == DIAMETER_AGENT_CLIENT_MODE:
@@ -113,7 +118,7 @@ class DiameterAssociation(object):
                          target=self.recv_message_from_queue).start()
 
 
-    def close(self):
+    def close(self) -> None:
         self.__is_connected()
 
         self.state_is_active = False
@@ -122,7 +127,7 @@ class DiameterAssociation(object):
         self.transport = None
 
 
-    def recv_message_from_queue(self):
+    def recv_message_from_queue(self) -> None:
         while not self._stop_threads and self.transport:
             self.transport._recv_data_available.wait(timeout=1)
 
@@ -161,7 +166,7 @@ class DiameterAssociation(object):
             self.lock.release()
 
 
-    def put_message_into_send_queue(self, msg):
+    def put_message_into_send_queue(self, msg: Type[DiameterMessage]) -> None:
         self.lock.acquire()
 
         self.__is_connected()
@@ -199,7 +204,7 @@ class DiameterAssociation(object):
         self.lock.release()
 
 
-    def send_message_from_queue(self):
+    def send_message_from_queue(self) -> None:
         self.lock.acquire()
         self.__is_connected()
 
@@ -256,7 +261,7 @@ class DiameterAssociation(object):
         self.lock.release()
 
 
-    def get_message(self):
+    def get_message(self) -> Type[DiameterMessage]:
         while not self._stop_threads:
             if self.postprocess_recv_messages.empty():
                 self.postprocess_recv_messages_ready.wait()
@@ -301,7 +306,7 @@ class DiameterAssociation(object):
             return message
 
 
-    def tracking_events(self):
+    def tracking_events(self) -> None:
         try:
             if (not self.transport.events) and (self.transport.tracking_events_count >= self.watchdog_timeout):
                 self.put_message_into_send_queue(self.base.dwr)
@@ -333,10 +338,10 @@ class Diameter:
 
 
     def __init__(self,
-                 config=None,
-                 debug=False,
-                 is_logging=False,
-                 app_name=None):
+                 config: dict = None,
+                 debug: bool = False,
+                 is_logging: bool = False,
+                 app_name: str = None) -> None:
         
         self.logging = DiameterLogging(debug, is_logging, app_name)
         
@@ -347,13 +352,13 @@ class Diameter:
         self._peer_state_machine = None
 
 
-    def make_config(self, config):
+    def make_config(self, config: dict) -> Config:
         if config:
             return self.config_class(config)
         return self.config_class(Diameter.default_config)
 
 
-    def get_base_messages(self, msgs=None):
+    def get_base_messages(self, msgs: List[Type[DiameterMessage]] = None) -> BaseMessages:
         proxy = DiameterBaseProxy(self._connection)
         if msgs:
             return proxy.get_custom_messages(msgs)
@@ -361,13 +366,13 @@ class Diameter:
             return proxy.get_default_messages()
 
 
-    def get_current_state(self):
+    def get_current_state(self) -> Any:
         if self._peer_state_machine:
             return self._peer_state_machine.get_current_state()
         return CLOSED
 
 
-    def start(self):
+    def start(self) -> None:
         current_state = self.get_current_state()
 
         if current_state != CLOSED:
@@ -382,7 +387,7 @@ class Diameter:
         self._association.start()
 
 
-    def reset(self):
+    def reset(self) -> None:
         current_state = self.get_current_state()
 
         if current_state == CLOSED:
@@ -395,7 +400,7 @@ class Diameter:
         self.start()
 
 
-    def close(self):
+    def close(self) -> None:
         current_state = self.get_current_state()
         
         if current_state == CLOSED:
@@ -406,12 +411,12 @@ class Diameter:
         self._peer_state_machine.close()
 
 
-    def send_messages(self, msgs):
+    def send_messages(self, msgs: List[Type[DiameterMessage]]) -> None:
         for msg in msgs:
             self._association.put_message_into_send_queue(msg)
 
 
-    def send_message(self, msg, avoid=True):    
+    def send_message(self, msg: Type[DiameterMessage], avoid: bool = True) -> Any:
         if isinstance(msg, DiameterRequest):
             diameter_logger.debug(f"External app wants to send a Diameter "\
                                   f"Request: "\
@@ -466,12 +471,12 @@ class Diameter:
                                            "allowed to be sent")
 
 
-    def get_message(self):
+    def get_message(self) -> Type[DiameterMessage]:
         return self._association.get_message()
 
 
     @contextmanager
-    def context(self):
+    def context(self) -> None:
         app_ids = get_app_ids(self.config["APPLICATIONS"])
         print(f"  * Running Diameter app ({app_ids}) on "\
               f"{self.config['LOCAL_NODE_IP_ADDRESS']}"\
@@ -511,7 +516,7 @@ class Diameter:
               f"{self.config['LOCAL_NODE_PORT']} is now down")
 
 
-    def is_open(self):
+    def is_open(self) -> bool:
         try:
             if self.get_current_state() == I_OPEN or \
                self.get_current_state() == R_OPEN:
@@ -522,7 +527,7 @@ class Diameter:
                 return False
 
 
-    def is_closed(self):
+    def is_closed(self) -> bool:
         try:
             if self.get_current_state() == CLOSED:
                 return True

@@ -16,6 +16,8 @@ import random
 import selectors
 import socket
 import threading
+from typing import Any, Literal
+
 from .config import TRACKING_SOCKET_EVENTS_TIMEOUT
 
 tcp_connection = logging.getLogger("TcpConnection")
@@ -24,7 +26,7 @@ tcp_server = logging.getLogger("TcpServer")
 
 
 class TcpConnection():
-    def __init__(self, ip_address, port):
+    def __init__(self, ip_address: str, port: str) -> None:
         self._recv_buffer = b""
         self._send_buffer = b""
         self.send_data_stream_queued = False
@@ -57,24 +59,24 @@ class TcpConnection():
         self.events_mask = selectors.EVENT_READ
         
 
-    def is_write_mode(self):
+    def is_write_mode(self) -> bool:
         if self.events_mask & selectors.EVENT_WRITE:
             return True
         return False
 
     
-    def is_read_mode(self):
+    def is_read_mode(self) -> bool:
         if self.events_mask & selectors.EVENT_READ:
             return True
         return False
 
-    def is_read_write_mode(self):
+    def is_read_write_mode(self) -> bool:
         if self.events_mask & (selectors.EVENT_READ | selectors.EVENT_WRITE):
             return True
         return False
    
 
-    def close(self):
+    def close(self) -> None:
         if not self.is_connected:
             raise ConnectionError("There is no transport connection up for "\
                                   "this PeerNode")
@@ -97,7 +99,7 @@ class TcpConnection():
         self._stop_threads = True
 
 
-    def run(self):
+    def run(self) -> None:
         if not self.is_connected:
             raise ConnectionError(f"[Socket-{self.sock_id}] There is no "\
                                   f"transport connection up for this Peer")
@@ -105,7 +107,7 @@ class TcpConnection():
                          target=self._run).start()
 
 
-    def _run(self):
+    def _run(self) -> None:
         while self.is_connected and not self._stop_threads:
             self.events = self.selector.select(timeout=TRACKING_SOCKET_EVENTS_TIMEOUT)
             self.tracking_events_count += TRACKING_SOCKET_EVENTS_TIMEOUT
@@ -123,7 +125,7 @@ class TcpConnection():
                     self.read()
 
 
-    def _set_selector_events_mask(self, mode, msg=None):
+    def _set_selector_events_mask(self, mode: Literal["r", "w", "rw"], msg: Any = None) -> None:
         self.lock.acquire()
         if mode == "r":
             tcp_connection.debug(f"[Socket-{self.sock_id}] Updating "\
@@ -159,7 +161,7 @@ class TcpConnection():
         self.lock.release()
 
 
-    def _write(self):
+    def _write(self) -> None:
         if self._send_buffer:
             try:
                 sent = self.sock.send(self._send_buffer)
@@ -179,7 +181,7 @@ class TcpConnection():
                                  f"has been sent")
 
 
-    def write(self):
+    def write(self) -> None:
         if not self.send_data_stream_queued and self.data_stream:
             self._send_buffer += self.data_stream
             self.data_stream = b""
@@ -197,7 +199,7 @@ class TcpConnection():
                                  f"data to be sent for a while")
 
 
-    def _read(self):
+    def _read(self) -> None:
         try:
             data = self.sock.recv(4096*64)
             tcp_connection.debug(f"[Socket-{self.sock_id}] Data received: "\
@@ -221,7 +223,7 @@ class TcpConnection():
                 self._stop_threads = True
 
 
-    def read(self):
+    def read(self) -> None:
         self._read()
 
         if self._recv_buffer:
@@ -235,7 +237,7 @@ class TcpConnection():
         self._set_selector_events_mask("r")
 
 
-    def test_connection(self):
+    def test_connection(self) -> bool:
         while True:
             try:
                 self.sock.send(b"")
@@ -248,11 +250,11 @@ class TcpConnection():
 
 
 class TcpClient(TcpConnection):
-    def __init__(self, ip_address, port):
+    def __init__(self, ip_address: str, port: str) -> None:
         super().__init__(ip_address, port)
 
 
-    def start(self):
+    def start(self) -> None:
         try:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             tcp_client.debug(f"[Socket-{self.sock_id}] Client-side Socket: "\
@@ -276,11 +278,11 @@ class TcpClient(TcpConnection):
 
 
 class TcpServer(TcpConnection):
-    def __init__(self, ip_address, port):
+    def __init__(self, ip_address: str, port: str) -> None:
         super().__init__(ip_address, port)
         
 
-    def start(self):
+    def start(self) -> None:
         try:
             self.server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             tcp_connection.debug(f"[Socket-{self.sock_id}] Server-side "\
@@ -307,7 +309,7 @@ class TcpServer(TcpConnection):
             tcp_server.exception(f"server_error: {e.args}")
 
 
-    def run(self):
+    def run(self) -> None:
         events = self.server_selector.select(timeout=None)
         for key, mask in events:
             tcp_server.debug(f"[Socket-{self.sock_id}] Event has been "\
@@ -329,7 +331,7 @@ class TcpServer(TcpConnection):
         super().run()
 
 
-    def close(self):
+    def close(self) -> None:
         super().close()
 
         try:
