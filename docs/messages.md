@@ -174,7 +174,7 @@ As per DiameterMessage's contructor, an object may be instantiated by passing a 
 
 The DiameterMessage class implements several methods, the `.load()` staticmethod, the `.convert()` classmethod and a few instance methods such as `.dump()` and `.copy()`.
 
-The `.append()` method is used to add only one DiameterAVP object into the DiameterMessage object's `avp` attribute. The `.extend()` method is used to add multiple DiameterAVP objects into the DiameterMessage object's `avp` attribute. The `.pop()` method is used to remove a DiameterAVP object from the DiameterMessage object's `avp` attribute. The `.clenaup()` method is used to cleanup all DiameterAVP objects from a DiameterMessage object. The `.has_avp()` checks if DiameterMessage has a given DiameterAVP by its name. The `.update_key()` method allows to change the alias attribute for a given DiameterAVP object in `avps` attribute.
+The `.append()` method is used to add only one DiameterAVP object into the DiameterMessage object's `avp` attribute. The `.extend()` method is used to add multiple DiameterAVP objects into the DiameterMessage object's `avp` attribute. The `.pop()` method is used to remove a DiameterAVP object from the DiameterMessage object's `avp` attribute. The `.clenaup()` method is used to cleanup all DiameterAVP objects from a DiameterMessage object. The `.has_avp()` checks if DiameterMessage has a given DiameterAVP by its name. The `.update_key()` method allows to change the alias attribute for a given DiameterAVP object in `avps` attribute. The `.update_avps()` method allows to update smoothly the data attribute (or the field) of all DiameterAVP objects of a given DiameterMessage.
 
 Aside DiameterAVP objects oriented methods, there are also a few DiameterHeader objects oriented methods which follows the setters and getters-like pattern.
 
@@ -430,7 +430,55 @@ True
 True
 ```
 
-##### Update
+Note all built-in DiameterMessage attributes related to DiameterAVP objects has the `<diameter_avp_name>_avp` format (a suffix `_avp` attached). However, you may search a given DiameterAVP object in a DiameterMessage by putting the `diameter_avp_name` only. Consider using the snippet code above with this approach.
+
+```python
+>>> message.has_avp("experimental_result_code")
+True
+>>> message.has_avp("termination_cause")
+True
+>>> message.has_avp("inband_security_id")
+True
+```
+
+##### Update DiameterAVP data
+
+Now you may update the DiameterAVP data on the go by simply calling the `.update_avps()` method passing the dictionary with new values you want to load a given DiameterMessage object. It already computes the final DiameterMessage length and updates its value.
+
+```python
+>>> from bromelia.avps import OriginHostAVP, OriginRealmAVP, DestinationRealmAVP
+>>> from bromelia.base import DiameterMessage
+>>> message = DiameterMessage()
+>>> message.extend([OriginHostAVP("computer.network"), OriginRealmAVP("network"), DestinationRealmAVP("network")])
+>>> message
+<Diameter Message: Unknown [], 0 [Diameter common message], 3 AVP(s)>
+>>> message.__dict__
+{'_header': <Diameter Header: Unknown [], 0 [Diameter common message]>, '_avps': [<Diameter AVP: 264 [Origin-Host] MANDATORY>, <Diameter AVP: 296 [Origin-Realm] MANDATORY>, <Diameter AVP: 283 [Destination-Realm] MANDATORY>], '_loaded': False, 'origin_host_avp': <Diameter AVP: 264 [Origin-Host] MANDATORY>, 'origin_realm_avp': <Diameter AVP: 296 [Origin-Realm] MANDATORY>, 'destination_realm_avp': <Diameter AVP: 283 [Destination-Realm] MANDATORY>}
+>>> len(message)
+76
+>>> for avp in message.avps:
+...     print(avp, avp.data)
+...
+<Diameter AVP: 264 [Origin-Host] MANDATORY> b'computer.network'
+<Diameter AVP: 296 [Origin-Realm] MANDATORY> b'network'
+<Diameter AVP: 283 [Destination-Realm] MANDATORY> b'network'
+>>> avps = {
+  "origin_host": "hss.br.epc.3gppnetwork.org",
+  "origin_realm": "br.epc.3gppnetwork.org",
+  "destination_realm": "pt.epc.3gppnetwork.org",
+}
+>>> message.update_avps(avps)
+>>> len(message)
+120
+>>> for avp in message.avps:
+...     print(avp, avp.data)
+...
+<Diameter AVP: 264 [Origin-Host] MANDATORY> b'hss.br.epc.3gppnetwork.org'
+<Diameter AVP: 296 [Origin-Realm] MANDATORY> b'br.epc.3gppnetwork.org'
+<Diameter AVP: 283 [Destination-Realm] MANDATORY> b'pt.epc.3gppnetwork.org'
+```
+
+##### Update Key
 
 Sometimes you may add a custom DiameterAVP object that is not defined anywhere. Once *bromelia* is not aware on this spec, it will create a custom attribute for DiameterMessage named as `unknown_avp`. As new unknown DiameterAVP objects are placed into DiameterMessage's `avps` attribute, it will named it as `unknown_avp__1`, `unknown_avp__2` and so on. That's why `.update_key()` comes into play, to change as per your taste.
 
@@ -1134,23 +1182,23 @@ class ReAuthRequest(DiameterRequest):
     }
 
     def __init__(self,
-                session_id=platform.node(),
-                origin_host=platform.node(),
-                origin_realm=socket.getfqdn(),
-                destination_realm=socket.gethostbyname(platform.node()),
-                destination_host=None,
-                auth_application_id=None,
-                re_auth_request_type=None,
-                user_name=None,
-                origin_state_id=None,
-                proxy_info=None,
-                route_record=None,
-                **kwargs):
+                 session_id=platform.node(),
+                 origin_host=platform.node(),
+                 origin_realm=socket.getfqdn(),
+                 destination_realm=socket.gethostbyname(platform.node()),
+                 destination_host=None,
+                 auth_application_id=None,
+                 re_auth_request_type=None,
+                 user_name=None,
+                 origin_state_id=None,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
 
         if not auth_application_id:
             raise DiameterMessageError("invalid auth_application_id value. "\
-                                    "It needs to include a valid Auth "\
-                                    "Application Id")
+                                       "It needs to include a valid Auth "\
+                                       "Application Id")
 
         DiameterRequest.__init__(self, auth_application_id, RE_AUTH_MESSAGE)
         DiameterRequest._load(self, locals())
@@ -1174,7 +1222,7 @@ mandatory = {
                 "destination_host": DestinationHostAVP,
                 "auth_application_id": AuthApplicationIdAVP,
                 "re_auth_request_type": ReAuthRequestTypeAVP
-    }
+}
 ```
 
 The constructor must have input arguments with the same name as presented in the `key` expressed above. The input arguments intended for mandatory AVPs must have default values. That ones intended for optional AVP may have default values or, if not, should be `None`. That's the convention in order to fulfill the internal requirements to allow smoothly custom Diameter Messages creation by inheritance.
@@ -1183,18 +1231,18 @@ You must include `**kwargs` at the end to allow arbitrary AVPs not related neith
 
 ```python
 def __init__(self,
-            session_id=platform.node(),
-            origin_host=platform.node(),
-            origin_realm=socket.getfqdn(),
-            destination_realm=socket.gethostbyname(platform.node()),
-            destination_host=None,
-            auth_application_id=None,
-            re_auth_request_type=None,
-            user_name=None,
-            origin_state_id=None,
-            proxy_info=None,
-            route_record=None,
-            **kwargs):
+             session_id=platform.node(),
+             origin_host=platform.node(),
+             origin_realm=socket.getfqdn(),
+             destination_realm=socket.gethostbyname(platform.node()),
+             destination_host=None,
+             auth_application_id=None,
+             re_auth_request_type=None,
+             user_name=None,
+             origin_state_id=None,
+             proxy_info=None,
+             route_record=None,
+             **kwargs):
 ```
 
 The example we are getting has a conditional-block which is not mandatory, but you may include it if your Diameter Message implementation has some special validation such as RAR message under analysis.
@@ -1202,8 +1250,8 @@ The example we are getting has a conditional-block which is not mandatory, but y
 ```python
 if not auth_application_id:
     raise DiameterMessageError("invalid auth_application_id value. "\
-                            "It needs to include a valid Auth "\
-                            "Application Id")
+                               "It needs to include a valid Auth "\
+                               "Application Id")
 ```
 
 In the end, it must always include the superclass constructor call (in our example, the `DiameterRequest`) and the `._load()` method. Your may also include another block of code if your implemenation needs so.
@@ -1264,18 +1312,18 @@ class MyDiameterRequest(DiameterRequest):
     cmd_code = MY_DIAMETER_MESSAGE
 
     def __init__(self,
-                origin_host=platform.node(),
-                origin_realm=socket.getfqdn(),
-                destination_realm=socket.gethostbyname(platform.node()),
-                destination_host=None,
-                auth_application_id=None,
-                user_name=None,
-                **kwargs):
+                 origin_host=platform.node(),
+                 origin_realm=socket.getfqdn(),
+                 destination_realm=socket.gethostbyname(platform.node()),
+                 destination_host=None,
+                 auth_application_id=None,
+                 user_name=None,
+                 **kwargs):
 
         if not auth_application_id:
             raise DiameterMessageError("invalid auth_application_id value. "\
-                                    "It needs to include a valid Auth "\
-                                    "Application Id")
+                                       "It needs to include a valid Auth "\
+                                       "Application Id")
 
         DiameterRequest.__init__(self, auth_application_id, MY_DIAMETER_MESSAGE)
         DiameterRequest._load(self, locals())
