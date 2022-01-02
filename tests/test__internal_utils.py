@@ -698,6 +698,14 @@ class TestGetAppIds(unittest.TestCase):
         app_ids = get_app_ids([{"vendor_id": VENDOR_ID_3GPP, "app_id": DIAMETER_APPLICATION_RELAY}])
         self.assertEqual(app_ids, "Relay")
 
+    def test__get_app_ids__Cx_Sh(self):
+        app_ids = get_app_ids([{"vendor_id": VENDOR_ID_3GPP, "app_id": DIAMETER_APPLICATION_Cx}, {"vendor_id": VENDOR_ID_3GPP, "app_id": DIAMETER_APPLICATION_Sh}])
+        self.assertEqual(app_ids, "3GPP Cx;3GPP Sh")
+
+    def test__get_app_ids__Cx_Sh_Rx(self):
+        app_ids = get_app_ids([{"vendor_id": VENDOR_ID_3GPP, "app_id": DIAMETER_APPLICATION_Cx}, {"vendor_id": VENDOR_ID_3GPP, "app_id": DIAMETER_APPLICATION_Sh}, {"vendor_id": VENDOR_ID_3GPP, "app_id": DIAMETER_APPLICATION_Rx}])
+        self.assertEqual(app_ids, "3GPP Cx;3GPP Sh;3GPP Rx")
+
 
 class TestGetAvpNameFormatted(unittest.TestCase):
     def test__get_avp_name_formatted__1(self):
@@ -731,6 +739,68 @@ class TestGetAvpNameFormatted(unittest.TestCase):
     def test__get_avp_name_formatted__8(self):
         avp_name = get_avp_name_formatted("max_requested_bw_dl__256")
         self.assertEqual(avp_name, "max_requested_bw_dl_avp__256")
+
+
+class TestGetLoggingFileName(unittest.TestCase):
+    def setUp(self):
+        self.prog = re.compile(r"log\-(.*)\-(\d{4}\-\d{2}\-\d{2})\-(\d{2}\-\d{2}\-\d{2})\-UTC(.*)\-pid\_(\d*)", re.X)
+
+    def test__get_logging_filename__1(self):
+        filename = get_logging_filename("AAA")
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "aaa")
+
+    def test__get_logging_filename__2(self):
+        filename = get_logging_filename("HSS")
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "hss")
+
+    def test__get_logging_filename__3(self):
+        filename = get_logging_filename("PCRF")
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "pcrf")
+
+    def test__get_logging_filename__4(self):
+        filename = get_logging_filename("OCS")
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "ocs")
+
+    def test__get_logging_filename__5(self):
+        filename = get_logging_filename("DRA")
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "dra")
+
+    def test__get_logging_filename__6(self):
+        filename = get_logging_filename("")
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "dsa")
+
+    def test__get_logging_filename__7(self):
+        filename = get_logging_filename()
+        match = self.prog.match(filename).groups()
+
+        self.assertEqual(match[0], "dsa")
+
+    def test__get_logging_filename__invalid__1(self):
+        with self.assertRaises(Exception) as cm:
+            filename = get_logging_filename("DRA-HSS")
+        self.assertEqual(cm.exception.args[0], "Invalid symbol found")
+
+    def test__get_logging_filename__invalid__2(self):
+        with self.assertRaises(Exception) as cm:
+            filename = get_logging_filename("DRA+HSS")
+        self.assertEqual(cm.exception.args[0], "Invalid symbol found")
+
+    def test__get_logging_filename__invalid__3(self):
+        with self.assertRaises(Exception) as cm:
+            filename = get_logging_filename("DRA=HSS")
+        self.assertEqual(cm.exception.args[0], "Invalid symbol found")
 
 
 if __name__ == "__main__":

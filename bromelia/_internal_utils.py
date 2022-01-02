@@ -27,35 +27,73 @@ from .exceptions import InvalidConfigKey
 from .exceptions import InvalidConfigValue
 
 
-def convert_to_1_byte(content):
+LocalNode = namedtuple("LocalNode", [
+                                        "host_name",
+                                        "realm",
+                                        "ip_address",
+                                        "port"
+                                    ]
+)
+PeerNode = namedtuple("PeerNode", [
+                                        "host_name",
+                                        "realm",
+                                        "ip_address",
+                                        "port"
+                                    ]
+)
+Connection = namedtuple("Connection", [
+                                        "name",
+                                        "mode",
+                                        "local_node",
+                                        "peer_node",
+                                        "application_ids",
+                                        "watchdog_timeout"
+                                    ]
+)
+config_mask = [
+                "MODE",
+                "APPLICATIONS",
+                "LOCAL_NODE_HOSTNAME",
+                "LOCAL_NODE_REALM",
+                "LOCAL_NODE_IP_ADDRESS",
+                "LOCAL_NODE_PORT",
+                "PEER_NODE_HOSTNAME",
+                "PEER_NODE_REALM",
+                "PEER_NODE_IP_ADDRESS",
+                "PEER_NODE_PORT",
+                "WATCHDOG_TIMEOUT"
+]
+
+
+def convert_to_1_byte(content: int) -> bytes:
     return struct.pack(">B", content)
 
 
-def convert_to_2_bytes(content):
+def convert_to_2_bytes(content: int) -> bytes:
     return struct.pack(">H", content)
 
 
-def convert_to_3_bytes(content):
+def convert_to_3_bytes(content: int) -> bytes:
     return content.to_bytes(3, byteorder="big")
 
 
-def convert_to_4_bytes(content):
+def convert_to_4_bytes(content: int) -> bytes:
     return struct.pack(">L", content)
 
 
-def convert_to_6_bytes(content):
+def convert_to_6_bytes(content: int) -> bytes:
     return content.to_bytes(6, byteorder="big")
 
 
-def convert_to_8_bytes(content):
+def convert_to_8_bytes(content: int) -> bytes:
     return struct.pack(">q", content)
 
 
-def convert_to_integer_from_bytes(integer):
-    return int.from_bytes(integer, byteorder="big")
+def convert_to_integer_from_bytes(bytes: bytes) -> int:
+    return int.from_bytes(bytes, byteorder="big")
 
 
-def header_representation(header):
+def header_representation(header) -> dict:
     cmd_code = header.command_code
     application_id = header.application_id
     
@@ -87,7 +125,7 @@ def header_representation(header):
     }
 
 
-def application_id_look_up(application_id):
+def application_id_look_up(application_id: bytes) -> tuple[str, str]:
     if not application_id:
         return "", "Unknown"
     
@@ -97,7 +135,7 @@ def application_id_look_up(application_id):
     return "", "Unknown"
 
 
-def command_code_look_up(command_code):
+def command_code_look_up(command_code: bytes) -> tuple[str, str]:
     if not command_code:
         return "", "Unknown"
 
@@ -107,7 +145,7 @@ def command_code_look_up(command_code):
     return "", "Unknown"
 
 
-def avp_look_up(avp):
+def avp_look_up(avp) -> str:
     if not avp.get_vendor_id():
         if avp.get_code() == 0:
             return "Unknown"
@@ -119,45 +157,8 @@ def avp_look_up(avp):
     return "Unknown"
 
 
-def _convert_config_to_connection_obj(config):
-    LocalNode = namedtuple("LocalNode", [
-                                            "host_name", 
-                                            "realm", 
-                                            "ip_address", 
-                                            "port"
-                                        ]
-    )
-    PeerNode = namedtuple("PeerNode", [
-                                            "host_name", 
-                                            "realm", 
-                                            "ip_address", 
-                                            "port"
-                                        ]
-    )
-    Connection = namedtuple("Connection", [
-                                            "name", 
-                                            "mode",
-                                            "local_node",
-                                            "peer_node",
-                                            "application_ids",
-                                            "watchdog_timeout"
-                                        ]
-    )
 
-    config_mask = [
-                    "MODE",
-                    "APPLICATIONS",
-                    "LOCAL_NODE_HOSTNAME",
-                    "LOCAL_NODE_REALM",
-                    "LOCAL_NODE_IP_ADDRESS",
-                    "LOCAL_NODE_PORT",
-                    "PEER_NODE_HOSTNAME",
-                    "PEER_NODE_REALM",
-                    "PEER_NODE_IP_ADDRESS",
-                    "PEER_NODE_PORT",
-                    "WATCHDOG_TIMEOUT"
-    ]
-
+def _convert_config_to_connection_obj(config) -> Connection:
     for key in config.keys():
         if key not in config_mask:
             raise InvalidConfigKey(f"Invalid config key '{key}' found")
@@ -165,9 +166,9 @@ def _convert_config_to_connection_obj(config):
     for key, value in config.items():
         if key == "MODE":
             if value not in ["CLIENT", "SERVER"]:
-                raise InvalidConfigValue("Invalid config value '{value}' "\
-                                f"found for config key '{key}'. It MUST be "\
-                                "either 'CLIENT' or 'SERVER'")
+                raise InvalidConfigValue(f"Invalid config value '{value}' "\
+                                         f"found for config key '{key}'. It "\
+                                         f"MUST be either 'CLIENT' or 'SERVER'")
 
             mode = value
 
@@ -176,18 +177,21 @@ def _convert_config_to_connection_obj(config):
                 for app in value:
                     app_keys = app.keys()
                     if not [key for key in app_keys if key in ["vendor_id", "app_id"]]:
-                        raise InvalidConfigValue("Invalid config value "\
-                                        f"found for config key '{key}'. It "\
-                                        "MUST be a dictionary with "\
-                                        "'vendor_id' and 'app_id' keys")
+                        raise InvalidConfigValue(f"Invalid config value "\
+                                                 f"found for config key "\
+                                                 f"'{key}'. It MUST be a "\
+                                                 f"dictionary with "\
+                                                 f"'vendor_id' and 'app_id' "\
+                                                 f"keys")
 
                     for key in app_keys:
                         if not isinstance(app[key], bytes):
-                            raise InvalidConfigValue("Invalid config value "\
-                                            f"'{value}' found for config key "\
-                                            f"'{key}'. It MUST be a "\
-                                            "dictionary with byte value in "\
-                                            "each key")
+                            raise InvalidConfigValue(f"Invalid config value "\
+                                                     f"'{value}' found for "\
+                                                     f"config key '{key}'. It "\
+                                                     f"MUST be a dictionary "\
+                                                     f"with byte value in "\
+                                                     f"each key")
 
 
             application_ids = value
@@ -203,8 +207,9 @@ def _convert_config_to_connection_obj(config):
 
             except ipaddress.AddressValueError:
                 raise InvalidConfigValue(f"Invalid config value '{value}' "\
-                                f"found for config key '{key}'. It MUST "\
-                                 "correspond to a valid IPv4 address format")
+                                         f"found for config key '{key}'. It "\
+                                         f"MUST correspond to a valid IPv4 "\
+                                         f"address format")
 
         elif key == "LOCAL_NODE_PORT":
             local_node_port = value
@@ -220,8 +225,9 @@ def _convert_config_to_connection_obj(config):
 
             except ipaddress.AddressValueError:
                 raise InvalidConfigValue(f"Invalid config value '{value}' "\
-                                f"found for config key '{key}'. It MUST "\
-                                 "correspond to a valid IPv4 address format")
+                                         f"found for config key '{key}'. It "\
+                                         f"MUST correspond to a valid IPv4 "\
+                                         f"address format")
 
         elif key == "PEER_NODE_PORT":
             peer_node_port = value
@@ -229,8 +235,8 @@ def _convert_config_to_connection_obj(config):
         elif key == "WATCHDOG_TIMEOUT":
             if not isinstance(value, int):
                 raise InvalidConfigValue(f"Invalid config value '{value}' "\
-                                f"found for config key '{key}'. It MUST be "\
-                                "'int'")
+                                         f"found for config key '{key}'. It "\
+                                         f"MUST be 'int'")
 
             watchdog_timeout = value
 
@@ -256,7 +262,7 @@ def _convert_config_to_connection_obj(config):
     return connection
 
 
-def _convert_file_to_config(filepath=None, variables_dictionary=globals()):
+def _convert_file_to_config(filepath: str = None, variables_dictionary: dict = globals()) -> list:
     if not filepath:
         filepath = os.path.join(os.getcwd(), "config.yaml")
 
@@ -292,13 +298,13 @@ def _convert_file_to_config(filepath=None, variables_dictionary=globals()):
                             "PEER_NODE_REALM": spec["peer"]["realm"],
                             "PEER_NODE_IP_ADDRESS": spec["peer"]["ip_address"],
                             "PEER_NODE_PORT": spec["peer"]["port"],
-                            "WATCHDOG_TIMEOUT": 60
+                            "WATCHDOG_TIMEOUT": spec["watchdog_timeout"]
         })
 
     return configs
 
 
-def get_app_ids(apps):
+def get_app_ids(apps: list) -> str:
     text = ""
     for index, app in enumerate(apps):
         app_name = application_id_look_up(app['app_id'])[0]
@@ -307,7 +313,7 @@ def get_app_ids(apps):
             return text[:-1]
 
 
-def get_app_name(filepath=None):
+def get_app_name(filepath: str = None) -> str:
     if not filepath:
         filepath = os.path.join(os.getcwd(), "config.yaml")
 
@@ -325,34 +331,38 @@ def get_app_name(filepath=None):
     return from_config_file["name"]
 
 
-def get_logging_filename(app_name=None):
+def get_logging_filename(app_name: str = None) -> str:
     if app_name is None:
         name = "dsa"
     else:
-        if not isinstance(app_name, str):
+        if not isinstance(app_name, str) or app_name == "":
             name = "dsa"
         else:
+            pattern = re.findall(r"[\-\+\*\/\\\!\@\#\$\%\&\\(\)\=\~\[\]\{\}]", app_name)
+            if pattern:
+                raise Exception("Invalid symbol found")
+
             name = app_name.lower()
 
     now = datetime.datetime.now()
 
-    year = str(now.year).zfill(2)
-    month = str(now.month).zfill(2)
-    day = str(now.day).zfill(2)
-
-    hour = str(now.hour).zfill(2)
-    minute = str(now.minute).zfill(2)
-    second = str(now.second).zfill(2)
-
+    #: The filename has the follow format:
+    #: log-{name}-{year}-{month}-{day}-{hour}-{minute}-{second}-UTC{utc}-pid_{pid}.log
     return f"log-{name}-"\
-           f"{year}-{month}-{day}-{hour}-"\
-           f"{minute}-{second}-UTC3-pid_{os.getpid()}.log"
+           f"{str(now.year).zfill(2)}-"\
+           f"{str(now.month).zfill(2)}-"\
+           f"{str(now.day).zfill(2)}-"\
+           f"{str(now.hour).zfill(2)}-"\
+           f"{str(now.minute).zfill(2)}-"\
+           f"{str(now.second).zfill(2)}-"\
+           f"UTC{str(now.astimezone())[-6:-3]}-"\
+           f"pid_{os.getpid()}.log"
 
 
 warnings.simplefilter("default")
 
 
-def show_warn(module, _path, _except=None):
+def show_warn(module: str, _path: str, _except:str = None) -> None:
     if module not in ["avps", "messages"]:
         raise ValueError("Deprecation Warning for avps & messages only")
 
@@ -368,7 +378,7 @@ def show_warn(module, _path, _except=None):
              DeprecationWarning, stacklevel=5)
 
 
-def get_avp_name_formatted(key):
+def get_avp_name_formatted(key: str) -> str:
     pattern = re.findall(r"(.*)__(\d*)", key)
     if pattern:
         key = pattern[0][0]
@@ -389,7 +399,7 @@ class SessionHandler:
 
 
     @staticmethod
-    def get_session_id(data, previous=None):
+    def get_session_id(data: str, previous: str = None) -> str:
         #: Returns high, low and optional values in order to fulfill the 
         #: recommended format: 
         #: <DiameterIdentity>;<high 32 bits>;<low 32 bits>[;<optional value>]
@@ -404,14 +414,14 @@ class SessionHandler:
 
 
     @staticmethod
-    def reset():
+    def reset() -> None:
         diff = datetime.datetime.utcnow() - datetime.datetime(1900, 1, 1, 0, 0, 0)
         SessionHandler.init = diff.days*24*60*60 + diff.seconds
         SessionHandler.id = 0
 
 
     @staticmethod
-    def _verify_session_id(previous, current):
+    def _verify_session_id(previous: str, current: str) -> None:
         if previous is not None:
             _previous = previous.split(";")
 
@@ -421,6 +431,9 @@ class SessionHandler:
                     return
 
             SessionHandler.reset()
+            return
+        
+        SessionHandler.id += 1
 
 
 SessionHandler()
