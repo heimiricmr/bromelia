@@ -1519,7 +1519,7 @@ class TestAcctMultiSessionIdAVP(unittest.TestCase):
 
         self.assertEqual(hostname, "es2")
         self.assertEqual(high, str(SessionHandler.init))
-        self.assertEqual(low, "0")
+        self.assertEqual(low, "1")
         self.assertEqual(optional, "bromelia")
 
     def test_acct_multi_session_id_avp__2(self):
@@ -1532,7 +1532,7 @@ class TestAcctMultiSessionIdAVP(unittest.TestCase):
 
         self.assertEqual(hostname, "my-diameter-server.my-network")
         self.assertEqual(high, str(SessionHandler.init))
-        self.assertEqual(low, "0")
+        self.assertEqual(low, "2")
         self.assertEqual(optional, "bromelia")
 
 
@@ -1876,7 +1876,7 @@ class TestSessionIdAVP(unittest.TestCase):
 
         self.assertEqual(hostname, "es2")
         self.assertEqual(high, str(SessionHandler.init))
-        self.assertEqual(low, "0")
+        self.assertEqual(low, "5")
         self.assertEqual(optional, "bromelia")
 
     def test_session_id_avp__2(self):
@@ -1889,7 +1889,7 @@ class TestSessionIdAVP(unittest.TestCase):
 
         self.assertEqual(hostname, "my-diameter-server.my-network")
         self.assertEqual(high, str(SessionHandler.init))
-        self.assertEqual(low, "0")
+        self.assertEqual(low, "6")
         self.assertEqual(optional, "bromelia")
 
 

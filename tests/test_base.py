@@ -1189,11 +1189,15 @@ class TestDiameterMessage(unittest.TestCase):
         self.assertEqual(message.auth_request_type_avp.__str__(), "<Diameter AVP: 274 [Auth-Request-Type] MANDATORY>")
         self.assertEqual(message.auth_request_type_avp__1.__str__(), "<Diameter AVP: 274 [Auth-Request-Type] MANDATORY>")
 
+        #: In case a key has been provided as such defined in attribute name
         self.assertTrue(message.has_avp("auth_request_type_avp"))
         self.assertTrue(message.has_avp("auth_request_type_avp__1"))
 
-        self.assertFalse(message.has_avp("auth_request_type"))
-        self.assertFalse(message.has_avp("auth_request_type__1"))
+        #: In case a key has been provided as such defined by the AVP name in
+        #: lower case
+        self.assertTrue(message.has_avp("auth_request_type"))
+        self.assertTrue(message.has_avp("auth_request_type__1"))
+
         self.assertFalse(message.has_avp("auth_request_type_avp1"))
         self.assertFalse(message.has_avp("auth_request_type_avp_1"))
 
@@ -1228,11 +1232,11 @@ class TestDiameterMessage(unittest.TestCase):
         self.assertEqual(message.__str__(), "<Diameter Message: Unknown [], 0 [Diameter common message], 1 AVP(s)>")
         self.assertEqual(message.disconnect_cause_avp.__str__(), "<Diameter AVP: 273 [Disconnect-Cause] MANDATORY>")
 
-        message.update_key("disconnect_cause_avp", "disconnect_cause")
+        message.update_key("disconnect_cause_avp", "disconnect")
 
         self.assertEqual(len(message), 32)
         self.assertEqual(message.__str__(), "<Diameter Message: Unknown [], 0 [Diameter common message], 1 AVP(s)>")
-        self.assertEqual(message.disconnect_cause.__str__(), "<Diameter AVP: 273 [Disconnect-Cause] MANDATORY>")
+        self.assertEqual(message.disconnect.__str__(), "<Diameter AVP: 273 [Disconnect-Cause] MANDATORY>")
 
         with self.assertRaises(AttributeError) as cm:
             message.disconnect_cause_avp.__str__()
