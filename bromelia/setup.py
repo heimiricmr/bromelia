@@ -509,6 +509,10 @@ class Diameter:
                 self.close()
 
         except KeyboardInterrupt:
+            print(f"  * Diameter connection on "\
+                  f"{self.config['LOCAL_NODE_IP_ADDRESS']}:"\
+                  f"{self.config['LOCAL_NODE_PORT']} is now down")
+
             sys.exit(0)
 
         print(f"  * Diameter connection on "\

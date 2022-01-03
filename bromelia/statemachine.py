@@ -14,18 +14,13 @@ import logging
 import threading
 import time
 
-from typing import Any
+from typing import Any, Literal, Type
 
 from ._internal_utils import application_id_look_up
+from .base import DiameterMessage
 from .config import *
-from .process import process_answer
-from .process import process_capability_exchange
-from .process import process_device_watchdog
-from .process import process_disconnect_peer
-from .process import process_request
-from .utils import is_answer_message
+from .process import BaseMessageProcessor
 from .utils import is_client_mode
-from .utils import is_request_message
 from .utils import is_server_mode
 from .utils import is_dwa_message as has_recv_dwa
 from .utils import is_dwr_message as has_recv_dwr
@@ -79,35 +74,168 @@ closing_logger = logging.getLogger("Closing")
 statemachine_logger = logging.getLogger("PeerStateMachine")
 
 
+def make_logging(msg):
+    if msg.has_avp("user_name"):
+        open_logger.debug(f"Message from _recv_messages: "\
+                            f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                            f"{msg.header.get_command_code()}, "\
+                            f"{msg.header.is_request()}, "\
+                            f"{msg.header.hop_by_hop.hex()}, "\
+                            f"LEN: {len(msg)}, "\
+                            f"USERNAME: {msg.user_name_avp.data}")
+    else:
+        open_logger.debug(f"Message from _recv_messages: "\
+                            f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                            f"{msg.header.get_command_code()}, "\
+                            f"{msg.header.is_request()}, "\
+                            f"{msg.header.hop_by_hop.hex()}, "\
+                            f"LEN: {len(msg)}")
+
+
 class State():
     def __init__(self, diameter_association) -> None:
         self.association = diameter_association
+        self.processor = BaseMessageProcessor(diameter_association)
+
 
     def run(self) -> None:
         assert(0, "Function not implemented.")
+
 
     def next(self) -> None:
         assert(0, "Function not implemented.")
 
 
+    def send_message(self, msg: Type[DiameterMessage] = None) -> None:
+        if msg is not None:
+            self.association.put_message_into_send_queue(msg)
+        self.association.send_message_from_queue()
+
+
+    def get_message(self):
+        self.association.lock.acquire()
+        msg = self.association._recv_messages.get()
+        self.association.lock.release()
+        return msg
+
+
+    def notify_postprocess_message(self, msg: Type[DiameterMessage]) -> None:
+        self.association.postprocess_recv_messages_lock.acquire()
+        self.association.postprocess_recv_messages.put(msg)
+        self.association.postprocess_recv_messages_lock.release()
+
+        self.association.postprocess_recv_messages_ready.set()
+
+
+    def make_default_logging(self, queue: Literal["send", "recv"] = "recv"):
+        message = f"Got message from _{queue}_messages Queue. Now there "\
+                  f"is/are {self.association._recv_messages.qsize()} "\
+                  f"Diameter Message(s)."
+        
+        if isinstance(self, Closed):
+            closed_logger.debug(message)
+
+        elif isinstance(self, WaitConnAck):
+            wait_conn_ack_logger.debug(message)
+
+        elif isinstance(self, WaitInitiatorCEA):
+            wait_initiator_cea_logger.debug(message)
+
+        elif isinstance(self, Open):
+            open_logger.debug(message)
+
+        elif isinstance(self, WaitReturns):
+            wait_returns_logger.debug(message)
+
+        elif isinstance(self, WaitConnAckElect):
+            wait_conn_ack_elect_logger.debug(message)
+
+
+    def has_recv_queue_message(self):
+        return not self.association._recv_messages.empty()
+
+
+    def has_send_queue_message(self):
+        return not self.association._send_messages.empty()
+
+
+    def set_closed_state(self, set_name: bool = False, force: bool = False) -> None:
+        if force:
+            time.sleep(SLEEP_TIMER)
+
+            self.association._stop_threads = True
+            self.association.postprocess_recv_messages_ready.set()
+
+        if set_name:
+            self.name = self.next_state = CLOSED
+        self.next_state = CLOSED
+
+
+    def set_wait_conn_ack_state(self, set_name: bool = False) -> None:
+        if set_name:
+            self.name = self.next_state = WAIT_CONN_ACK
+        self.next_state = WAIT_CONN_ACK
+
+
+    def set_wait_initiator_cea_state(self, set_name: bool = False) -> None:
+        if set_name:
+            self.name = self.next_state = WAIT_I_CEA
+        self.next_state = WAIT_I_CEA
+
+
+    def set_open_state(self, set_name: bool = False, early_stage: bool = False) -> None:
+        if early_stage:
+            self.association.state_is_active = True
+
+        if set_name:
+            self.name = self.next_state = OPEN
+        self.next_state = OPEN
+
+
+    def set_wait_returns_state(self, set_name: bool = False, early_stage: bool = False) -> None:
+        if early_stage:
+            self.association.state_is_active = True
+
+        if set_name:
+            self.name = self.next_state = WAIT_RETURNS
+        self.next_state = WAIT_RETURNS
+
+
+    def set_wait_conn_ack_elect_state(self, set_name: bool = False, early_stage: bool = False) -> None:
+        if early_stage:
+            self.association.state_is_active = True
+
+        if set_name:
+            self.name = self.next_state = WAIT_CONN_ACK_ELECT
+        self.next_state = WAIT_CONN_ACK_ELECT
+
+
+    def set_closing_state(self, set_name: bool = False) -> None:
+        if set_name:
+            self.name = self.next_state = CLOSING
+        self.next_state = CLOSING
+
+
+    def is_set_release_signal_from_local(self):
+        return not self.association.state_is_active
+
+
+    def is_set_release_signal_from_peer(self):
+        return self.association.transport._stop_threads
+
+
 class Closed(State):
     def run(self) -> None:
-        self.next_state = CLOSED
-        self.name = self.next_state
+        self.set_closed_state(set_name=True)
 
         if is_client_mode(self.association):
             self.event_start()
         
         elif is_server_mode(self.association):
-            if not self.association._recv_messages.empty():
-                self.association.lock.acquire()
-                self.msg = self.association._recv_messages.get()
-                self.association.lock.release()
+            if self.has_recv_queue_message():
+                self.msg = self.get_message()
 
-                closed_logger.debug(f"Got message from _recv_messages Queue. "\
-                                    f"Now there is/are "\
-                                    f"{self.association._recv_messages.qsize()} "\
-                                    f"Diameter Message(s).")
+                self.make_default_logging()
 
                 if has_recv_cer(self.msg):
                     self.event_responder_conn_cer()
@@ -116,31 +244,21 @@ class Closed(State):
     def event_start(self) -> None:
         closed_logger.debug("Event has been triggered.")
 
-        self.next_state = WAIT_CONN_ACK
+        self.set_wait_conn_ack_state()
 
 
     def event_responder_conn_cer(self) -> None:
         closed_logger.debug("Event has been triggered.")
 
-        cer = self.msg
-        process = process_capability_exchange(self.association, cer)
-
-        if process.is_valid:
-            cea = self.association.base.cea
-            cea.header.hop_by_hop = cer.header.hop_by_hop
-            cea.header.end_to_end = cer.header.end_to_end
-
-            self.association.put_message_into_send_queue(cea)
-            self.association.send_message_from_queue()
-
-            self.association.state_is_active = True
-            self.next_state = OPEN
+        if self.processor.is_valid_capability_exchange(msg=self.msg):
+            cea = self.processor.create_answer(msg=self.msg)
+            self.send_message(msg=cea)
+            self.set_open_state(early_stage=True)
 
 
 class WaitConnAck(State):
     def run(self) -> None:
-        self.next_state = WAIT_CONN_ACK
-        self.name = self.next_state
+        self.set_wait_conn_ack_state(set_name=True)
 
         if self.association.is_connected():
             if self.association.transport.test_connection():
@@ -148,16 +266,10 @@ class WaitConnAck(State):
             else:
                 self.event_initiator_rcv_conn_nack()
 
-        #: Processing the Diameter messages received.
-        if not self.association._recv_messages.empty():
-            self.association.lock.acquire()
-            self.msg = self.association._recv_messages.get()
-            self.association.lock.release()
+        if self.has_recv_queue_message():
+            self.msg = self.get_message()
 
-            wait_initiator_cea_logger.debug(f"Got message from _recv_messages "\
-                                            f"Queue. Now there is/are "\
-                                            f"{self.association._recv_messages.qsize()} "\
-                                            f"Diameter Message(s).")
+            self.make_default_logging()
 
             if has_recv_cer(self.msg):
                 self.event_responder_conn_cer()            
@@ -166,52 +278,38 @@ class WaitConnAck(State):
     def event_initiator_rcv_conn_ack(self) -> None:
         wait_conn_ack_logger.debug("Event has been triggered.")
 
-        cer = self.association.base.cer
-        self.association.put_message_into_send_queue(cer)
-        self.association.send_message_from_queue()
-
-        self.next_state = WAIT_I_CEA
+        self.send_message(msg=self.association.base.cer)
+        self.set_wait_initiator_cea_state()
 
 
     def event_initiator_rcv_conn_nack(self) -> None:
         wait_conn_ack_logger.debug("Event has been triggered.")
 
-        self.next_state = CLOSED
+        self.set_closed_state()
 
 
     def event_responder_conn_cer(self) -> None:
         wait_conn_ack_logger.debug("Event has been triggered.")
 
-        cer = self.msg
-        process = process_capability_exchange(self.association, cer)
-
-        if process.is_valid:
-            self.association.state_is_active = True
-            self.next_state = WAIT_CONN_ACK_ELECT
+        if self.processor.is_valid_capability_exchange(msg=self.msg):
+            self.set_wait_conn_ack_elect_state(early_stage=True)
 
 
     def event_timeout(self) -> None:
         """ It needs to be coded """
         wait_conn_ack_logger.debug("Event has been triggered.")
 
-        self.next_state = CLOSED
+        self.set_closed_state()
 
 
 class WaitInitiatorCEA(State):
     def run(self) -> None:
-        self.next_state = WAIT_I_CEA
-        self.name = self.next_state
+        self.set_wait_initiator_cea_state(set_name=True)
 
-        #: Processing the Diameter messages received.
-        if not self.association._recv_messages.empty():
-            self.association.lock.acquire()
-            self.msg = self.association._recv_messages.get()
-            self.association.lock.release()
+        if self.has_recv_queue_message():
+            self.msg = self.get_message()
 
-            wait_initiator_cea_logger.debug(f"Got message from _recv_messages "\
-                                            f"Queue. Now there is/are "
-                                            f"{self.association._recv_messages.qsize()} "\
-                                            f"Diameter Message(s).")
+            self.make_default_logging()
 
             if has_recv_cea(self.msg):
                 self.event_open_rcv_cea()            
@@ -226,76 +324,58 @@ class WaitInitiatorCEA(State):
     def event_open_rcv_cea(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        cea = self.msg
-        process = process_capability_exchange(self.association, cea)
-
-        if process.is_valid:           
-            self.association.state_is_active = True
-            self.next_state = OPEN
+        if self.processor.is_valid_capability_exchange(msg=self.msg):
+            self.set_open_state(early_stage=True)
 
 
     def event_responder_conn_cer(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        cer = self.msg
-        process = process_capability_exchange(self.association, cer)
-
-        if process.is_valid:
-            self.association.state_is_active = True
-            self.next_state = WAIT_RETURNS
+        if self.processor.is_valid_capability_exchange(msg=self.msg):
+            self.set_wait_returns_state(early_stage=True)
 
 
     def event_initiator_peer_disc(self) -> None:
         """ It needs to be coded """
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        self.next_state = CLOSED
+        self.set_closed_state()
 
     
     def event_initiator_rcv_non_cea(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        self.next_state = CLOSED
+        self.set_closed_state()
 
 
     def event_timeout(self) -> None:
         """ It needs to be coded """
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
-        self.next_state = CLOSED
+        self.set_closed_state()
 
 
 class Open(State):
     def run(self) -> None:
-        self.next_state = OPEN
-        self.name = self.next_state
+        self.set_open_state(set_name=True)
 
         self.association.tracking_events()
 
-        if self.association.transport._stop_threads:
+        if self.is_set_release_signal_from_peer():
             self.event_open_peer_disc()      
 
-        if not self.association.state_is_active:
+        if self.is_set_release_signal_from_local():
             self.event_stop()
 
-        if not self.association._send_messages.empty():
-            open_logger.debug(f"Got message from _send_messages "\
-                              f"Queue. Now there is/are "\
-                              f"{self.association._send_messages.qsize()} "\
-                              f"Diameter Message(s).")
+        if self.has_send_queue_message():
+            self.make_default_logging(queue="send")
 
             self.event_send_message()
 
-        #: Processing the Diameter messages received.
-        elif not self.association._recv_messages.empty():
-            self.association.lock.acquire()
-            self.msg = self.association._recv_messages.get()
-            self.association.lock.release()
+        elif self.has_recv_queue_message():
+            self.msg = self.get_message()
 
-            open_logger.debug(f"Got message from _recv_messages Queue. Now "\
-                              f"there is/are "\
-                              f"{self.association._recv_messages.qsize()} "\
-                              f"Diameter Message(s).")
+            self.make_default_logging()
 
             if has_recv_dwr(self.msg):
                 self.event_open_rcv_dwr()
@@ -321,192 +401,115 @@ class Open(State):
     def event_send_message(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        self.association.send_message_from_queue()
-
-        self.next_state = OPEN
+        self.send_message()
+        self.set_open_state()
 
 
     def event_open_rcv_message(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        if is_answer_message(self.msg):
-            process_answer(self.association, self.msg)
-            
-        elif is_request_message(self.msg):
-            process_request(self.association, self.msg)
+        self.processor.check_message(self.msg)
 
-        if self.msg.has_avp("user_name_avp"):
-            open_logger.debug(f"Message from _recv_messages: "\
-                              f"{application_id_look_up(self.msg.header.application_id)[0]}, "\
-                              f"{self.msg.header.get_command_code()}, "\
-                              f"{self.msg.header.is_request()}, "\
-                              f"{self.msg.header.hop_by_hop.hex()}, "\
-                              f"LEN: {len(self.msg)}, "\
-                              f"USERNAME: {self.msg.user_name_avp.data}")
-        else:
-            open_logger.debug(f"Message from _recv_messages: "\
-                              f"{application_id_look_up(self.msg.header.application_id)[0]}, "\
-                              f"{self.msg.header.get_command_code()}, "\
-                              f"{self.msg.header.is_request()}, "\
-                              f"{self.msg.header.hop_by_hop.hex()}, "\
-                              f"LEN: {len(self.msg)}")
+        make_logging(self.msg)
 
         open_logger.debug("Putting into postprocess_recv_messages Queue")
-
-        self.association.postprocess_recv_messages_lock.acquire()
-        self.association.postprocess_recv_messages.put(self.msg)
-        self.association.postprocess_recv_messages_lock.release()
-
-        self.association.postprocess_recv_messages_ready.set()
+        self.notify_postprocess_message(self.msg)
 
         open_logger.debug("Just notified postprocess_recv_messages_ready")
-    
-        self.next_state = OPEN
+        self.set_open_state()
 
 
     def event_open_rcv_dwr(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        dwr = self.msg
-        process = process_device_watchdog(self.association, dwr)
-
-        if process.is_valid:
-            dwa = self.association.base.dwa
-            dwa.header.hop_by_hop = dwr.header.hop_by_hop
-            dwa.header.end_to_end = dwr.header.end_to_end
-
-            self.association.put_message_into_send_queue(dwa)
-            self.association.send_message_from_queue()
-
-            self.next_state = OPEN
+        if self.processor.is_valid_device_watchdog(msg=self.msg):
+            dwa = self.processor.create_answer(msg=self.msg)
+            self.send_message(msg=dwa)
+            self.set_open_state()
 
     
     def event_open_rcv_dwa(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        dwa = self.msg
-        process = process_device_watchdog(self.association, dwa)
-
-        if process.is_valid:
-            self.next_state = OPEN
+        if self.processor.is_valid_device_watchdog(msg=self.msg):
+            self.set_open_state()
         else:
-            self.next_state = CLOSING
+            self.set_closing_state()
 
     
     def event_responder_conn_cer(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        self.next_state = OPEN
+        self.set_open_state()
 
 
     def event_stop(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        dpr = self.association.base.dpr
-        self.association.put_message_into_send_queue(dpr)
-        self.association.send_message_from_queue()
-
-        self.next_state = CLOSING
+        self.send_message(msg=self.association.base.dpr)
+        self.set_closing_state()
 
 
     def event_open_rcv_dpr(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        dpr = self.msg
-        process = process_disconnect_peer(self.association, dpr)
+        if self.processor.is_valid_disconnect_peer(msg=self.msg):
+            dpa = self.processor.create_answer(msg=self.msg)
+            self.send_message(msg=dpa)
 
-        if process.is_valid:
-            dpa = self.association.base.dpa
-            dpa.header.hop_by_hop = dpr.header.hop_by_hop
-            dpa.header.end_to_end = dpr.header.end_to_end
+        self.set_closed_state(force=True)
 
-            self.association.put_message_into_send_queue(dpa)
-            self.association.send_message_from_queue()
-
-        time.sleep(SLEEP_TIMER)
-
-        self.association._stop_threads = True
-        self.association.postprocess_recv_messages_ready.set()
-
-        self.next_state = CLOSED
-        
 
     def event_open_peer_disc(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        self.next_state = CLOSED
+        self.set_closed_state()
 
 
     def event_open_rcv_cer(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        cer = self.msg
-        process = process_capability_exchange(self.association, cer)
+        if self.processor.is_valid_capability_exchange(msg=self.msg):
+            cea = self.processor.create_answer(msg=self.msg)
+            self.send_message(msg=cea)
 
-        if process.is_valid:
-            cea = self.association.base.cea
-            cea.header.hop_by_hop = cer.header.hop_by_hop
-            cea.header.end_to_end = cer.header.end_to_end
-
-            self.association.put_message_into_send_queue(cea)
-            self.association.send_message_from_queue()
-
-        self.next_state = OPEN
+        self.set_open_state()
 
 
     def event_open_rcv_cea(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        cea = self.msg
-        process = process_capability_exchange(self.association, cea)
-
-        if process.is_valid:
-            self.next_state = OPEN
+        if self.processor.is_valid_capability_exchange(msg=self.msg):
+            self.set_open_state()
 
 
 class WaitReturns(State):
     def run(self) -> None:
-        self.next_state = WAIT_RETURNS
-        self.name = self.next_state
+        self.set_wait_returns_state(set_name=True)
     
 
 class WaitConnAckElect(State):
     def run(self) -> None:
-        self.next_state = WAIT_CONN_ACK_ELECT
-        self.name = self.next_state
+        self.set_wait_conn_ack_elect_state(set_name=True)
 
 
-class Closing(State):   
+class Closing(State):
     def run(self) -> None:
-        self.next_state = CLOSING
-        self.name = self.next_state
+        self.set_closing_state(set_name=True)
 
-        if not self.association._recv_messages.empty():
-            self.association.lock.acquire()
-            self.msg = self.association._recv_messages.get()
-            self.association.lock.release()
+        if self.has_recv_queue_message():
+            self.msg = self.get_message()
+
+            self.make_default_logging()
 
             if has_recv_dpa(self.msg):
-                closing_logger.debug(f"Got DPA message from _recv_messages "\
-                                     f"Queue. Now there is/are "\
-                                     f"{self.association._recv_messages.qsize()} "\
-                                     f"Diameter Message(s).")
                 self.event_rcv_dpa()
-           
-            else:
-                closing_logger.debug(f"Got a non-DPA message from "\
-                                     f"_recv_messages Queue. Now there is/are "\
-                                     f"{self.association._recv_messages.qsize()} "\
-                                     f"Diameter Message(s).")
 
 
     def event_rcv_dpa(self) -> None:
         open_logger.debug("Event has been triggered.")
 
-        self.association.send_message_from_queue()
-        self.association._stop_threads = True
-
-        self.next_state = CLOSED
+        self.set_closed_state(force=True)
 
 
 class PeerStateMachine():
@@ -547,6 +550,7 @@ class PeerStateMachine():
                                          f"to {next_state.upper()} state.")
 
             return self.states[next_state]
+
         else:
             raise TypeError("Input not supported for current state.")        
 
