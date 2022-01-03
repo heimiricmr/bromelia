@@ -15,6 +15,8 @@ import logging
 from .avps import AuthRequestTypeAVP
 from .constants import *
 from .exceptions import ProcessRequestException
+from .utils import is_answer_message
+from .utils import is_request_message
 
 process_message_logging = logging.getLogger("ProcessDiameterMessage")
 
@@ -296,6 +298,84 @@ class ProcessDiameterMessage:
             return False
 
 
+class ProcessCapabilityExchange():
+    def __init__(self, association, message):
+        self.association = association
+        self.connection = association.connection
+        self.message = message
+
+        self.checklist_mandatory_avps = 0
+        self.checklist_optional_avps = 0
+        self.checklist_error_avps = 0
+        self.is_valid = False
+
+        if message.header.flags == FLAG_REQUEST:
+            self.process_request()
+        elif message.header.flags == FLAG_RESPONSE:
+            self.process_answer()
+        else:
+            """What should we do if find an error?"""
+            pass
+
+
+    def process_request(self):
+        for avp in self.message.avps:
+            if ProcessDiameterMessage.is_valid_origin_host_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_origin_realm_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_product_name_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
+                self.checklist_optional_avps += 1
+
+
+        if (self.checklist_mandatory_avps == 5) and (self.checklist_optional_avps >= 0 and self.checklist_optional_avps <= 7):
+            self.is_valid = True
+        else:
+            self.is_valid = False
+
+
+    def process_answer(self):
+        ProcessDiameterMessage.process_answer_from_existing_pending_request(self.association, self.message)
+        for avp in self.message.avps:
+            if ProcessDiameterMessage.is_valid_result_code_avp(avp):
+                self.checklist_mandatory_avps += 1
+
+            if ProcessDiameterMessage.is_valid_origin_host_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_origin_realm_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_product_name_avp(avp, self.connection):
+                self.checklist_mandatory_avps += 1
+
+            elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
+                self.checklist_optional_avps += 1
+
+
+        if (self.checklist_mandatory_avps == 6) and (self.checklist_optional_avps >= 0 or self.checklist_optional_avps <= 7):
+            self.is_valid = True
+        else:
+            self.is_valid = False
+
+
 class ProcessDeviceWatchdog():
     def __init__(self, association, message):
         self.association = association
@@ -415,92 +495,45 @@ class ProcessDisconnectPeer():
             self.is_valid = False
 
 
-class ProcessCapabilityExchange():
-    def __init__(self, association, message):
+class BaseMessageProcessor:
+    def __init__(self, association):
         self.association = association
-        self.connection = association.connection
-        self.message = message
-
-        self.checklist_mandatory_avps = 0
-        self.checklist_optional_avps = 0
-        self.checklist_error_avps = 0
-        self.is_valid = False
-
-        if message.header.flags == FLAG_REQUEST:
-            self.process_request()
-        elif message.header.flags == FLAG_RESPONSE:
-            self.process_answer()
-        else:
-            """What should we do if find an error?"""
-            pass
 
 
-    def process_request(self):
-        for avp in self.message.avps:
-            if ProcessDiameterMessage.is_valid_origin_host_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_origin_realm_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_product_name_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
-                self.checklist_optional_avps += 1
+    def is_valid_capability_exchange(self, msg):
+        process = ProcessCapabilityExchange(self.association, msg)
+        return process.is_valid
 
 
-        if (self.checklist_mandatory_avps == 5) and (self.checklist_optional_avps >= 0 and self.checklist_optional_avps <= 7):
-            self.is_valid = True
-        else:
-            self.is_valid = False
+    def is_valid_device_watchdog(self, msg):
+        process = ProcessDeviceWatchdog(self.association, msg)
+        return process.is_valid
 
 
-    def process_answer(self):
-        ProcessDiameterMessage.process_answer_from_existing_pending_request(self.association, self.message)
-        for avp in self.message.avps:
-            if ProcessDiameterMessage.is_valid_result_code_avp(avp):
-                self.checklist_mandatory_avps += 1
-
-            if ProcessDiameterMessage.is_valid_origin_host_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_origin_realm_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_product_name_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
-
-            elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
-                self.checklist_optional_avps += 1
+    def is_valid_disconnect_peer(self, msg):
+        process = ProcessDisconnectPeer(self.association, msg)
+        return process.is_valid
 
 
-        if (self.checklist_mandatory_avps == 6) and (self.checklist_optional_avps >= 0 or self.checklist_optional_avps <= 7):
-            self.is_valid = True
-        else:
-            self.is_valid = False
+    def create_answer(self, msg):
+        if msg.header.command_code == CAPABILITIES_EXCHANGE_MESSAGE:
+            answer = self.association.base.cea
+    
+        elif msg.header.command_code == DEVICE_WATCHDOG_MESSAGE:
+            answer = self.association.base.dwa
+
+        elif msg.header.command_code == DISCONNECT_PEER_MESSAGE:
+            answer = self.association.base.dpa
+
+        answer.header.hop_by_hop = msg.header.hop_by_hop
+        answer.header.end_to_end = msg.header.end_to_end
+
+        return answer
 
 
-def process_device_watchdog(association, message):
-    return ProcessDeviceWatchdog(association, message)
-
-
-def process_disconnect_peer(association, message):
-    return ProcessDisconnectPeer(association, message)
-
-
-def process_capability_exchange(association, message):
-    return ProcessCapabilityExchange(association, message)
-
+    def check_message(self, msg):
+        if is_answer_message(msg):
+            process_answer(self.association, msg)
+            
+        elif is_request_message(msg):
+            process_request(self.association, msg)
