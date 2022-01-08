@@ -16,9 +16,7 @@ import re
 import os
 import struct
 import yaml
-import warnings
 from collections import namedtuple
-from warnings import warn
 
 from .definitions import diameter_application_ids
 from .definitions import diameter_avps
@@ -357,25 +355,6 @@ def get_logging_filename(app_name: str = None) -> str:
            f"{str(now.second).zfill(2)}-"\
            f"UTC{str(now.astimezone())[-6:-3]}-"\
            f"pid_{os.getpid()}.log"
-
-
-warnings.simplefilter("default")
-
-
-def show_warn(module: str, _path: str, _except:str = None) -> None:
-    if module not in ["avps", "messages"]:
-        raise ValueError("Deprecation Warning for avps & messages only")
-
-    if _except is None:
-        warn(f"Please prefer import Diameter Message classes from "\
-             f"bromelia.lib.{_path} instead bromelia.{_path}.{module}. "\
-             f"The latter one will be deprecated in the next release",
-             DeprecationWarning, stacklevel=5)
-    else:
-        warn(f"Please prefer import Diameter Message classes from "\
-             f"bromelia.lib.{_except} instead bromelia.{_path}.{module}. "\
-             f"The latter one will be deprecated in the next release",
-             DeprecationWarning, stacklevel=5)
 
 
 def get_avp_name_formatted(key: str) -> str:

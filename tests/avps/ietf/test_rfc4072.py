@@ -19,7 +19,7 @@ base_dir = os.path.dirname(testing_dir)
 sys.path.insert(0, base_dir)
 
 from bromelia.avps.ietf.rfc4072 import *
-from bromelia.etsi_3gpp_swm.definitions import *
+from bromelia.lib.etsi_3gpp_swm.definitions import *
 
 
 class TestDiameterAVP(unittest.TestCase):
