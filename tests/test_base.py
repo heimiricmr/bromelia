@@ -421,6 +421,84 @@ class TestDiameterAVP(unittest.TestCase):
         self.assertEqual(avp.get_length(), 8)
         self.assertIsNone(avp.get_padding_length())
 
+    def test_diameter_avp__custom_object__data_0(self):
+        avp = DiameterAVP(data=0)
+
+        self.assertEqual(avp.code, bytes.fromhex("00000000"))
+        self.assertEqual(avp.flags, bytes.fromhex("00"))
+        self.assertIsNone(avp.vendor_id)
+        self.assertEqual(avp.length, bytes.fromhex("00000c"))
+        self.assertEqual(avp.data, bytes.fromhex("00000000"))
+        self.assertIsNone(avp.padding)
+
+        self.assertEqual(avp.get_code(), 0)
+        self.assertEqual(avp.get_flags(), 0)
+        self.assertIsNone(avp.get_vendor_id())
+        self.assertEqual(avp.get_length(), 12)
+        self.assertIsNone(avp.get_padding_length())
+
+    def test_diameter_avp__custom_object__data_1(self):
+        avp = DiameterAVP(data=1)
+
+        self.assertEqual(avp.code, bytes.fromhex("00000000"))
+        self.assertEqual(avp.flags, bytes.fromhex("00"))
+        self.assertIsNone(avp.vendor_id)
+        self.assertEqual(avp.length, bytes.fromhex("00000c"))
+        self.assertEqual(avp.data, bytes.fromhex("00000001"))
+        self.assertIsNone(avp.padding)
+
+        self.assertEqual(avp.get_code(), 0)
+        self.assertEqual(avp.get_flags(), 0)
+        self.assertIsNone(avp.get_vendor_id())
+        self.assertEqual(avp.get_length(), 12)
+        self.assertIsNone(avp.get_padding_length())
+
+    def test_diameter_avp__custom_object__data_2(self):
+        avp = DiameterAVP(data=2)
+
+        self.assertEqual(avp.code, bytes.fromhex("00000000"))
+        self.assertEqual(avp.flags, bytes.fromhex("00"))
+        self.assertIsNone(avp.vendor_id)
+        self.assertEqual(avp.length, bytes.fromhex("00000c"))
+        self.assertEqual(avp.data, bytes.fromhex("00000002"))
+        self.assertIsNone(avp.padding)
+
+        self.assertEqual(avp.get_code(), 0)
+        self.assertEqual(avp.get_flags(), 0)
+        self.assertIsNone(avp.get_vendor_id())
+        self.assertEqual(avp.get_length(), 12)
+        self.assertIsNone(avp.get_padding_length())
+
+        avp.data = "Frodo Baggins"
+
+        self.assertEqual(avp.code, bytes.fromhex("00000000"))
+        self.assertEqual(avp.flags, bytes.fromhex("00"))
+        self.assertIsNone(avp.vendor_id)
+        self.assertEqual(avp.length, bytes.fromhex("000015"))
+        self.assertEqual(avp.data, b"Frodo Baggins")
+        self.assertEqual(avp.padding, bytes.fromhex("000000"))
+
+        self.assertEqual(avp.get_code(), 0)
+        self.assertEqual(avp.get_flags(), 0)
+        self.assertIsNone(avp.get_vendor_id())
+        self.assertEqual(avp.get_length(), 21)
+        self.assertEqual(avp.get_padding_length(), 3)
+
+        avp.data = None
+
+        self.assertEqual(avp.code, bytes.fromhex("00000000"))
+        self.assertEqual(avp.flags, bytes.fromhex("00"))
+        self.assertIsNone(avp.vendor_id)
+        self.assertEqual(avp.length, bytes.fromhex("000008"))
+        self.assertIsNone(avp.data)
+        self.assertIsNone(avp.padding)
+
+        self.assertEqual(avp.get_code(), 0)
+        self.assertEqual(avp.get_flags(), 0)
+        self.assertIsNone(avp.get_vendor_id())
+        self.assertEqual(avp.get_length(), 8)
+        self.assertIsNone(avp.get_padding_length())
+
     def test_diameter_avp__eq_dunder(self):
         avp1 = DiameterAVP()
         avp2 = DiameterAVP()

@@ -302,6 +302,8 @@ class DiameterAVP(object):
         except TypeError as e:
             if "object of type 'NoneType' has no len()" in e.args[0]:
                 length = 0
+            elif "object of type 'int' has no len()" in e.args[0]:
+                length = 4
 
         if self.vendor_id:        
             length += AVP_HEADER_LENGTH_LONGER
@@ -392,6 +394,8 @@ class DiameterAVP(object):
                 raise AVPAttributeValueError("invalid data value. Consider "\
                                              "create a data type object "\
                                              "before assigning")
+        if value == 0:
+            data = convert_to_4_bytes(value)
 
         self._data = data                                
 
@@ -1423,7 +1427,7 @@ class DiameterMessage:
         """Load a byte stream which represents Diameter Message and returns a 
         list of DiameterMessage objects.
         """
-        messages = []
+        msgs = []
         index = 0
 
         while index < len(stream):
@@ -1436,12 +1440,12 @@ class DiameterMessage:
             avp_stream = stream[lower_limit:upper_limit]
             avps = DiameterAVP.load(avp_stream)
 
-            message = DiameterMessage(header, avps, loaded=True)
-            messages.append(message)
+            msg = DiameterMessage(header, avps, loaded=True)
+            msgs.append(msg)
 
             index += header.get_length()
 
-        return messages
+        return msgs
 
 
     def _load(self, values: dict) -> None:
