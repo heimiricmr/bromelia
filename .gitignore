@@ -26,3 +26,6 @@ bromelia.egg-info
 .key.pub
 followup
 messages
+
+# macOS internal
+*.DS_Store

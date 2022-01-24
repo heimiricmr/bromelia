@@ -32,10 +32,7 @@ from .config import Config
 from .config import DiameterLogging
 from .config import (SLEEP_TIMER, WAITING_CONN_TIMER,
                      LISTENING_TICKER, SEND_BUFFER_MAXIMUM_SIZE)
-from .config import (CLOSED, CLOSING,
-                     I_OPEN, R_OPEN,
-                     WAIT_CONN_ACK, WAIT_I_CEA,
-                     WAIT_CONN_ACK_ELECT, WAIT_RETURNS)
+from .config import CLOSED, I_OPEN, R_OPEN
 from .constants import DIAMETER_AGENT_CLIENT_MODE
 from .constants import DIAMETER_AGENT_SERVER_MODE
 from .exceptions import AVPParsingError
@@ -46,7 +43,6 @@ from .messages import DiameterRequest
 from .proxy import BaseMessages
 from .proxy import DiameterBaseProxy
 from .statemachine import PeerStateMachine
-from .statemachine import CLOSED, I_OPEN, R_OPEN
 from .transport import TcpClient
 from .transport import TcpServer
 from .utils import is_base_request
@@ -54,6 +50,29 @@ from .utils import is_base_answer
 
 diameter_conn_logger = logging.getLogger("DiameterConnection")
 diameter_logger = logging.getLogger("Diameter")
+
+
+def make_logging(msg, disable_else=False):
+    if msg.has_avp("user_name_avp"):
+        diameter_conn_logger.debug(f"Message from "\
+                                   f"postprocess_recv_messages Queue: "\
+                                   f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                                   f"{msg.header.get_command_code()}, "\
+                                   f"{msg.header.is_request()}, "\
+                                   f"{msg.header.hop_by_hop.hex()}, "\
+                                   f"{len(msg)}, "\
+                                   f"{msg.user_name_avp.data}")
+    else:
+        if disable_else:
+            return
+
+        diameter_conn_logger.debug(f"Message from "\
+                                   f"postprocess_recv_messages Queue: "\
+                                   f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                                   f"{msg.header.get_command_code()}, "\
+                                   f"{msg.header.is_request()}, "\
+                                   f"{msg.header.hop_by_hop.hex()}, "\
+                                   f"{len(msg)}")
 
 
 class DiameterAssociation(object):
@@ -146,14 +165,7 @@ class DiameterAssociation(object):
             try:
                 msgs = DiameterMessage.load(data_stream)
                 for msg in msgs:
-                    if msg.has_avp("user_name_avp"):
-                        diameter_conn_logger.debug(f"Message from Transport Layer: "\
-                                                   f"{application_id_look_up(msg.header.application_id)[0]}, "\
-                                                   f"{msg.header.get_command_code()}, "\
-                                                   f"{msg.header.hop_by_hop.hex()}, "\
-                                                   f"LEN: {len(msgs)}, "\
-                                                   f"DATA_LENGTH: {len(data_stream)}, "\
-                                                   f"USERNAME: {msg.user_name_avp.data}")
+                    make_logging(msg, disable_else=True)
                     self._recv_messages.put(msg)
                 
                 diameter_conn_logger.debug(f"Found {len(msgs)} Diameter "\
@@ -261,6 +273,25 @@ class DiameterAssociation(object):
         self.lock.release()
 
 
+    def get_postprocess_recv_message(self):
+        self.lock.acquire()
+        diameter_conn_logger.debug("Acquired DiameterAssociation lock")
+
+        self.postprocess_recv_messages_lock.acquire()
+        msg = self.postprocess_recv_messages.get()
+        self.postprocess_recv_messages_lock.release()
+
+        make_logging(msg)
+
+        self.postprocess_recv_messages_ready.clear()
+        diameter_conn_logger.debug("Cleared go ahead for "\
+                                   "postprocess_recv_messages_ready")
+
+        self.lock.release()
+        diameter_conn_logger.debug("Released DiameterAssociation lock")
+        return msg
+
+
     def get_message(self) -> Type[DiameterMessage]:
         while not self._stop_threads:
             if self.postprocess_recv_messages.empty():
@@ -271,39 +302,7 @@ class DiameterAssociation(object):
                 diameter_conn_logger.debug("No need to wait for go ahead for "\
                                            "postprocess_recv_messages_ready")
     
-            self.lock.acquire()
-            diameter_conn_logger.debug("Acquired DiameterAssociation lock")
-
-            self.postprocess_recv_messages_lock.acquire()
-            message = self.postprocess_recv_messages.get()
-            self.postprocess_recv_messages_lock.release()
-
-            if message.has_avp("user_name_avp"):
-                diameter_conn_logger.debug(f"Message from "\
-                                           f"postprocess_recv_messages Queue: "\
-                                           f"{application_id_look_up(message.header.application_id)[0]}, "\
-                                           f"{message.header.get_command_code()}, "\
-                                           f"{message.header.is_request()}, "\
-                                           f"{message.header.hop_by_hop.hex()}, "\
-                                           f"{len(message)}, "\
-                                           f"{message.user_name_avp.data}")
-            else:
-                diameter_conn_logger.debug(f"Message from "\
-                                           f"postprocess_recv_messages Queue: "\
-                                           f"{application_id_look_up(message.header.application_id)[0]}, "\
-                                           f"{message.header.get_command_code()}, "\
-                                           f"{message.header.is_request()}, "\
-                                           f"{message.header.hop_by_hop.hex()}, "\
-                                           f"{len(message)}")
-
-            self.postprocess_recv_messages_ready.clear()
-            diameter_conn_logger.debug("Cleared go ahead for "\
-                                       "postprocess_recv_messages_ready")
-
-            self.lock.release()
-            diameter_conn_logger.debug("Released DiameterAssociation lock")
-
-            return message
+            return self.get_postprocess_recv_message()
 
 
     def tracking_events(self) -> None:

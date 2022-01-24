@@ -49,7 +49,7 @@ def get_application_string_by_id(application_id):
             return _string.split("DIAMETER_APPLICATION_")[1].lower()
 
 
-def get_formatted_answer_as_per_request(answer, request):
+def decorate_answer(answer, request):
     answer.header.application_id = request.header.application_id
     answer.header.hop_by_hop = request.header.hop_by_hop
     answer.header.end_to_end = request.header.end_to_end
@@ -57,7 +57,56 @@ def get_formatted_answer_as_per_request(answer, request):
     if request.has_avp("session_id_avp"):
         answer.session_id_avp.data = request.session_id_avp.data
         answer.refresh()
+
+    if (is_3xxx_failure(answer) or
+        is_4xxx_failure(answer) or
+        is_5xxx_failure(answer)):
+
+        answer.header.set_error_bit(True)
+
+    if answer.has_avp("experimental_result_avp"):
+        if answer.has_avp("result_code_avp"):
+            answer.pop("result_code_avp")
+
     return answer
+
+
+def make_logging(msg):
+    if msg.has_avp("user_name"):
+        worker_logger.debug(f"Message from Diameter Layer Process: "\
+                            f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                            f"{msg.header.get_command_code()}, "\
+                            f"{msg.header.is_request()}, "\
+                            f"{msg.header.hop_by_hop.hex()}, "\
+                            f"LEN: {len(msg)}, "\
+                            f"USERNAME: {msg.user_name_avp.data}")
+    else:
+        worker_logger.debug(f"Message from Diameter Layer Process: "\
+                            f"{application_id_look_up(msg.header.application_id)[0]}, "\
+                            f"{msg.header.get_command_code()}, "\
+                            f"{msg.header.is_request()}, "\
+                            f"{msg.header.hop_by_hop.hex()}, "\
+                            f"LEN: {len(msg)}")
+
+
+def setup_logging_info(worker, msg):
+    return f"[{worker.name}][{msg.header.hop_by_hop.hex()}]"
+
+
+class WorkerLogger(logging.Logger):
+    def __init__(self, worker):
+        self.worker = worker
+        worker_logger.debug(f"Initializing Worker {worker}")
+
+
+    def debug(self, msg, diameter_message=None, *args, **kwargs):
+        if diameter_message is not None:
+            hop_by_hop = diameter_message.header.hop_by_hop
+            msg = f"[{self.worker.name}] [{hop_by_hop.hex()}] {msg}"
+        else:
+            msg = f"[{self.worker.name}] {msg}"
+
+        worker_logger.debug(msg, *args, **kwargs)
 
 
 class Global(object):
@@ -72,10 +121,25 @@ class PendingAnswer:
     Answers for a set of Diameter Requests. It supports the Bromelia class inner 
     workings.
     """
-    def __init__(self):
+    def __init__(self, msg):
         self.recv_event = threading.Event()
         self.stop_event = threading.Event()
-        self.message = None
+        self.msg = msg
+
+
+    def wait(self):
+        self.recv_event.wait()
+        self.recv_event.clear()
+        self.stop_event.set()
+
+
+    def update_msg(self, msg):
+        self.msg = msg
+
+
+    def notify(self):
+        self.recv_event.set()
+        self.stop_event.wait()
 
 
 class Worker(multiprocessing.Process):
@@ -86,10 +150,11 @@ class Worker(multiprocessing.Process):
     def __init__(self, app, manager):
         multiprocessing.Process.__init__(self)
         self.daemon = True
+        self.logger = WorkerLogger(self.name)
 
+        self.is_open = manager.Event()
         self.name = Worker.set_name(app.config["APPLICATIONS"])
         self.app = app
-        self.is_open = manager.Event()
 
         self.recv_queue = manager.Queue()
         self.send_queue = manager.Queue()
@@ -103,7 +168,7 @@ class Worker(multiprocessing.Process):
         self.update_associations()
         self.update_recv_queues()
 
-        worker_logger.debug(f"Initializing Worker {self}")
+        self.logger.debug(f"Initializing Worker for app {app}")
 
 
     @staticmethod
@@ -125,75 +190,98 @@ class Worker(multiprocessing.Process):
         Worker.recv_queues.append([self.recv_queue, self.recv_lock])
 
 
+    def send_message(self, message):
+        self.app.send_message(message)
+        self.send_event.clear()
+        self.send_lock.release()
+
+
+    def send_messages(self, messages):
+        self.app.send_messages(messages)
+        self.send_event.clear()
+        self.send_lock.release()
+
+
+    def get_incoming_message(self):
+        return self.app.get_message()
+
+
+    def get_outgoing_message(self):
+        return self.send_queue.get()
+
+
+    def set_outgoing_message(self, msg):
+        self.send_lock.acquire()
+        self.send_queue.put(msg)
+        self.send_event.set()
+
+
+    def get_outgoing_messages(self):
+        outgoing_messages = list()
+        while not self.send_queue.empty():
+            outgoing_message = self.get_outgoing_message()
+            outgoing_messages.append(outgoing_message)
+
+
+    def notify_incoming_message(self, message):
+        self.recv_lock.acquire()
+        self.recv_queue.put(message)
+        self.recv_lock.release()
+
+
+    def get_pending_answer(self, hop_by_hop):
+        return self.pending_answers[hop_by_hop]
+
+
+    def is_pending_answer(self, msg):
+        if msg.header.hop_by_hop in self.pending_answers.keys():
+            return True
+        return False
+
+
+    def insert_pending_answer(self, p_answer):
+        self.pending_answers.update({p_answer.msg.header.hop_by_hop: p_answer})
+
+
+    def remove_pending_answer(self, p_answer):
+        p_answer.notify()
+        self.pending_answers.pop(p_answer.msg.header.hop_by_hop, None)
+
+
+    def is_send_queue_empty(self):
+        if self.send_queue.empty():
+            self.logger.debug("The send_queue is empty and there is no "\
+                              "notification to go ahead")
+            return True
+        return False
+
+
     def send_handler(self):
         while True:
-            if self.send_queue.empty():
-                worker_logger.debug("The send_queue is empty and there is no "\
-                                    "notification to go ahead")
-
+            if self.is_send_queue_empty():
                 self.send_event.wait(timeout=1)
 
-                worker_logger.debug("Got go ahead for send_event Event")
+            else:
+                self.logger.debug(f"There is/are {self.send_queue.qsize()} "\
+                                  f"message(s) available to be sent")
 
+                if self.send_queue.qsize() == 1:
+                    outgoing_message = self.get_outgoing_message()
+                    self.send_message(outgoing_message)
 
-            worker_logger.debug(f"[{self.name}] There is/are "\
-                                f"{self.send_queue.qsize()} message(s) "\
-                                f"available to be sent")
-
-            if self.send_queue.qsize() == 1:
-                outgoing_message = self.send_queue.get()
-                hop_by_hop = outgoing_message.header.hop_by_hop
-
-                worker_logger.debug(f"[{self.name}][{hop_by_hop.hex()}] "\
-                                    f"Sending to endpoint")
-
-                self.app.send_message(outgoing_message)
-
-                self.send_event.clear()
-                self.send_lock.release()
-
-            elif self.send_queue.qsize() > 1:
-                outgoing_messages = list()
-
-                while not self.send_queue.empty():
-                    outgoing_message = self.send_queue.get()
-                    hop_by_hop = outgoing_message.header.hop_by_hop
-
-                    outgoing_messages.append(outgoing_message)
-                
-                    worker_logger.debug(f"[{self.name}][{hop_by_hop.hex()}] "\
-                                        f"Sending to endpoint")
-
-                self.app.send_messages(outgoing_messages)
-
-                self.send_event.clear()
-                self.send_lock.release()
+                elif self.send_queue.qsize() > 1:
+                    outgoing_messages = self.get_outgoing_messages()
+                    self.send_messages(outgoing_messages)
 
 
     def recv_handler(self):
         while True:
-            incoming_message = self.app.get_message()
+            msg = self.get_incoming_message()
 
-            if incoming_message:
-                user_name = None
-                if incoming_message.has_avp("user_name_avp"):
-                    user_name = incoming_message.user_name_avp.data
-
-                worker_logger.debug(f"Message from Diameter Layer Process: "\
-                                    f"{application_id_look_up(incoming_message.header.application_id)[0]}, "\
-                                    f"{incoming_message.header.get_command_code()}, "\
-                                    f"{incoming_message.header.hop_by_hop.hex()}, "\
-                                    f"DATA LENGTH: {len(incoming_message)}, "\
-                                    f"USERNAME: {user_name}")
-    
-                hop_by_hop = incoming_message.header.hop_by_hop
-
-                self.recv_lock.acquire()
-                self.recv_queue.put(incoming_message)
-                self.recv_lock.release()
-    
-                worker_logger.debug(f"[{self.name}][{hop_by_hop.hex()}] "\
-                                    f"Putting into recv_queue Queue")
+            if msg:
+                make_logging(msg)
+                self.notify_incoming_message(msg)
+                self.logger.debug("Putting into recv_queue Queue", msg)
 
 
     #: it starts under worker.start() call
@@ -296,17 +384,35 @@ class Bromelia:
         return apps
 
 
+    def check_associations_spawned(self):
+        while True:
+            time.sleep(BROMELIA_LOADING_TICKER)
+            if self.associations is not None and self.recv_queues is not None:
+                break
+
+    
+    def check_associations_ready(self, block=True):
+        associations = copy(self.associations)
+        while block:
+            time.sleep(BROMELIA_LOADING_TICKER)
+            if not associations:
+                break
+
+            for key in list(associations.keys()):
+                association = associations[key]
+
+                if association.is_open.is_set():
+                    associations.pop(key)
+
+
     def _run(self, debug, is_logging):
         apps = self._create_applications(debug, is_logging)
 
-        bromelia_logger.debug(f"Route found: {self.routes})")
+        bromelia_logger.debug(f"Routes found: {self.routes})")
 
         with multiprocessing.Manager() as manager:
             for app in apps:
-                bromelia_logger.debug(f"Initializing Worker for app {app}")
                 worker = Worker(app, manager)
-
-                bromelia_logger.debug(f"Starting Worker for app {app}")
                 worker.start()
 
             self.recv_queues = Worker.recv_queues
@@ -323,24 +429,40 @@ class Bromelia:
                          args=(debug, is_logging)).start()
 
         #: Wait spinning up Diameter objects in the connection layer processes
-        while True:
-            time.sleep(BROMELIA_LOADING_TICKER)
-            if self.associations is not None and self.recv_queues is not None:
-                break
-
+        self.check_associations_spawned()
+        
         #: Block til all Diameter objects are opened in the connection layer
         #: processes - that is, connection are established
-        associations = copy(self.associations)
-        while block:
-            time.sleep(BROMELIA_LOADING_TICKER)
-            if not associations:
-                break
+        self.check_associations_ready(block)
 
-            for key in list(associations.keys()):
-                association = associations[key]
 
-                if association.is_open.is_set():
-                    associations.pop(key)
+    def get_incoming_message(self):
+        for recv_queue, recv_lock in self.recv_queues:
+            if not recv_queue.empty():
+                recv_lock.acquire()
+                msg = recv_queue.get()
+                recv_lock.release()
+                return msg
+
+
+    def get_worker_by_message(self, request):
+        return self.associations[request.header.application_id]
+
+
+    def create_message_thread(self, msg):
+        if msg.header.is_request():
+            self.request_id += 1
+            thrd = threading.Thread(name=f"recv_request_{self.request_id}",
+                                    target=self.callback_route,
+                                    args=(msg,))
+        else:
+            self.answer_id += 1
+            thrd = threading.Thread(name=f"recv_answer_{self.answer_id}",
+                                    target=self.handler_pending_answers,
+                                    args=(msg,))
+
+        thrd.start()
+        return thrd
 
 
     def main(self):
@@ -350,26 +472,10 @@ class Bromelia:
         while True:
             time.sleep(BROMELIA_TICKER)
 
-            for recv_queue, recv_lock in self.recv_queues:
-                if not recv_queue.empty():
-                    recv_lock.acquire()
-                    message = recv_queue.get()
-                    recv_lock.release()
-                    
-                    if message.header.is_request():
-                        thrd = threading.Thread(name=f"recv_request_{self.request_id}", 
-                                                target=self.callback_route, 
-                                                args=(message,))
-                        self.request_id += 1
-
-                    else:
-                        thrd = threading.Thread(name=f"recv_answer_{self.answer_id}", 
-                                                target=self.handler_pending_answers, 
-                                                args=(message,))
-                        self.answer_id += 1
-
-                    thrd.start()
-                    thrds.append(thrd)
+            msg = self.get_incoming_message()
+            if msg is not None:
+                thrd = self.create_message_thread(msg)
+                thrds.append(thrd)
 
             for thrd in thrds:
                 if not thrd.is_alive():
@@ -393,39 +499,29 @@ class Bromelia:
         return outer_function
 
 
-    def handler_pending_answers(self, message):
+    def handler_pending_answers(self, msg):
         try:
             self.answer_threshold.wait(timeout=PROCESS_TIMER)
         except threading.BrokenBarrierError:
             self.answer_threshold.reset()
 
-        application_id = message.header.application_id
-        hop_by_hop = message.header.hop_by_hop
-        
-        worker = self.associations[application_id]
-        logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"\
-                       f"[PENDING:{len(worker.pending_answers)}]"
+        worker = self.get_worker_by_message(msg)
 
+        logging_info = setup_logging_info(worker, msg)
         bromelia_logger.debug(f"{logging_info} Check if it is an expected "\
                               f"answer")
 
-        if hop_by_hop in worker.pending_answers.keys():
+        if worker.is_pending_answer(msg):
             bromelia_logger.debug(f"{logging_info} Found Hop-By-Hop in "\
                                   f"Pending answer")
 
-            pending_answer = worker.pending_answers[hop_by_hop]
+            p_answer = worker.get_pending_answer(msg.header.hop_by_hop)
+            p_answer.update_msg(msg)
 
-            pending_answer.message = message
-            bromelia_logger.debug(f"{logging_info} Update Pending answer "\
-                                  f"with the received answer")
-
-            pending_answer.recv_event.set()
-            pending_answer.stop_event.wait()
-
-            worker.pending_answers.pop(message.header.hop_by_hop, None)
+            worker.remove_pending_answer(p_answer)
 
 
-    def get_error_answer_for_request(self, request):
+    def create_error_answer(self, request):
         application_id = request.header.application_id
 
         config = self.associations[application_id].app.config
@@ -441,69 +537,57 @@ class Bromelia:
         return DiameterAnswer(header=request.header, avps=avps)
 
 
+    def get_request_callback(self, request):
+        application_id = request.header.application_id
+        command_code = request.header.command_code
+
+        return self.routes[application_id][command_code]
+
+
     def callback_route(self, request):
         try:
             self.request_threshold.wait(timeout=PROCESS_TIMER)
         except threading.BrokenBarrierError:
             self.request_threshold.reset()
 
-        application_id = request.header.application_id
-        command_code = request.header.command_code
-        hop_by_hop = request.header.hop_by_hop
+        worker = self.get_worker_by_message(request)
+        callback_function = self.get_request_callback(request)
 
-        worker = self.associations[application_id]
-        logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"
-
-        callback_function = self.routes[application_id][command_code]
-        bromelia_logger.debug(f"{logging_info} {callback_function}")
+        logging_info = setup_logging_info(worker, request)
 
         try:
             answer = callback_function(request)
-
         except Exception as e:
+            answer = None
             bromelia_logger.exception(f"{logging_info} Error has been "\
                                       f"raised in callback_function: {e.args}")
-            answer = None
+
 
         if not isinstance(answer, DiameterAnswer):
             bromelia_logger.exception(f"{logging_info} There is no answer "\
                                       f"processed to be sent. We are sending "\
                                       f"UNABLE_TO_COMPLY")
 
-            error_answer = self.get_error_answer_for_request(request)
-            self.send_message(error_answer)
+            answer = self.create_error_answer(request)
+            self.send_message(answer)
 
             raise BromeliaException("Route function must return "\
                                     "DiameterAnswer object")
 
 
-        answer = get_formatted_answer_as_per_request(answer, request)
-
-        if (is_3xxx_failure(answer) or 
-            is_4xxx_failure(answer) or 
-            is_5xxx_failure(answer)):
-
-            answer.header.set_error_bit(True)
-
-        if answer.has_avp("experimental_result_avp"):
-            if answer.has_avp("result_code_avp"):
-                answer.pop("result_code_avp")
-
-
-        bromelia_logger.debug(f"{logging_info} Sending answer")
+        answer = decorate_answer(answer, request)
         self.send_message(answer)
 
+        bromelia_logger.debug(f"{logging_info} Sending answer")
 
-    def send_message(self, message, recv_answer=True):
-        application_id = message.header.application_id
-        hop_by_hop = message.header.hop_by_hop
 
+    def send_message(self, msg, recv_answer=True):
         if self.associations is None:
             return self.testing_answer
             
-        worker = self.associations[application_id]
-        logging_info = f"[{worker.name}][{hop_by_hop.hex()}]"
+        worker = self.get_worker_by_message(msg)
 
+        logging_info = setup_logging_info(worker, msg)
         bromelia_logger.debug(f"{logging_info} Application needs to send a "\
                               f"message")
         
@@ -520,31 +604,25 @@ class Bromelia:
         except threading.BrokenBarrierError:
             self.send_threshold.reset()
 
-        worker.send_lock.acquire()
-        worker.send_queue.put(message)
-        worker.send_event.set()
-
+        worker.set_outgoing_message(msg)
         bromelia_logger.debug(f"{logging_info} Just put message into "\
                               f"send_queue Queue and notified send_event Event")
 
-        if message.header.is_request() and recv_answer:
-            pending_answer = PendingAnswer()
-            worker.pending_answers.update({hop_by_hop: pending_answer})
+        if msg.header.is_request() and recv_answer:
+            p_answer = PendingAnswer(msg)
+
+            worker.insert_pending_answer(p_answer)
             bromelia_logger.debug(f"{logging_info} Added Pending answer")
 
-            pending_answer.recv_event.wait()
+            p_answer.wait()
             bromelia_logger.debug(f"{logging_info} Notification from "\
                                   f"Pending answer")
 
-            pending_answer.recv_event.clear()
-            pending_answer.stop_event.set()
-            bromelia_logger.debug(f"{logging_info} Cleanup of Pending answer")
-
-            return pending_answer.message
+            return p_answer.msg
 
 
-    def load_messages_into_application_id(self, messages, application_id):
-        def decorated_message(message):
+    def load_messages_into_application_id(self, msgs, application_id):
+        def decorated_message(msg):
             def proxy(**attrs):
                 _config = None
 
@@ -563,27 +641,27 @@ class Bromelia:
                 peer_node_realm = _config["PEER_NODE_REALM"]
                 local_node_hostname = _config["LOCAL_NODE_HOSTNAME"]
 
-                if issubclass(message, DiameterRequest):
+                if issubclass(msg, DiameterRequest):
                     request_attrs = {"destination_realm": peer_node_realm}
                     attrs.update(**request_attrs)
 
-                if "session_id" in message.mandatory:
+                if "session_id" in msg.mandatory:
                     attrs.update({"session_id": local_node_hostname})
 
-                return message(**attrs)
+                return msg(**attrs)
 
             return proxy
 
         application_string = get_application_string_by_id(application_id)
         self.__dict__.update({application_string: SimpleNamespace()})
 
-        for message in messages:
-            _name = [letter for letter in message.__name__ if letter.isupper()]
+        for msg in msgs:
+            _name = [letter for letter in msg.__name__ if letter.isupper()]
             short_message_name = "".join(_name).upper()
 
             setattr(self.__dict__[application_string], 
                     short_message_name, 
-                    decorated_message(message))
+                    decorated_message(msg))
 
 
     def get_route(self, route_name):

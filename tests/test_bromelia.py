@@ -19,7 +19,7 @@ base_dir = os.path.dirname(testing_dir)
 sys.path.insert(0, base_dir)
 
 from bromelia.bromelia import get_application_string_by_id   
-from bromelia.bromelia import get_formatted_answer_as_per_request
+from bromelia.bromelia import decorate_answer
 from bromelia.constants import *
 from bromelia.messages import CEA, CER
 from bromelia.lib.etsi_3gpp_s6a import ULA, ULR
@@ -72,8 +72,8 @@ class TestGetApplicationStringById(unittest.TestCase):
         self.assertEqual(get_application_string_by_id(DIAMETER_APPLICATION_RELAY), "relay")
 
 
-class TestGetFormattedAnswerAsPerRequest(unittest.TestCase):
-    def test__get_formatted_answer_as_per_request__1_no_session_id_avp(self):
+class TestDecorateAnswer(unittest.TestCase):
+    def test__decorate_answer__1_no_session_id_avp(self):
         cer = CER()
         cea = CEA()
 
@@ -85,7 +85,7 @@ class TestGetFormattedAnswerAsPerRequest(unittest.TestCase):
         self.assertNotEqual(cea.header.hop_by_hop, cer.header.hop_by_hop)       # different messages, then diff hop_by_hop
         self.assertNotEqual(cea.header.end_to_end, cer.header.end_to_end)       # different messages, then diff end_to_end
 
-        cea = get_formatted_answer_as_per_request(cea, cer)
+        cea = decorate_answer(cea, cer)
 
         self.assertEqual(cea.header.version, cer.header.version)
         self.assertNotEqual(cea.header.length, cer.header.length)
@@ -95,7 +95,7 @@ class TestGetFormattedAnswerAsPerRequest(unittest.TestCase):
         self.assertEqual(cea.header.hop_by_hop, cer.header.hop_by_hop)          # different messages, but now same transaction
         self.assertEqual(cea.header.end_to_end, cer.header.end_to_end)          # different messages, but now same transaction
 
-    def test__get_formatted_answer_as_per_request__2_session_id_avp(self):
+    def test__decorate_answer__2_session_id_avp(self):
         ulr = ULR(destination_realm="peernode", user_name="frodo", visited_plmn_id=bytes.fromhex("27f450"))
         ula = ULA()
 
@@ -108,7 +108,7 @@ class TestGetFormattedAnswerAsPerRequest(unittest.TestCase):
         self.assertNotEqual(ula.header.end_to_end, ulr.header.end_to_end)       # different messages, then diff end_to_end
         self.assertNotEqual(ula.session_id_avp, ulr.session_id_avp)             # different messages, then diff session_id_avp
 
-        ula = get_formatted_answer_as_per_request(ula, ulr)
+        ula = decorate_answer(ula, ulr)
 
         self.assertEqual(ula.header.version, ulr.header.version)
         self.assertNotEqual(ula.header.length, ulr.header.length)
