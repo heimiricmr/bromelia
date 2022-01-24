@@ -93,7 +93,7 @@ def setup_logging_info(worker, msg):
     return f"[{worker.name}][{msg.header.hop_by_hop.hex()}]"
 
 
-class WorkerLogger(logging.Logger):
+class WorkerLogger():
     def __init__(self, worker):
         self.worker = worker
         worker_logger.debug(f"Initializing Worker {worker}")
@@ -150,7 +150,7 @@ class Worker(multiprocessing.Process):
     def __init__(self, app, manager):
         multiprocessing.Process.__init__(self)
         self.daemon = True
-        self.logger = WorkerLogger(self.name)
+        self.logger = WorkerLogger(self)
 
         self.is_open = manager.Event()
         self.name = Worker.set_name(app.config["APPLICATIONS"])
