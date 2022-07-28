@@ -544,6 +544,9 @@ class PeerStateMachine():
         elif next_state == CLOSED and self.current_state.name != CLOSED:
             self.is_running = False
             self.association.close()
+            statemachine_logger.debug("Making message None")
+            self.association.postprocess_recv_messages.put(None)
+            self.association.postprocess_recv_messages_ready.set()
 
         if next_state in self.states:
             if self.current_state.name != next_state:

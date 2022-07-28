@@ -268,6 +268,12 @@ class DiameterAssociation(object):
 
             self.postprocess_recv_messages_lock.acquire()
             message = self.postprocess_recv_messages.get()
+            if not message:
+                diameter_conn_logger.debug("Message is None")
+                self.postprocess_recv_messages_lock.release()
+                self.lock.release()
+                continue
+
             self.postprocess_recv_messages_lock.release()
 
             if message.has_avp("user_name_avp"):
