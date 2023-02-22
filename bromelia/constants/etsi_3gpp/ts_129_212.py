@@ -140,6 +140,7 @@ REPORTING_LEVEL_SPONSORED_CONNECTIVITY_LEVEL = convert_to_4_bytes(2)
 #: List of QOS-CLASS-IDENTIFIER.
 #: For more information, please refer to Section 5.3.17 of 
 #: of ETSI TS 129 212 V15.3.0 (2018-07).
+QCI_0 = convert_to_4_bytes(0)
 QCI_1 = convert_to_4_bytes(1)
 QCI_2 = convert_to_4_bytes(2)
 QCI_3 = convert_to_4_bytes(3)

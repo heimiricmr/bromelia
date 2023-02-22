@@ -87,6 +87,7 @@ class QosClassIdentifierAVP(DiameterAVP, EnumeratedType):
     vendor_id = VENDOR_ID_3GPP
 
     values = [
+                QCI_0,
                 QCI_1,
                 QCI_2,
                 QCI_3,
