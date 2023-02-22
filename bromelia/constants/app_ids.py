@@ -14,6 +14,7 @@
 from .._internal_utils import convert_to_4_bytes
 
 DIAMETER_APPLICATION_DEFAULT = convert_to_4_bytes(0)
+DIAMETER_APPLICATION_Gy = convert_to_4_bytes(4)
 DIAMETER_APPLICATION_Cx = convert_to_4_bytes(16777216)
 DIAMETER_APPLICATION_Sh = convert_to_4_bytes(16777217)
 DIAMETER_APPLICATION_Zh = convert_to_4_bytes(16777221)
