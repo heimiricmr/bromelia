@@ -31,6 +31,7 @@ QOS_INFORMATION_AVP_CODE = convert_to_4_bytes(1016)
 CHARGING_RULE_REPORT_AVP_CODE = convert_to_4_bytes(1018)
 PCC_RULE_STATUS_AVP_CODE = convert_to_4_bytes(1019)
 ACCESS_NETWORK_CHARGING_IDENTIFIER_GX_AVP_CODE = convert_to_4_bytes(1022)
+BEARER_CONTROL_MODE_AVP_CODE = convert_to_4_bytes(1023)
 NETWORK_REQUEST_SUPPORT_AVP_CODE = convert_to_4_bytes(1024)
 GUARANTEED_BITRATE_DL_AVP_CODE = convert_to_4_bytes(1025)
 GUARANTEED_BITRATE_UL_AVP_CODE = convert_to_4_bytes(1026)
@@ -47,6 +48,7 @@ DEFAULT_EPS_BEARER_QOS_AVP_CODE = convert_to_4_bytes(1049)
 AN_GW_ADDRESS_AVP_CODE = convert_to_4_bytes(1050)
 FLOW_INFORMATION_AVP_CODE = convert_to_4_bytes(1058)
 CHARGING_CORRELATION_INDICATOR_AVP_CODE = convert_to_4_bytes(1073)
+FLOW_DIRECTION_AVP_CODE = convert_to_4_bytes(1080)
 UE_LOCAL_IP_ADDRESS_AVP_CODE = convert_to_4_bytes(2805)
 
 #: List of Bearer-Usage AVP values.
@@ -246,3 +248,18 @@ PRE_EMPTION_VULNERABILITY_DISABLED = convert_to_4_bytes(1)
 #: For more information, please refer to Section 5.3.67 of 
 #: ETSI TS 129 212 V15.3.0 (2018-07).
 CHARGING_CORRELATION_INDICATOR_CHARGING_IDENTIFIER_REQUIRED = convert_to_4_bytes(0)
+
+#: List of Flow-Direction AVP values.
+#: For more information, please refer to Section 5.3.65 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+FLOW_DIRECTION_UNSPECIFIED = convert_to_4_bytes(0)
+FLOW_DIRECTION_DOWNLINK = convert_to_4_bytes(1)
+FLOW_DIRECTION_UPLINK = convert_to_4_bytes(2)
+FLOW_DIRECTION_BIDIRECTIONAL = convert_to_4_bytes(3)
+
+#: List of Bearer-Control-Mode AVP values.
+#: For more information, please refer to Section 5.3.23 of
+#: ETSI TS 129 212 V15.3.0 (2018-07).
+BEARER_CONTROL_MODE_UE_ONLY = convert_to_4_bytes(0)
+BEARER_CONTROL_MODE_RESERVED = convert_to_4_bytes(1)
+BEARER_CONTROL_MODE_UE_NW = convert_to_4_bytes(2)

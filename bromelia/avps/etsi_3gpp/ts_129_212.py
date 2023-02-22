@@ -255,6 +255,30 @@ class AnGwAddressAVP(DiameterAVP, AddressType):
         AddressType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
+class FlowDirectionAVP(DiameterAVP, EnumeratedType):
+    """Implementation of Flow-Direction AVP in Section 5.3.65 of
+    ETSI TS 129 212 V15.3.0 (2018-07).
+
+    The Flow-Direction AVP (AVP Code 1080) is of type Enumerated.
+    """
+    code = FLOW_DIRECTION_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    values = [
+               FLOW_DIRECTION_UNSPECIFIED,
+               FLOW_DIRECTION_DOWNLINK,
+               FLOW_DIRECTION_UPLINK,
+               FLOW_DIRECTION_BIDIRECTIONAL,
+    ]
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             FlowDirectionAVP.code,
+                             FlowDirectionAVP.vendor_id)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
 class ChargingCorrelationIndicatorAVP(DiameterAVP, EnumeratedType):
     """Implementation of Charging-Correlation-Indicator AVP in Section 5.3.67 of
     ETSI TS 129 212 V15.3.0 (2018-07).
@@ -571,6 +595,30 @@ class AccessNetworkChargingIdentifierGxAVP(DiameterAVP, GroupedType):
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
         GroupedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class BearerControlModeAVP(DiameterAVP, EnumeratedType):
+    """Implementation of Bearer-Control-Mode AVP in Section 5.3.23 of 
+    ETSI TS 129 212 V15.3.0 (2018-07).
+
+    The Bearer-Control-Mode AVP (AVP Code 1023) is of type Enumerated.
+    """
+    code = BEARER_CONTROL_MODE_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    values = [
+                BEARER_CONTROL_MODE_UE_ONLY,
+                BEARER_CONTROL_MODE_RESERVED,
+                BEARER_CONTROL_MODE_UE_NW
+    ]
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             BearerControlModeAVP.code,
+                             BearerControlModeAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
 class NetworkRequestSupportAVP(DiameterAVP, EnumeratedType):
