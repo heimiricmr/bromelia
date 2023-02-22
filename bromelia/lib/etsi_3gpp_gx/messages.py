@@ -49,7 +49,7 @@ class CreditControlAnswer(DiameterAnswer):
                     # "oc_supported_features": OcSupportedFeaturesAVP,
                     # "oc_olr": OcOlrAVP,
                     "supported_features": SupportedFeaturesAVP,
-                    # "bearer_control_mode": BearerControlModeAVP,
+                    "bearer_control_mode": BearerControlModeAVP,
                     "event_trigger": EventTriggerAVP,
                     # "event_report_indication": EventReportIndicationAVP,
                     "origin_state_id": OriginStateIdAVP,

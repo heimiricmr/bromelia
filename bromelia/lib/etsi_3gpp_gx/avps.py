@@ -14,6 +14,7 @@ from ...avps.etsi_3gpp.ts_129_061 import X3gppChargingCharacteristicsAVP
 
 from ...avps.etsi_3gpp.ts_129_212 import AccessNetworkChargingIdentifierGxAVP
 from ...avps.etsi_3gpp.ts_129_212 import AnGwAddressAVP
+from ...avps.etsi_3gpp.ts_129_212 import BearerControlModeAVP
 from ...avps.etsi_3gpp.ts_129_212 import BearerUsageAVP
 from ...avps.etsi_3gpp.ts_129_212 import ChargingRuleInstallAVP
 from ...avps.etsi_3gpp.ts_129_212 import ChargingRuleReportAVP
