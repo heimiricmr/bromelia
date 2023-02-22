@@ -81,3 +81,34 @@ def create_authentication_data_unavailable_response(proxy_response: type[Diamete
 def create_unknown_serving_node_response(proxy_response: type[DiameterAnswer], **kwargs):
     return proxy_response(experimental_result=create_experimental_result_data(DIAMETER_ERROR_UNKOWN_SERVING_NODE),
                           **kwargs)
+
+
+@include_error_bit
+def create_rat_not_allowed_response(proxy_response: type[DiameterAnswer], **kwargs):
+    return proxy_response(experimental_result=create_experimental_result_data(DIAMETER_ERROR_RAT_NOT_ALLOWED),
+           **kwargs)
+
+
+@include_error_bit
+def create_roaming_not_allowed_response(proxy_response: type[DiameterAnswer], msg: str, **kwargs):
+    return proxy_response(experimental_result=create_experimental_result_data(DIAMETER_ERROR_ROAMING_NOT_ALLOWED),
+                          error_diagnostic=msg,
+                          **kwargs)
+
+
+@include_error_bit
+def create_realm_not_served_response(proxy_response: type[DiameterAnswer], msg: str, **kwargs):
+    return proxy_response(result_code=DIAMETER_REALM_NOT_SERVED,
+                          error_message=ErrorMessageAVP(msg),
+                          **kwargs)
+
+
+@include_error_bit
+def create_unknown_eps_subscription_response(proxy_response: type[DiameterAnswer], **kwargs):
+    return proxy_response(experimental_result=create_experimental_result_data(DIAMETER_ERROR_UNKNOWN_EPS_SUBSCRIPTION),
+                          **kwargs)
+
+
+@include_error_bit
+def create_success_response(proxy_response: type[DiameterAnswer], **kwargs):
+    return proxy_response(result_code=DIAMETER_SUCCESS, **kwargs)
