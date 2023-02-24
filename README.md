@@ -84,6 +84,7 @@ config = {
                                 "vendor_id": VENDOR_ID_3GPP, 
                                 "app_id": DIAMETER_APPLICATION_S6a_S6d
             }],
+            "TRANSPORT_TYPE": "TCP",
             "LOCAL_NODE_HOSTNAME": LOCAL_HOSTNAME,
             "LOCAL_NODE_REALM": LOCAL_REALM,
             "LOCAL_NODE_IP_ADDRESS": "127.0.0.1",

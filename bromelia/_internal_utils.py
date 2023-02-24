@@ -42,6 +42,7 @@ PeerNode = namedtuple("PeerNode", [
 Connection = namedtuple("Connection", [
                                         "name",
                                         "mode",
+                                        "transport_type",
                                         "local_node",
                                         "peer_node",
                                         "application_ids",
@@ -50,6 +51,7 @@ Connection = namedtuple("Connection", [
 )
 config_mask = [
                 "MODE",
+                "TRANSPORT_TYPE",
                 "APPLICATIONS",
                 "LOCAL_NODE_HOSTNAME",
                 "LOCAL_NODE_REALM",
@@ -170,6 +172,13 @@ def _convert_config_to_connection_obj(config) -> Connection:
 
             mode = value
 
+        elif key == "TRANSPORT_TYPE":
+            if value not in ["TCP", "SCTP"]:
+                raise InvalidConfigValue("Invalid config value '{value}' "\
+                                f"found for config key '{key}'. It MUST be "\
+                                "either 'TCP' or 'SCTP'")
+            transport_type = value
+
         elif key == "APPLICATIONS":
             if value:
                 for app in value:
@@ -252,6 +261,7 @@ def _convert_config_to_connection_obj(config) -> Connection:
 
     connection = Connection(name="bromelia",
                             mode=mode,
+                            transport_type=transport_type,
                             application_ids=application_ids,
                             local_node=local_node,
                             peer_node=peer_node,
@@ -287,6 +297,7 @@ def _convert_file_to_config(filepath: str = None, variables_dictionary: dict = g
 
         configs.append({
                             "MODE": spec["mode"].upper(),
+                            "TRANSPORT_TYPE": spec["transport_type"].upper(),
                             "APPLICATIONS": spec["applications"],
                             "LOCAL_NODE_HOSTNAME": spec["local"]["hostname"],
                             "LOCAL_NODE_REALM": spec["local"]["realm"],

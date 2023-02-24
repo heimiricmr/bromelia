@@ -249,6 +249,69 @@ class TcpConnection():
                     return False
 
 
+
+import importlib
+class SctpConnection(TcpConnection):
+    def __init__(self, ip_address, port):
+        try:
+            self.sctp = importlib.import_module("sctp")
+            self._sctp = importlib.import_module("_sctp")
+        except ModuleNotFoundError as ex:
+            tcp_connection.error(f"Python 'pysctp' module is required. Cannot initialize SctpConnection.")
+            raise ex
+        super().__init__(ip_address, port)
+
+    def _write(self):
+        if self._send_buffer:
+            try:
+                sent = self.sock.sctp_send(self._send_buffer)
+                tcp_connection.debug(f"[Socket-{self.sock_id}] Just sent "\
+                                     f"{sent} bytes in _send_buffer")
+
+            except BlockingIOError:
+                tcp_connection.exception(f"[Socket-{self.sock_id}] An error "\
+                                         f"has occurred")
+
+                self._stop_threads = True
+
+            else:
+                self._send_buffer = self._send_buffer[sent:]
+
+            tcp_connection.debug(f"[Socket-{self.sock_id}] Stream data "\
+                                 f"has been sent")
+    def _read(self):
+        try:
+            fromaddr, flags, data, notif = self.sock.sctp_recv(4096*64)
+            print("Msg arrived, flag %d" % flags)
+            tcp_connection.debug(f"[Socket-{self.sock_id}] Data received: "\
+                                 f"{data.hex()}")
+
+        except:
+            tcp_connection.exception(f"[Socket-{self.sock_id}] An Exception "\
+                                     f"has been raised")
+
+            self.error_has_raised = True
+            self._stop_threads = True
+
+        else:
+            if data:
+                self._recv_buffer += data
+                tcp_connection.debug(f"[Socket-{self.sock_id}] _recv_buffer: "\
+                                     f"{self._recv_buffer.hex()}")
+            else:
+                tcp_connection.debug(f"[Socket-{self.sock_id}] Peer closed "\
+                                     f"connection")
+                self._stop_threads = True
+
+    def test_connection(self):
+        state = self.sock.get_status()
+        if self.sock.get_status().state == state.state_ESTABLISHED:
+            return True
+        else:
+            self.connection_attempts -= self.connection_attempts
+            return False
+
+
 class TcpClient(TcpConnection):
     def __init__(self, ip_address: str, port: str) -> None:
         super().__init__(ip_address, port)
@@ -272,6 +335,43 @@ class TcpClient(TcpConnection):
             self.selector.register(self.sock, selectors.EVENT_READ | selectors.EVENT_WRITE)
             tcp_client.debug(f"[Socket-{self.sock_id}] Registering Socket "\
                              f"Selector address: {self.selector.get_map()}")
+
+        except Exception as e:
+            tcp_client.exception(f"client_errors: {e.args}")
+
+
+class SctpClient(TcpClient,SctpConnection):
+    def __init__(self, ip_address, port):
+        SctpConnection.__init__(self, ip_address, port)
+
+    def test_connection(self):
+        return SctpConnection.test_connection(self)
+
+    def _read(self):
+        return SctpConnection._read(self)
+
+    def _write(self):
+        return SctpConnection._write(self)
+
+    def start(self):
+        try:
+            self.sock = self.sctp.sctpsocket_tcp(socket.AF_INET)
+            tcp_client.debug(f"[Socket-{self.sock_id}] Client-side Socket: "\
+                             f"{self.sock}")
+
+
+            tcp_client.debug(f"[Socket-{self.sock_id}] Connecting to the "\
+                             f"Remote Peer")
+            self.sock.connect((self.ip_address, self.port))
+            self.is_connected = True
+
+            tcp_client.debug(f"[Socket-{self.sock_id}] Setting as "\
+                             f"Non-Blocking")
+            self.sock.setblocking(False)
+
+            tcp_client.debug(f"[Socket-{self.sock_id}] Registering Socket "\
+                             f"Selector address: {self.selector.get_map()}")
+            self.selector.register(self.sock, selectors.EVENT_READ | selectors.EVENT_WRITE)
 
         except Exception as e:
             tcp_client.exception(f"client_errors: {e.args}")
@@ -344,3 +444,50 @@ class TcpServer(TcpConnection):
 
         except KeyError:
             tcp_server.debug("There is no such Selector registered")
+
+
+class SctpServer(TcpServer,SctpConnection):
+    def __init__(self, ip_address, port):
+        SctpConnection.__init__(self, ip_address, port)
+
+    def test_connection(self):
+        return SctpConnection.test_connection(self)
+
+    def _read(self):
+        return SctpConnection._read(self)
+
+    def _write(self):
+        return SctpConnection._write(self)
+
+    def start(self):
+        try:
+            if self._sctp.getconstant("IPPROTO_SCTP") != 132:
+                raise Exception("SCTP not supported by system")
+            self.server_sock = self.sctp.sctpsocket_tcp(socket.AF_INET)
+            # sock.initparams.max_instreams = 3
+            # sock.initparams.max_ostreams = 3
+            # sock.events.clear()
+            # sock.events.data_io = 1
+
+            tcp_connection.debug(f"[Socket-{self.sock_id}] Server-side "\
+                                 f"Socket: {self.server_sock}")
+
+            self.server_selector = selectors.DefaultSelector()
+
+            self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 4096*64)
+            self.server_sock.bind((self.ip_address, self.port))
+            self.server_sock.listen()
+            tcp_server.debug(f"[Socket-{self.sock_id}] Listening on "\
+                             f"{self.ip_address}:{self.port}")
+
+            self.server_sock.setblocking(False)
+            tcp_server.debug(f"[Socket-{self.sock_id}] Setting as "\
+                             f"Non-Blocking")
+
+            self.server_selector.register(self.server_sock, selectors.EVENT_READ | selectors.EVENT_WRITE)
+            tcp_server.debug(f"[Socket-{self.sock_id}] Registering "\
+                             f"Socket into Selector address: "\
+                             f"{self.server_selector.get_map()}")
+
+        except Exception as e:
+            tcp_server.exception(f"server_error: {e.args}")
