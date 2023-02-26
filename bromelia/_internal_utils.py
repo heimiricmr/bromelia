@@ -17,6 +17,7 @@ import os
 import struct
 import yaml
 from collections import namedtuple
+from types import SimpleNamespace
 
 from .definitions import diameter_application_ids
 from .definitions import diameter_avps
@@ -365,6 +366,41 @@ def get_avp_name_formatted(key: str) -> str:
         return f"{key}_avp__{idx}"
 
     return f"{key}_avp"
+
+
+def setup_spec(filepath: str = None) -> SimpleNamespace:
+    if not filepath:
+        filepath = os.path.join(os.getcwd(), "config.yaml")
+
+    try:
+        if os.path.exists(filepath):
+            with open(filepath, "r") as config_file:
+                from_config_file = yaml.load(config_file, Loader=yaml.FullLoader)
+
+    except Exception as e:
+        logging.exception(f"_convert_file_to_config - exception: {e}")
+
+    if from_config_file["api_version"] != "v1":
+        raise
+
+    specs = SimpleNamespace()
+
+    for spec in from_config_file["spec"]:
+        for application in spec["applications"]:
+            short_app_name = application["app_id"].split("DIAMETER_APPLICATION_")[1].lower()
+            if not "spec" in spec:
+                setattr(
+                    specs,
+                    short_app_name,
+                    None
+                )
+            else:
+                setattr(
+                    specs,
+                    short_app_name,
+                    spec["spec"]
+                    )
+    return specs
 
 
 class SessionHandler:

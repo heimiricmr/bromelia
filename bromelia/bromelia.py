@@ -21,6 +21,7 @@ from types import SimpleNamespace
 from ._internal_utils import _convert_file_to_config
 from ._internal_utils import application_id_look_up
 from ._internal_utils import get_app_name
+from ._internal_utils import setup_spec
 from .avps import DestinationHostAVP
 from .avps import DestinationRealmAVP
 from .avps import OriginHostAVP
@@ -345,6 +346,7 @@ class Bromelia:
         bromelia_logger.debug(f"Initializing Bromelia application")
         self.config_file = config_file
         self.configs = _convert_file_to_config(self.config_file, globals())
+        self.specs = setup_spec(self.config_file)
         self.app_name = get_app_name(self.config_file)
         self.routes = {}
         self._routes = {}
