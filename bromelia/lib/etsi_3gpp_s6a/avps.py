@@ -36,6 +36,7 @@ from ...avps.etsi_3gpp.ts_129_272 import UeSrvccCapabilityAVP
 from ...avps.etsi_3gpp.ts_129_272 import SupportedServicesAVP
 from ...avps.etsi_3gpp.ts_129_272 import CancellationTypeAVP
 from ...avps.etsi_3gpp.ts_129_272 import ClrFlagsAVP
+from ...avps.etsi_3gpp.ts_129_272 import IdrFlagsAVP
 
 from ...avps.ietf.rfc5447 import Mip6AgentInfoAVP
 

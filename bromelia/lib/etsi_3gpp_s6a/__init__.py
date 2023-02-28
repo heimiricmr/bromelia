@@ -26,3 +26,6 @@ from .messages import PurgeUeRequest as PUR
 
 from .messages import UpdateLocationAnswer as ULA
 from .messages import UpdateLocationRequest as ULR
+
+from .messages import InsertSubscriberDataRequest as IDR
+

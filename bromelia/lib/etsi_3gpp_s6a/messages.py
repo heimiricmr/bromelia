@@ -708,3 +708,73 @@ class UpdateLocationRequest(DiameterRequest):
                                  application_id=DIAMETER_APPLICATION_S6a_S6d)
 
         DiameterRequest._load(self, locals())
+
+
+class InsertSubscriberDataRequest(DiameterRequest):
+    """Implementation of Insert-Subscriber-Data-Request (IDR) command as per 
+    clause 7.2.9 of ETSI TS 129 272 V15.8.0 (2019-07).
+
+    The Insert-Subscriber-Data-Request is indicated by the Command Code field set to 319 and the 'R' bit set in the Command Flags field.
+
+    Usage::
+
+        >>> from bromelia.lib.etsi_3gpp_s6a import IDR
+        >>> ulr_avps = {
+        ...     "destination_realm": "example.com",
+        ...     "user_name": "frodo",
+        ...     "visited_plmn_id": bytes.fromhex("ffffff")
+        ... }
+        >>> idr = IDR(**idr_avps)
+        >>> idr
+        <Diameter Message: 316 [ULR] REQ|PXY, 16777251 [3GPP S6a], 10 AVP(s)>
+    """    
+
+    mandatory = {
+                    "session_id": SessionIdAVP,
+                    "auth_session_state": AuthSessionStateAVP,
+                    "origin_host": OriginHostAVP,
+                    "origin_realm": OriginRealmAVP,
+                    "destination_realm": DestinationRealmAVP,
+                    "destination_host": DestinationHostAVP,
+                    "user_name": UserNameAVP,
+                    "subscription_data": SubscriptionDataAVP,
+                    "idr_flags": IdrFlagsAVP,
+    }
+
+    optionals = {
+                    #"drmp": DrmpAVP,
+                    "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
+                    "supported_features": SupportedFeaturesAVP,
+                    "terminal_information": TerminalInformationAVP,
+                    "proxy_info": ProxyInfoAVP,
+                    #"reset_id": ResetIdAVP,
+                    "route_record": RouteRecordAVP,
+    }
+
+    def __init__(self, 
+                 session_id=platform.node(), 
+                 drmp=None,
+                 vendor_specific_application_id=[VendorIdAVP(VENDOR_ID_3GPP), AuthApplicationIdAVP(DIAMETER_APPLICATION_S6a_S6d)],
+                 auth_session_state=NO_STATE_MAINTAINED,
+                 origin_host=platform.node(), 
+                 origin_realm=socket.getfqdn(), 
+                 destination_host=None,
+                 destination_realm=None,
+                 user_name=None,
+                 
+                 subscription_data=None,
+                 
+                 supported_features=None,
+                 terminal_information=None,
+                 idr_flags=3,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
+
+        DiameterRequest.__init__(self, 
+                                 command_code=INSERT_SUBSCRIBER_DATA_MESSAGE, 
+                                 application_id=DIAMETER_APPLICATION_S6a_S6d)
+
+        DiameterRequest._load(self, locals())
+    
+        

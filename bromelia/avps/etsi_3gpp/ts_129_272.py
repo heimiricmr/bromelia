@@ -649,6 +649,23 @@ class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
+class IdrFlagsAVP(DiameterAVP, Unsigned32Type):
+    """Implementation of IDR-Flags AVP in Section 7.3.103 of 
+    ETSI TS 129 272 V15.08.0 (2019-07).
+
+    The IDR-Flags AVP (AVP Code 1405) is of type Unsigned32.
+    """
+    code = IDR_FLAGS_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             IdrFlagsAVP.code,
+                             IdrFlagsAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
 
 class UlaFlagsAVP(DiameterAVP, Unsigned32Type):
     """Implementation of ULA-Flags AVP in Section 7.3.8 of 
