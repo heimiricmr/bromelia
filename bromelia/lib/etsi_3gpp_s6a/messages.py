@@ -547,6 +547,130 @@ class PurgeUeRequest(DiameterRequest):
         DiameterRequest._load(self, locals())
 
 
+class ResetAnswer(DiameterAnswer):
+    """Implementation of Reset-Answer (RSA) command as per clause 7.2.16 of
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The Reset-Answer is indicated by the Command Code field set to 322 and
+    Command Flag's 'R' bit cleared.
+
+    Usage::
+
+        >>> from bromelia.lib.etsi_3gpp_s6a import RSA
+        >>> rsa = RSA()
+        >>> rsa
+        <Diameter Message: 322 [RSA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
+    """
+
+    mandatory = {
+                    "session_id": SessionIdAVP,
+                    "auth_session_state": AuthSessionStateAVP,
+                    "origin_host": OriginHostAVP,
+                    "origin_realm": OriginRealmAVP,
+                    "result_code": ResultCodeAVP,
+                    "experimental_result": ExperimentalResultAVP,
+    }
+
+    optionals = { 
+                    # "drmp": DrmpAVP,
+                    "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
+                    # "oc_supported_features": OcSupportedFeaturesAVP,
+                    # "oc_olr": OcOlrAVP,
+                    # "load": LoadAVP,
+                    "failed_avp": FailedAvpAVP,
+                    "proxy_info": ProxyInfoAVP,
+                    "route_record": RouteRecordAVP,
+    }
+
+    def __init__(self,
+                 session_id=platform.node(),
+                 drmp=None,
+                 vendor_specific_application_id=[VendorIdAVP(VENDOR_ID_3GPP), AuthApplicationIdAVP(DIAMETER_APPLICATION_S6a_S6d)],
+                 result_code=None,
+                 experimental_result=None,
+                 auth_session_state=NO_STATE_MAINTAINED,
+                 origin_host=platform.node(), 
+                 origin_realm=socket.getfqdn(), 
+                 oc_supported_features=None,
+                 oc_olr=None,
+                 load=None,
+                 pua_flags=None,
+                 failed_avp=None,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
+
+        DiameterAnswer.__init__(self, 
+                                command_code=RESET_MESSAGE, 
+                                application_id=DIAMETER_APPLICATION_S6a_S6d)
+
+        DiameterAnswer._load(self, locals())
+
+
+class ResetRequest(DiameterRequest):
+    """Implementation of Reset-Request (RSR) command as per clause 7.2.15 of
+    ETSI TS 129 272 V16.3.0 (2020-11).
+
+    The Reset-Request is indicated by the Command Code field set to 322 and
+    the 'R' bit set in the Command Flags field.
+
+    Usage::
+
+        >>> from bromelia.lib.etsi_3gpp_s6a import RSR
+        >>> rsr_avps = {
+        ...     "destination_realm": "example.com",
+        ...     "user_name": "frodo",
+        ... }
+        >>> rsr = RSR(**rsr_avps)
+        >>> pur
+        <Diameter Message: 322 [RSR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
+    """    
+
+    mandatory = {
+                    "session_id": SessionIdAVP,
+                    "auth_session_state": AuthSessionStateAVP,
+                    "origin_host": OriginHostAVP,
+                    "origin_realm": OriginRealmAVP,
+                    "destination_realm": DestinationRealmAVP,
+    }
+
+    optionals = {
+                    "user_id": UserIdAVP,
+                    # "drmp": DrmpAVP,
+                    "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
+                    "destination_host": DestinationHostAVP,
+                    # "oc_supported_features": OcSupportedFeaturesAVP,
+                    "supported_features": SupportedFeaturesAVP,
+                    # "eps_location_information": EpsLocationInformationAVP,
+                    "proxy_info": ProxyInfoAVP,
+                    "route_record": RouteRecordAVP,
+    }
+
+    def __init__(self, 
+                 session_id=platform.node(), 
+                 drmp=None,
+                 vendor_specific_application_id=[VendorIdAVP(VENDOR_ID_3GPP), AuthApplicationIdAVP(DIAMETER_APPLICATION_S6a_S6d)],
+                 auth_session_state=NO_STATE_MAINTAINED,
+                 origin_host=platform.node(), 
+                 origin_realm=socket.getfqdn(), 
+                 destination_host=None,
+                 destination_realm=None,
+                 user_name=None,
+                 oc_supported_features=None,
+                 pur_flags=None,
+                 supported_features=None,
+                 eps_location_information=None,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
+
+        DiameterRequest.__init__(self, 
+                                 command_code=RESET_MESSAGE, 
+                                 application_id=DIAMETER_APPLICATION_S6a_S6d)
+
+        DiameterRequest._load(self, locals())
+
+
 class UpdateLocationAnswer(DiameterAnswer):
     """Implementation of Update-Location-Answer (ULA) command as per 
     clause 7.2.4 of ETSI TS 129 272 V15.4.0 (2018-07).

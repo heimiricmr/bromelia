@@ -720,6 +720,23 @@ class NorFlagsAVP(DiameterAVP, Unsigned32Type):
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
+class UserIdAVP(DiameterAVP, UTF8StringType):
+    """Implementation of User-Id AVP in Section 7.3.50 pf ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The User-Id AVP (AVP Code 1) is of type UTF8String.
+    """
+    code = USER_ID_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self,
+                             UserIdAVP.code,
+                             UserIdAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        UTF8StringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
 class PurFlagsAVP(DiameterAVP, Unsigned32Type):
     """Implementation of PUR-Flags AVP in Section 7.3.149 of 
     ETSI TS 129 272 V15.4.0 (2018-07).

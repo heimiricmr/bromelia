@@ -29,3 +29,5 @@ from .messages import UpdateLocationRequest as ULR
 
 from .messages import InsertSubscriberDataRequest as IDR
 
+from .messages import ResetRequest as RSR
+from .messages import ResetAnswer as RSA
