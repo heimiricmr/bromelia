@@ -49,6 +49,7 @@ setuptools.setup(
     ],
     install_requires=[
         "pyyaml"
+        "pysctp"
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",

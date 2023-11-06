@@ -35,6 +35,8 @@ from .config import (SLEEP_TIMER, WAITING_CONN_TIMER,
 from .config import CLOSED, I_OPEN, R_OPEN
 from .constants import DIAMETER_AGENT_CLIENT_MODE
 from .constants import DIAMETER_AGENT_SERVER_MODE
+from .constants import DIAMETER_AGENT_TRANSPORT_TYPE_TCP
+from .constants import DIAMETER_AGENT_TRANSPORT_TYPE_SCTP
 from .exceptions import AVPParsingError
 from .exceptions import DiameterApplicationError
 from .exceptions import DiameterAssociationError
@@ -45,6 +47,8 @@ from .proxy import DiameterBaseProxy
 from .statemachine import PeerStateMachine
 from .transport import TcpClient
 from .transport import TcpServer
+from .transport import SctpClient
+from .transport import SctpServer
 from .utils import is_base_request
 from .utils import is_base_answer
 
@@ -120,12 +124,24 @@ class DiameterAssociation(object):
         self._stop_threads = False
 
         if self.connection.mode == DIAMETER_AGENT_CLIENT_MODE:
-               self.transport = TcpClient(self.connection.peer_node.ip_address, 
+            if self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_TCP:
+                self.transport = TcpClient(self.connection.peer_node.ip_address,
                                           self.connection.peer_node.port)
-            
+            elif self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_SCTP:
+                self.transport = SctpClient(self.connection.peer_node.ip_address,
+                                           self.connection.peer_node.port)
+            else:
+                raise DiameterAssociationError("Invalid Diameter Agent transport type.")
+
         elif self.connection.mode == DIAMETER_AGENT_SERVER_MODE:
-            self.transport = TcpServer(self.connection.local_node.ip_address, 
+            if self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_TCP:
+                self.transport = TcpServer(self.connection.local_node.ip_address,
+                                        self.connection.local_node.port)
+            elif self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_SCTP:
+                self.transport = SctpServer(self.connection.local_node.ip_address,
                                        self.connection.local_node.port)
+            else:
+                raise DiameterAssociationError("Invalid Diameter Agent transport type.")
 
         else:
             raise DiameterAssociationError("Invalid Diameter Agent mode.")
@@ -324,6 +340,7 @@ class Diameter:
     default_config = {
             "MODE": "CLIENT",
             "APPLICATIONS": [],
+            "TRANSPORT_TYPE": "TCP",
             "LOCAL_NODE_HOSTNAME": platform.node(),
             "LOCAL_NODE_REALM": socket.getfqdn(),
             "LOCAL_NODE_IP_ADDRESS": socket.gethostbyname(platform.node()),
@@ -480,6 +497,7 @@ class Diameter:
         print(f"  * Running Diameter app ({app_ids}) on "\
               f"{self.config['LOCAL_NODE_IP_ADDRESS']}"\
               f":{self.config['LOCAL_NODE_PORT']} as "\
+              f"{self.config['TRANSPORT_TYPE']} "\
               f"{self.config['MODE']} mode (CEX)")
 
         try:

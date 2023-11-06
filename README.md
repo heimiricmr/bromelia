@@ -84,6 +84,7 @@ config = {
                                 "vendor_id": VENDOR_ID_3GPP, 
                                 "app_id": DIAMETER_APPLICATION_S6a_S6d
             }],
+            "TRANSPORT_TYPE": "TCP",
             "LOCAL_NODE_HOSTNAME": LOCAL_HOSTNAME,
             "LOCAL_NODE_REALM": LOCAL_REALM,
             "LOCAL_NODE_IP_ADDRESS": "127.0.0.1",
@@ -122,7 +123,7 @@ with app.context():
 
 ```bash
 $ python3 examples/diameter-app1/diameter_mme.py
-  * Running Diameter app (3GPP S6a) on 127.0.0.1:3868 as CLIENT mode (CEX)
+  * Running Diameter app (3GPP S6a) on 127.0.0.1:3868 as TCP CLIENT mode (CEX)
 ```
 
 For more information, see [How to build your Diameter application: The 1st way (Not that good)](docs/diameter-app1.md) in [Documentation](#documentation) section.
@@ -157,7 +158,7 @@ if __name__ == "__main__":
 
 ```bash
 $ python3 examples/diameter-app2/bromelia_mme.py
-  * Running Diameter app (3GPP S6a) on 127.0.0.1:3868 as CLIENT mode (CEX)
+  * Running Diameter app (3GPP S6a) on 127.0.0.1:3868 as TCP CLIENT mode (CEX)
 ```
 
 For more information, see [How to build your Diameter application: The 2nd way (The Best ever!)](docs/diameter-app2.md) in [Documentation](#documentation) section.

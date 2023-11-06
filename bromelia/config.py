@@ -52,6 +52,9 @@ TRACKING_SOCKET_EVENTS_TIMEOUT = 1
 
 class Config(dict):
     def __init__(self, defaults=None):
+        if not defaults.get("TRANSPORT_TYPE"):
+            defaults["TRANSPORT_TYPE"] = "TCP"
+
         dict.__init__(self, defaults or {})
 
 
