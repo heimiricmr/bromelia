@@ -11,6 +11,7 @@
     :license: MIT, see LICENSE for more details.
 """
 import logging
+import types
 
 from .avps import AuthRequestTypeAVP
 from .constants import *
@@ -99,7 +100,6 @@ class ProcessDiameterMessage:
             if hop_by_hop_key in association.pending_requests:
                 if message.header.end_to_end == association.pending_requests[hop_by_hop_key].header.end_to_end:
                     association.pending_requests.pop(hop_by_hop_key)
-
     
     @staticmethod
     def is_valid_origin_host_avp(avp, connection):
@@ -338,12 +338,10 @@ class ProcessCapabilityExchange():
             elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
                 self.checklist_optional_avps += 1
 
-
         if (self.checklist_mandatory_avps == 5) and (self.checklist_optional_avps >= 0 and self.checklist_optional_avps <= 7):
             self.is_valid = True
         else:
             self.is_valid = False
-
 
     def process_answer(self):
         ProcessDiameterMessage.process_answer_from_existing_pending_request(self.association, self.message)
@@ -496,6 +494,12 @@ class ProcessDisconnectPeer():
 
 
 class BaseMessageProcessor:
+    
+    recv_callback = None
+    
+    def set_recv_callback(callback: types.FunctionType):
+        BaseMessageProcessor.recv_callback = callback
+    
     def __init__(self, association):
         self.association = association
 
@@ -532,6 +536,11 @@ class BaseMessageProcessor:
 
 
     def check_message(self, msg):
+        
+        if BaseMessageProcessor.recv_callback:
+            BaseMessageProcessor.recv_callback(self.association, msg)
+            return
+
         if is_answer_message(msg):
             process_answer(self.association, msg)
             
