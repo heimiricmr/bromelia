@@ -30,9 +30,9 @@ from bromelia.lib.etsi_3gpp_s6a import CLR # CancelLocationRequest
 config_file = os.path.join(basedir, "bromelia_hss_config.yaml")
 
 app = Bromelia(config_file=config_file)
-app.load_messages_into_application_id([CLA, CLR], DIAMETER_APPLICATION_S6a_S6d)
+app.load_messages_into_application_id([CLA, CLR], DIAMETER_APPLICATION_S6a)
 
-CLR = app.s6a_s6d.CLR   #: Creating CLR alias
+CLR = app.s6a.CLR   #: Creating CLR alias
 
 if __name__ == "__main__":
     app.run()   #: It will be blocked until connection has been established

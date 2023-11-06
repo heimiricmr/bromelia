@@ -28,11 +28,11 @@ from bromelia.lib.etsi_3gpp_s6a import CLR # CancelLocationRequest
 config_file = os.path.join(basedir, "bromelia_mme_config.yaml")
 
 app = Bromelia(config_file=config_file)
-app.load_messages_into_application_id([CLA, CLR], DIAMETER_APPLICATION_S6a_S6d)
+app.load_messages_into_application_id([CLA, CLR], DIAMETER_APPLICATION_S6a)
 
-CLA = app.s6a_s6d.CLA   #: Creating CLA alias
+CLA = app.s6a.CLA   #: Creating CLA alias
 
-@app.route(application_id=DIAMETER_APPLICATION_S6a_S6d, command_code=CANCEL_LOCATION_MESSAGE)
+@app.route(application_id=DIAMETER_APPLICATION_S6a, command_code=CANCEL_LOCATION_MESSAGE)
 def clr(request):
     return CLA(result_code=DIAMETER_SUCCESS)
 
