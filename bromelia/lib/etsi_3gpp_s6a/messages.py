@@ -567,12 +567,12 @@ class ResetAnswer(DiameterAnswer):
                     "auth_session_state": AuthSessionStateAVP,
                     "origin_host": OriginHostAVP,
                     "origin_realm": OriginRealmAVP,
-                    "result_code": ResultCodeAVP,
-                    "experimental_result": ExperimentalResultAVP,
     }
 
     optionals = { 
                     # "drmp": DrmpAVP,
+                    "result_code": ResultCodeAVP,
+                    "experimental_result": ExperimentalResultAVP,
                     "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
                     # "oc_supported_features": OcSupportedFeaturesAVP,
                     # "oc_olr": OcOlrAVP,
@@ -619,10 +619,10 @@ class ResetRequest(DiameterRequest):
         >>> from bromelia.lib.etsi_3gpp_s6a import RSR
         >>> rsr_avps = {
         ...     "destination_realm": "example.com",
-        ...     "user_name": "frodo",
+        ...     "destination_host": "host.example.com",
         ... }
         >>> rsr = RSR(**rsr_avps)
-        >>> pur
+        >>> rsr
         <Diameter Message: 322 [RSR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
     """    
 
@@ -632,18 +632,18 @@ class ResetRequest(DiameterRequest):
                     "origin_host": OriginHostAVP,
                     "origin_realm": OriginRealmAVP,
                     "destination_realm": DestinationRealmAVP,
+                    "destination_host": DestinationHostAVP,
     }
 
     optionals = {
                     "user_id": UserIdAVP,
                     # "drmp": DrmpAVP,
                     "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
-                    "destination_host": DestinationHostAVP,
-                    # "oc_supported_features": OcSupportedFeaturesAVP,
                     "supported_features": SupportedFeaturesAVP,
-                    # "eps_location_information": EpsLocationInformationAVP,
                     "proxy_info": ProxyInfoAVP,
                     "route_record": RouteRecordAVP,
+                    "subscription_data": SubscriptionDataAVP,
+                    "subscription_data_deletion": SubscriptionDataDeletionAVP,
     }
 
     def __init__(self, 
@@ -655,11 +655,11 @@ class ResetRequest(DiameterRequest):
                  origin_realm=socket.getfqdn(), 
                  destination_host=None,
                  destination_realm=None,
-                 user_name=None,
-                 oc_supported_features=None,
-                 pur_flags=None,
                  supported_features=None,
-                 eps_location_information=None,
+                 user_id=None,
+                 reset_id=None,
+                 subscription_data=None,
+                 subscription_data_deletion=None,
                  proxy_info=None,
                  route_record=None,
                  **kwargs):
@@ -838,13 +838,15 @@ class InsertSubscriberDataRequest(DiameterRequest):
     """Implementation of Insert-Subscriber-Data-Request (IDR) command as per 
     clause 7.2.9 of ETSI TS 129 272 V15.8.0 (2019-07).
 
-    The Insert-Subscriber-Data-Request is indicated by the Command Code field set to 319 and the 'R' bit set in the Command Flags field.
+    The Insert-Subscriber-Data-Request is indicated by the Command Code field 
+    set to 319 and the 'R' bit set in the Command Flags field.
 
     Usage::
 
         >>> from bromelia.lib.etsi_3gpp_s6a import IDR
-        >>> ulr_avps = {
+        >>> idr_avps = {
         ...     "destination_realm": "example.com",
+        ...     "destination_host": "host.example.com",
         ...     "user_name": "frodo",
         ...     "visited_plmn_id": bytes.fromhex("ffffff")
         ... }
@@ -862,14 +864,13 @@ class InsertSubscriberDataRequest(DiameterRequest):
                     "destination_host": DestinationHostAVP,
                     "user_name": UserNameAVP,
                     "subscription_data": SubscriptionDataAVP,
-                    "idr_flags": IdrFlagsAVP,
     }
 
     optionals = {
                     #"drmp": DrmpAVP,
+                    "idr_flags": IdrFlagsAVP,
                     "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
                     "supported_features": SupportedFeaturesAVP,
-                    "terminal_information": TerminalInformationAVP,
                     "proxy_info": ProxyInfoAVP,
                     #"reset_id": ResetIdAVP,
                     "route_record": RouteRecordAVP,
@@ -889,7 +890,6 @@ class InsertSubscriberDataRequest(DiameterRequest):
                  subscription_data=None,
                  
                  supported_features=None,
-                 terminal_information=None,
                  idr_flags=3,
                  proxy_info=None,
                  route_record=None,

@@ -651,9 +651,9 @@ class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
 
 class IdrFlagsAVP(DiameterAVP, Unsigned32Type):
     """Implementation of IDR-Flags AVP in Section 7.3.103 of 
-    ETSI TS 129 272 V15.08.0 (2019-07).
+    ETSI TS 129 272 V15.8.0 (2019-07).
 
-    The IDR-Flags AVP (AVP Code 1405) is of type Unsigned32.
+    The IDR-Flags AVP (AVP Code 1490) is of type Unsigned32.
     """
     code = IDR_FLAGS_AVP_CODE
     vendor_id = VENDOR_ID_3GPP
@@ -721,9 +721,10 @@ class NorFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class UserIdAVP(DiameterAVP, UTF8StringType):
-    """Implementation of User-Id AVP in Section 7.3.50 pf ETSI TS 129 272 V15.4.0 (2018-07).
+    """Implementation of User-Id AVP in Section 7.3.50 of 
+    ETSI TS 129 272 V15.4.0 (2018-07).
 
-    The User-Id AVP (AVP Code 1) is of type UTF8String.
+    The User-Id AVP (AVP Code 1444) is of type UTF8String.
     """
     code = USER_ID_AVP_CODE
     vendor_id = VENDOR_ID_3GPP
