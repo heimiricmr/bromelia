@@ -649,6 +649,23 @@ class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
+class IdrFlagsAVP(DiameterAVP, Unsigned32Type):
+    """Implementation of IDR-Flags AVP in Section 7.3.103 of 
+    ETSI TS 129 272 V15.8.0 (2019-07).
+
+    The IDR-Flags AVP (AVP Code 1490) is of type Unsigned32.
+    """
+    code = IDR_FLAGS_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             IdrFlagsAVP.code,
+                             IdrFlagsAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
 
 class UlaFlagsAVP(DiameterAVP, Unsigned32Type):
     """Implementation of ULA-Flags AVP in Section 7.3.8 of 
@@ -701,6 +718,24 @@ class NorFlagsAVP(DiameterAVP, Unsigned32Type):
         DiameterAVP.set_mandatory_bit(self, True)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class UserIdAVP(DiameterAVP, UTF8StringType):
+    """Implementation of User-Id AVP in Section 7.3.50 of 
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The User-Id AVP (AVP Code 1444) is of type UTF8String.
+    """
+    code = USER_ID_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self,
+                             UserIdAVP.code,
+                             UserIdAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        UTF8StringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
 class PurFlagsAVP(DiameterAVP, Unsigned32Type):
@@ -1065,3 +1100,89 @@ class ClrFlagsAVP(DiameterAVP, Unsigned32Type):
                              ClrFlagsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
         Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class TSCodeAVP(DiameterAVP, OctetStringType):
+    """Implementation of TS-Code AVP in Section 7.3.208 of 
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The TS-Code AVP (AVP Code 1487) is of type OctetString.
+    Octets are coded according to 3GPP TS 29.002 [24].
+    """
+    code = TS_CODE_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             TSCodeAVP.code,
+                             TSCodeAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        OctetStringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class SSCodeAVP(DiameterAVP, OctetStringType):
+    """Implementation of SS-Code AVP in Section 7.3.87 of 
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The TS-Code AVP (AVP Code 1476) is of type OctetString.
+    Octets are coded according to 3GPP TS 29.002 [24].
+    """
+    code = SS_CODE_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             SSCodeAVP.code,
+                             SSCodeAVP.vendor_id)
+        DiameterAVP.set_mandatory_bit(self, True)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        OctetStringType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class DsrFlagsAVP(DiameterAVP, Unsigned32Type):
+    """Implementation of DSR-Flags AVP in Section 7.3.25 of 
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The DSR-Flags AVP (AVP Code 1421) is of type Unsigned32.
+    """
+    code = DSR_FLAGS_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             DsrFlagsAVP.code,
+                             DsrFlagsAVP.vendor_id)
+        DiameterAVP.set_vendor_id_bit(self, True)
+        Unsigned32Type.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+
+class SubscriptionDataDeletionAVP(DiameterAVP, GroupedType):
+    """Implementation of Subscription-Data-Deletion AVP in Section 7.3.208 of 
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The Subscription-Data-Deletion AVP (AVP Code 1685) is of type Grouped.
+    """
+    code = SUBSCRIPTION_DATA_DELETION_AVP_CODE
+    vendor_id = VENDOR_ID_3GPP
+    
+    mandatory = {
+                    "dsr_flags": DsrFlagsAVP,
+    }
+
+    optionals = {
+                    #"scef_id": ScefIdAVP,
+                    "context_identifier": ContextIdentifierAVP,
+                    "ts_code": TSCodeAVP,
+                    "ss_code": SSCodeAVP,
+    }
+
+    def __init__(self, data):
+        DiameterAVP.__init__(self, 
+                             SubscriptionDataDeletionAVP.code,
+                             SubscriptionDataDeletionAVP.vendor_id)
+        SubscriptionDataDeletionAVP.set_mandatory_bit(self, True)
+        SubscriptionDataDeletionAVP.set_vendor_id_bit(self, True)
+        GroupedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
+
+

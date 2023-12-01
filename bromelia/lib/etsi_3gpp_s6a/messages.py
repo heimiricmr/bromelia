@@ -547,6 +547,130 @@ class PurgeUeRequest(DiameterRequest):
         DiameterRequest._load(self, locals())
 
 
+class ResetAnswer(DiameterAnswer):
+    """Implementation of Reset-Answer (RSA) command as per clause 7.2.16 of
+    ETSI TS 129 272 V15.4.0 (2018-07).
+
+    The Reset-Answer is indicated by the Command Code field set to 322 and
+    Command Flag's 'R' bit cleared.
+
+    Usage::
+
+        >>> from bromelia.lib.etsi_3gpp_s6a import RSA
+        >>> rsa = RSA()
+        >>> rsa
+        <Diameter Message: 322 [RSA] PXY, 16777251 [3GPP S6a], 5 AVP(s)>
+    """
+
+    mandatory = {
+                    "session_id": SessionIdAVP,
+                    "auth_session_state": AuthSessionStateAVP,
+                    "origin_host": OriginHostAVP,
+                    "origin_realm": OriginRealmAVP,
+    }
+
+    optionals = { 
+                    # "drmp": DrmpAVP,
+                    "result_code": ResultCodeAVP,
+                    "experimental_result": ExperimentalResultAVP,
+                    "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
+                    # "oc_supported_features": OcSupportedFeaturesAVP,
+                    # "oc_olr": OcOlrAVP,
+                    # "load": LoadAVP,
+                    "failed_avp": FailedAvpAVP,
+                    "proxy_info": ProxyInfoAVP,
+                    "route_record": RouteRecordAVP,
+    }
+
+    def __init__(self,
+                 session_id=platform.node(),
+                 drmp=None,
+                 vendor_specific_application_id=[VendorIdAVP(VENDOR_ID_3GPP), AuthApplicationIdAVP(DIAMETER_APPLICATION_S6a_S6d)],
+                 result_code=None,
+                 experimental_result=None,
+                 auth_session_state=NO_STATE_MAINTAINED,
+                 origin_host=platform.node(), 
+                 origin_realm=socket.getfqdn(), 
+                 oc_supported_features=None,
+                 oc_olr=None,
+                 load=None,
+                 pua_flags=None,
+                 failed_avp=None,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
+
+        DiameterAnswer.__init__(self, 
+                                command_code=RESET_MESSAGE, 
+                                application_id=DIAMETER_APPLICATION_S6a_S6d)
+
+        DiameterAnswer._load(self, locals())
+
+
+class ResetRequest(DiameterRequest):
+    """Implementation of Reset-Request (RSR) command as per clause 7.2.15 of
+    ETSI TS 129 272 V16.3.0 (2020-11).
+
+    The Reset-Request is indicated by the Command Code field set to 322 and
+    the 'R' bit set in the Command Flags field.
+
+    Usage::
+
+        >>> from bromelia.lib.etsi_3gpp_s6a import RSR
+        >>> rsr_avps = {
+        ...     "destination_realm": "example.com",
+        ...     "destination_host": "host.example.com",
+        ... }
+        >>> rsr = RSR(**rsr_avps)
+        >>> rsr
+        <Diameter Message: 322 [RSR] REQ|PXY, 16777251 [3GPP S6a], 7 AVP(s)>
+    """    
+
+    mandatory = {
+                    "session_id": SessionIdAVP,
+                    "auth_session_state": AuthSessionStateAVP,
+                    "origin_host": OriginHostAVP,
+                    "origin_realm": OriginRealmAVP,
+                    "destination_realm": DestinationRealmAVP,
+                    "destination_host": DestinationHostAVP,
+    }
+
+    optionals = {
+                    "user_id": UserIdAVP,
+                    # "drmp": DrmpAVP,
+                    "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
+                    "supported_features": SupportedFeaturesAVP,
+                    "proxy_info": ProxyInfoAVP,
+                    "route_record": RouteRecordAVP,
+                    "subscription_data": SubscriptionDataAVP,
+                    "subscription_data_deletion": SubscriptionDataDeletionAVP,
+    }
+
+    def __init__(self, 
+                 session_id=platform.node(), 
+                 drmp=None,
+                 vendor_specific_application_id=[VendorIdAVP(VENDOR_ID_3GPP), AuthApplicationIdAVP(DIAMETER_APPLICATION_S6a_S6d)],
+                 auth_session_state=NO_STATE_MAINTAINED,
+                 origin_host=platform.node(), 
+                 origin_realm=socket.getfqdn(), 
+                 destination_host=None,
+                 destination_realm=None,
+                 supported_features=None,
+                 user_id=None,
+                 reset_id=None,
+                 subscription_data=None,
+                 subscription_data_deletion=None,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
+
+        DiameterRequest.__init__(self, 
+                                 command_code=RESET_MESSAGE, 
+                                 application_id=DIAMETER_APPLICATION_S6a_S6d)
+
+        DiameterRequest._load(self, locals())
+
+
 class UpdateLocationAnswer(DiameterAnswer):
     """Implementation of Update-Location-Answer (ULA) command as per 
     clause 7.2.4 of ETSI TS 129 272 V15.4.0 (2018-07).
@@ -708,3 +832,88 @@ class UpdateLocationRequest(DiameterRequest):
                                  application_id=DIAMETER_APPLICATION_S6a_S6d)
 
         DiameterRequest._load(self, locals())
+
+
+class InsertSubscriberDataRequest(DiameterRequest):
+    """Implementation of Insert-Subscriber-Data-Request (IDR) command as per 
+    clause 7.2.9 of ETSI TS 129 272 V15.8.0 (2019-07).
+
+    The Insert-Subscriber-Data-Request is indicated by the Command Code field 
+    set to 319 and the 'R' bit set in the Command Flags field.
+
+    Usage::
+
+    >>> from bromelia.lib.etsi_3gpp_s6a import IDR
+    >>> from bromelia.lib.etsi_3gpp_s6a.avps import *
+    >>> from bromelia.constants.etsi_3gpp.ts_129_272 import *
+    >>> apn_conf_avp = [
+    ...     ContextIdentifierAVP(1),
+    ...     ServiceSelectionAVP('*'),
+    ...     PdnTypeAVP(PDN_TYPE_IPV4),
+    ... ]
+    >>> apn_confprofile_avp = [
+    ...     ContextIdentifierAVP(1),
+    ...     AllApnConfigurationsIncludedIndicatorAVP(ALL_APN_CONFIGURATIONS_INCLUDED),
+    ...     ApnConfigurationAVP(apn_conf_avp),
+    ... ]
+    >>> subscription_avp = [
+    ... ApnConfigurationProfileAVP(apn_confprofile_avp)
+    ... ]
+    >>> idr_avps = {
+    ...     "destination_realm": "example.com",
+    ...     "destination_host": "host.example.com",
+    ...     "user_name": "frodo",
+    ...     "subscription_data": subscription_avp,
+    ... }
+    >>> idr = IDR(**idr_avps)
+    >>> idr
+    <Diameter Message: 319 [IDR] REQ|PXY, 16777251 [3GPP S6a], 10 AVP(s)>
+    """    
+
+    mandatory = {
+                    "session_id": SessionIdAVP,
+                    "auth_session_state": AuthSessionStateAVP,
+                    "origin_host": OriginHostAVP,
+                    "origin_realm": OriginRealmAVP,
+                    "destination_realm": DestinationRealmAVP,
+                    "destination_host": DestinationHostAVP,
+                    "user_name": UserNameAVP,
+                    "subscription_data": SubscriptionDataAVP,
+    }
+
+    optionals = {
+                    #"drmp": DrmpAVP,
+                    "idr_flags": IdrFlagsAVP,
+                    "vendor_specific_application_id": VendorSpecificApplicationIdAVP,
+                    "supported_features": SupportedFeaturesAVP,
+                    "proxy_info": ProxyInfoAVP,
+                    #"reset_id": ResetIdAVP,
+                    "route_record": RouteRecordAVP,
+    }
+
+    def __init__(self, 
+                 session_id=platform.node(), 
+                 drmp=None,
+                 vendor_specific_application_id=[VendorIdAVP(VENDOR_ID_3GPP), AuthApplicationIdAVP(DIAMETER_APPLICATION_S6a_S6d)],
+                 auth_session_state=NO_STATE_MAINTAINED,
+                 origin_host=platform.node(), 
+                 origin_realm=socket.getfqdn(), 
+                 destination_host=None,
+                 destination_realm=None,
+                 user_name=None,
+                 
+                 subscription_data=None,
+                 
+                 supported_features=None,
+                 idr_flags=3,
+                 proxy_info=None,
+                 route_record=None,
+                 **kwargs):
+
+        DiameterRequest.__init__(self, 
+                                 command_code=INSERT_SUBSCRIBER_DATA_MESSAGE, 
+                                 application_id=DIAMETER_APPLICATION_S6a_S6d)
+
+        DiameterRequest._load(self, locals())
+    
+        

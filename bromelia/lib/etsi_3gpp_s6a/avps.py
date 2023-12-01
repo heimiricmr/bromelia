@@ -36,6 +36,16 @@ from ...avps.etsi_3gpp.ts_129_272 import UeSrvccCapabilityAVP
 from ...avps.etsi_3gpp.ts_129_272 import SupportedServicesAVP
 from ...avps.etsi_3gpp.ts_129_272 import CancellationTypeAVP
 from ...avps.etsi_3gpp.ts_129_272 import ClrFlagsAVP
+from ...avps.etsi_3gpp.ts_129_272 import IdrFlagsAVP
+from ...avps.etsi_3gpp.ts_129_272 import UserIdAVP
+from ...avps.etsi_3gpp.ts_129_272 import SSCodeAVP
+from ...avps.etsi_3gpp.ts_129_272 import TSCodeAVP
+from ...avps.etsi_3gpp.ts_129_272 import DsrFlagsAVP
+from ...avps.etsi_3gpp.ts_129_272 import SubscriptionDataDeletionAVP
+from ...avps.etsi_3gpp.ts_129_272 import PdnTypeAVP
+from ...avps.etsi_3gpp.ts_129_272 import AllApnConfigurationsIncludedIndicatorAVP
+from ...avps.etsi_3gpp.ts_129_272 import ApnConfigurationAVP
+from ...avps.etsi_3gpp.ts_129_272 import ApnConfigurationProfileAVP
 
 from ...avps.ietf.rfc5447 import Mip6AgentInfoAVP
 
