@@ -623,7 +623,7 @@ class ResetRequest(DiameterRequest):
         ... }
         >>> rsr = RSR(**rsr_avps)
         >>> rsr
-        <Diameter Message: 322 [RSR] REQ|PXY, 16777251 [3GPP S6a], 8 AVP(s)>
+        <Diameter Message: 322 [RSR] REQ|PXY, 16777251 [3GPP S6a], 7 AVP(s)>
     """    
 
     mandatory = {
@@ -843,16 +843,31 @@ class InsertSubscriberDataRequest(DiameterRequest):
 
     Usage::
 
-        >>> from bromelia.lib.etsi_3gpp_s6a import IDR
-        >>> idr_avps = {
-        ...     "destination_realm": "example.com",
-        ...     "destination_host": "host.example.com",
-        ...     "user_name": "frodo",
-        ...     "visited_plmn_id": bytes.fromhex("ffffff")
-        ... }
-        >>> idr = IDR(**idr_avps)
-        >>> idr
-        <Diameter Message: 316 [ULR] REQ|PXY, 16777251 [3GPP S6a], 10 AVP(s)>
+    >>> from bromelia.lib.etsi_3gpp_s6a import IDR
+    >>> from bromelia.lib.etsi_3gpp_s6a.avps import *
+    >>> from bromelia.constants.etsi_3gpp.ts_129_272 import *
+    >>> apn_conf_avp = [
+    ...     ContextIdentifierAVP(1),
+    ...     ServiceSelectionAVP('*'),
+    ...     PdnTypeAVP(PDN_TYPE_IPV4),
+    ... ]
+    >>> apn_confprofile_avp = [
+    ...     ContextIdentifierAVP(1),
+    ...     AllApnConfigurationsIncludedIndicatorAVP(ALL_APN_CONFIGURATIONS_INCLUDED),
+    ...     ApnConfigurationAVP(apn_conf_avp),
+    ... ]
+    >>> subscription_avp = [
+    ... ApnConfigurationProfileAVP(apn_confprofile_avp)
+    ... ]
+    >>> idr_avps = {
+    ...     "destination_realm": "example.com",
+    ...     "destination_host": "host.example.com",
+    ...     "user_name": "frodo",
+    ...     "subscription_data": subscription_avp,
+    ... }
+    >>> idr = IDR(**idr_avps)
+    >>> idr
+    <Diameter Message: 319 [IDR] REQ|PXY, 16777251 [3GPP S6a], 10 AVP(s)>
     """    
 
     mandatory = {
