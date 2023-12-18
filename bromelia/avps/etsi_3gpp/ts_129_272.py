@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module contains Diameter AVP classes defined in ETSI TS 129 272.
-    
+
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
@@ -33,7 +33,7 @@ from ...utils import decode_from_tbcd, encode_to_tbcd
 
 
 class StnSrAVP(DiameterAVP, OctetStringType):
-    """Implementation of STN-SR AVP in Section 7.3.39 of 
+    """Implementation of STN-SR AVP in Section 7.3.39 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The STN-SR AVP (AVP Code 1433) is of type OctetString.
@@ -42,7 +42,7 @@ class StnSrAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              StnSrAVP.code,
                              StnSrAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -62,11 +62,11 @@ class StnSrAVP(DiameterAVP, OctetStringType):
 
 
     def decode(self):
-        return decode_from_tbcd(self.data)
+        return decode_from_tbcd(self.data.hex())
 
 
 class AmbrAVP(DiameterAVP, GroupedType):
-    """Implementation of AMBR AVP in Section 7.3.41 of 
+    """Implementation of AMBR AVP in Section 7.3.41 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The AMBR AVP (AVP Code 1435) is of type Grouped.
@@ -84,7 +84,7 @@ class AmbrAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              AmbrAVP.code,
                              AmbrAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -93,7 +93,7 @@ class AmbrAVP(DiameterAVP, GroupedType):
 
 
 class SubscriberStatusAVP(DiameterAVP, EnumeratedType):
-    """Implementation of Subscriber-Status AVP in Section 7.3.29 of 
+    """Implementation of Subscriber-Status AVP in Section 7.3.29 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The Subscriber-Status AVP (AVP code 1424) is of type Enumerated.
@@ -107,7 +107,7 @@ class SubscriberStatusAVP(DiameterAVP, EnumeratedType):
      ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              SubscriberStatusAVP.code,
                              SubscriberStatusAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -125,7 +125,7 @@ class ContextIdentifierAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ContextIdentifierAVP.code,
                              ContextIdentifierAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -149,10 +149,10 @@ class PdnTypeAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              PdnTypeAVP.code,
                              PdnTypeAVP.vendor_id)
-        DiameterAVP.set_vendor_id_bit(self, True)    
+        DiameterAVP.set_vendor_id_bit(self, True)
         EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
@@ -166,7 +166,7 @@ class ServiceSelectionAVP(DiameterAVP, UTF8StringType):
     vendor_id = None
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ServiceSelectionAVP.code,
                              ServiceSelectionAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -174,7 +174,7 @@ class ServiceSelectionAVP(DiameterAVP, UTF8StringType):
 
 
 class AllocationRetentionPriorityAVP(DiameterAVP, GroupedType):
-    """Implementation of Allocation-Retention-Priority AVP in Section 7.3.40 
+    """Implementation of Allocation-Retention-Priority AVP in Section 7.3.40
     of ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Allocation-Retention-Priority AVP (AVP Code 1034) is of type Grouped.
@@ -200,7 +200,7 @@ class AllocationRetentionPriorityAVP(DiameterAVP, GroupedType):
 
 
 class EpsSubscribedQosProfileAVP(DiameterAVP, GroupedType):
-    """Implementation of EPS-Subscribed-QoS-Profile AVP in Section 7.3.37 
+    """Implementation of EPS-Subscribed-QoS-Profile AVP in Section 7.3.37
     of ETSI TS 129 272 V15.10.0 (2020-01)
 
     The EPS-Subscribed-QoS-Profile AVP (AVP Code 1431) is of type Grouped.
@@ -215,7 +215,7 @@ class EpsSubscribedQosProfileAVP(DiameterAVP, GroupedType):
     optionals = {}
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              EpsSubscribedQosProfileAVP.code,
                              EpsSubscribedQosProfileAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -224,10 +224,10 @@ class EpsSubscribedQosProfileAVP(DiameterAVP, GroupedType):
 
 
 class VplmnDynamicAddressAllowedAVP(DiameterAVP, EnumeratedType):
-    """Implementation of VPLMN-Dynamic-Address-Allowed AVP in Section 7.3.38 
+    """Implementation of VPLMN-Dynamic-Address-Allowed AVP in Section 7.3.38
     of ETSI TS 129 272 V15.10.0 (2020-01).
 
-    The VPLMN-Dynamic-Address-Allowed AVP (AVP Code 1432) is of type 
+    The VPLMN-Dynamic-Address-Allowed AVP (AVP Code 1432) is of type
     Enumerated.
     """
     code = VPLMN_DYNAMIC_ADDRESS_ALLOWED_AVP_CODE
@@ -240,7 +240,7 @@ class VplmnDynamicAddressAllowedAVP(DiameterAVP, EnumeratedType):
 
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              VplmnDynamicAddressAllowedAVP.code,
                              VplmnDynamicAddressAllowedAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -249,7 +249,7 @@ class VplmnDynamicAddressAllowedAVP(DiameterAVP, EnumeratedType):
 
 
 class PdnGwAllocationTypeAVP(DiameterAVP, EnumeratedType):
-    """Implementation of PDN-GW-Allocation-Type AVP in Section 7.3.44 of 
+    """Implementation of PDN-GW-Allocation-Type AVP in Section 7.3.44 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The PDN-GW-Allocation-Type AVP (AVP Code 1438) is of type Enumerated.
@@ -263,7 +263,7 @@ class PdnGwAllocationTypeAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              PdnGwAllocationTypeAVP.code,
                              PdnGwAllocationTypeAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -311,7 +311,7 @@ class ApnConfigurationAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ApnConfigurationAVP.code,
                              ApnConfigurationAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -320,10 +320,10 @@ class ApnConfigurationAVP(DiameterAVP, GroupedType):
 
 
 class AllApnConfigurationsIncludedIndicatorAVP(DiameterAVP, EnumeratedType):
-    """Implementation of All-APN-Configurations-Included-Indicator AVP in 
+    """Implementation of All-APN-Configurations-Included-Indicator AVP in
     Section 7.3.33 of ETSI TS 129 272 V15.4.0 (2018-07).
 
-    The All-APN-Configurations-Included-Indicator AVP (AVP Code 1428) is of 
+    The All-APN-Configurations-Included-Indicator AVP (AVP Code 1428) is of
     type Enumerated.
     """
     code = ALL_APN_CONFIGURATIONS_INCLUDED_INDICATOR_AVP_CODE
@@ -335,11 +335,11 @@ class AllApnConfigurationsIncludedIndicatorAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              AllApnConfigurationsIncludedIndicatorAVP.code,
                              AllApnConfigurationsIncludedIndicatorAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
-        DiameterAVP.set_vendor_id_bit(self, True)    
+        DiameterAVP.set_vendor_id_bit(self, True)
         EnumeratedType.__init__(self, data=data, vendor_id=VENDOR_ID_3GPP)
 
 
@@ -362,7 +362,7 @@ class ApnConfigurationProfileAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ApnConfigurationProfileAVP.code,
                              ApnConfigurationProfileAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -371,7 +371,7 @@ class ApnConfigurationProfileAVP(DiameterAVP, GroupedType):
 
 
 class UeUsageTypeAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of UE-Usage-Type AVP in Section 7.3.202 of 
+    """Implementation of UE-Usage-Type AVP in Section 7.3.202 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The UE-Usage-Type AVP (AVP Code 1680) is of type Unsigned32.
@@ -380,7 +380,7 @@ class UeUsageTypeAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              UeUsageTypeAVP.code,
                              UeUsageTypeAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -388,7 +388,7 @@ class UeUsageTypeAVP(DiameterAVP, Unsigned32Type):
 
 
 class OperatorDeterminedBarringAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of Operator-Determined-Barring AVP in Section 7.3.30 of 
+    """Implementation of Operator-Determined-Barring AVP in Section 7.3.30 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Operator-Determined-Barring AVP (AVP Code 1425) is of type Unsigned32.
@@ -397,7 +397,7 @@ class OperatorDeterminedBarringAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data=convert_to_4_bytes(0)):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              OperatorDeterminedBarringAVP.code,
                              OperatorDeterminedBarringAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -406,7 +406,7 @@ class OperatorDeterminedBarringAVP(DiameterAVP, Unsigned32Type):
 
 
 class SubscriptionDataAVP(DiameterAVP, GroupedType):
-    """Implementation of Subscription-Data AVP in Section 7.3.2 of 
+    """Implementation of Subscription-Data AVP in Section 7.3.2 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The Subscription-Data AVP (AVP Code 1400) is of type Grouped.
@@ -459,7 +459,7 @@ class SubscriptionDataAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              SubscriptionDataAVP.code,
                              SubscriptionDataAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -477,7 +477,7 @@ class ImeiAVP(DiameterAVP, UTF8StringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ImeiAVP.code,
                              ImeiAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -486,7 +486,7 @@ class ImeiAVP(DiameterAVP, UTF8StringType):
 
 
 class NumberOfRequestedVectorsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of Number-Of-Requested-Vectors AVP in Section 7.3.14 of 
+    """Implementation of Number-Of-Requested-Vectors AVP in Section 7.3.14 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Number-Of-Requested-Vectors AVP (AVP Code 1410) is of type Unsigned32.
@@ -495,7 +495,7 @@ class NumberOfRequestedVectorsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              NumberOfRequestedVectorsAVP.code,
                              NumberOfRequestedVectorsAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -504,7 +504,7 @@ class NumberOfRequestedVectorsAVP(DiameterAVP, Unsigned32Type):
 
 
 class ReSynchronizationInfoAVP(DiameterAVP, OctetStringType):
-    """Implementation of Re-Synchronization-Info AVP in Section 7.3.15 of 
+    """Implementation of Re-Synchronization-Info AVP in Section 7.3.15 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Re-Synchronization-Info AVP (AVP Code 1411) is of type OctetString.
@@ -513,7 +513,7 @@ class ReSynchronizationInfoAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ReSynchronizationInfoAVP.code,
                              ReSynchronizationInfoAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -522,7 +522,7 @@ class ReSynchronizationInfoAVP(DiameterAVP, OctetStringType):
 
 
 class ImmediateResponsePreferredAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of Immediate-Response-Preferred AVP in Section 7.3.16 of 
+    """Implementation of Immediate-Response-Preferred AVP in Section 7.3.16 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Immediate-Response-Preferred AVP (AVP Code 1412) is of type Unsigned32.
@@ -531,7 +531,7 @@ class ImmediateResponsePreferredAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ImmediateResponsePreferredAVP.code,
                              ImmediateResponsePreferredAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -540,10 +540,10 @@ class ImmediateResponsePreferredAVP(DiameterAVP, Unsigned32Type):
 
 
 class RequestedEutranAuthenticationInfoAVP(DiameterAVP, GroupedType):
-    """Implementation of Requested-EUTRAN-Authentication-Info AVP in 
+    """Implementation of Requested-EUTRAN-Authentication-Info AVP in
     Section 7.3.11 of ETSI TS 129 272 V15.10.0 (2020-01).
 
-    The Requested-EUTRAN-Authentication-Info AVP (AVP Code 1408) is of type 
+    The Requested-EUTRAN-Authentication-Info AVP (AVP Code 1408) is of type
     Grouped.
     """
     code = REQUESTED_EUTRAN_AUTHENTICATION_INFO_AVP_CODE
@@ -557,7 +557,7 @@ class RequestedEutranAuthenticationInfoAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              RequestedEutranAuthenticationInfoAVP.code,
                              RequestedEutranAuthenticationInfoAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -575,7 +575,7 @@ class SoftwareVersionAVP(DiameterAVP, UTF8StringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              SoftwareVersionAVP.code,
                              SoftwareVersionAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -596,11 +596,11 @@ class TerminalInformationAVP(DiameterAVP, GroupedType):
     optionals = {
                      "imei": ImeiAVP,
                     # "x3gpp2_meid": x3gpp2MeidAVP,
-                    "software_version": SoftwareVersionAVP       
+                    "software_version": SoftwareVersionAVP
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              TerminalInformationAVP.code,
                              TerminalInformationAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -609,7 +609,7 @@ class TerminalInformationAVP(DiameterAVP, GroupedType):
 
 
 class EquipmentStatusAVP(DiameterAVP, EnumeratedType):
-    """Implementation of Equipment-Status AVP in Section 7.3.51 of 
+    """Implementation of Equipment-Status AVP in Section 7.3.51 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The Equipment-Status AVP (AVP Code 1445) is of type Enumerated.
@@ -624,7 +624,7 @@ class EquipmentStatusAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              EquipmentStatusAVP.code,
                              EquipmentStatusAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -633,7 +633,7 @@ class EquipmentStatusAVP(DiameterAVP, EnumeratedType):
 
 
 class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of ULR-Flags AVP in Section 7.3.7 of 
+    """Implementation of ULR-Flags AVP in Section 7.3.7 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The ULR-Flags AVP (AVP Code 1405) is of type Unsigned32.
@@ -642,7 +642,7 @@ class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              UlrFlagsAVP.code,
                              UlrFlagsAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -651,7 +651,7 @@ class UlrFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class UlaFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of ULA-Flags AVP in Section 7.3.8 of 
+    """Implementation of ULA-Flags AVP in Section 7.3.8 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The ULA-Flags AVP (AVP Code 1406) is of type Unsigned32.
@@ -660,7 +660,7 @@ class UlaFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              UlaFlagsAVP.code,
                              UlaFlagsAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -669,7 +669,7 @@ class UlaFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class AirFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of AIR-Flags AVP in Section 7.3.201 of 
+    """Implementation of AIR-Flags AVP in Section 7.3.201 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The AIR-Flags AVP (AVP Code 1679) is of type Unsigned32.
@@ -678,7 +678,7 @@ class AirFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              AirFlagsAVP.code,
                              AirFlagsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -686,7 +686,7 @@ class AirFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class NorFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of NOR-Flags AVP in Section 7.3.49 of 
+    """Implementation of NOR-Flags AVP in Section 7.3.49 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The NOR-Flags AVP (AVP Code 1443) is of type Unsigned32.
@@ -695,7 +695,7 @@ class NorFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              NorFlagsAVP.code,
                              NorFlagsAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -704,7 +704,7 @@ class NorFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class PurFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of PUR-Flags AVP in Section 7.3.149 of 
+    """Implementation of PUR-Flags AVP in Section 7.3.149 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The PUR-Flags AVP (AVP Code 1635) is of type Unsigned32.
@@ -713,7 +713,7 @@ class PurFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              PurFlagsAVP.code,
                              PurFlagsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -721,7 +721,7 @@ class PurFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class PuaFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of PUA-Flags AVP in Section 7.3.49 of 
+    """Implementation of PUA-Flags AVP in Section 7.3.49 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The PUA-Flags AVP (AVP Code 1442) is of type Unsigned32.
@@ -730,7 +730,7 @@ class PuaFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              PuaFlagsAVP.code,
                              PuaFlagsAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -739,7 +739,7 @@ class PuaFlagsAVP(DiameterAVP, Unsigned32Type):
 
 
 class AlertReasonAVP(DiameterAVP, EnumeratedType):
-    """Implementation of Alert-Reason AVP in Section 7.3.83 of 
+    """Implementation of Alert-Reason AVP in Section 7.3.83 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The Alert-Reason AVP (AVP Code 1434) is of type Enumerated.
@@ -753,7 +753,7 @@ class AlertReasonAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              AlertReasonAVP.code,
                              AlertReasonAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -778,7 +778,7 @@ class ErrorDiagnosticAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ErrorDiagnosticAVP.code,
                              ErrorDiagnosticAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -786,7 +786,7 @@ class ErrorDiagnosticAVP(DiameterAVP, EnumeratedType):
 
 
 class VisitedPlmnIdAVP(DiameterAVP, OctetStringType):
-    """Implementation of Visited-PLMN-Id AVP in Section 7.3.9 of 
+    """Implementation of Visited-PLMN-Id AVP in Section 7.3.9 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Visited-PLMN-Id AVP (AVP Code 1407) is of type OctetString.
@@ -795,7 +795,7 @@ class VisitedPlmnIdAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              VisitedPlmnIdAVP.code,
                              VisitedPlmnIdAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -804,7 +804,7 @@ class VisitedPlmnIdAVP(DiameterAVP, OctetStringType):
 
 
 class ItemNumberAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of Item-Number AVP in Section 7.3.23 of 
+    """Implementation of Item-Number AVP in Section 7.3.23 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The Item-Number AVP (AVP Code 1419) is of type Unsigned32.
@@ -813,7 +813,7 @@ class ItemNumberAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ItemNumberAVP.code,
                              ItemNumberAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -822,7 +822,7 @@ class ItemNumberAVP(DiameterAVP, Unsigned32Type):
 
 
 class RandAVP(DiameterAVP, OctetStringType):
-    """Implementation of RAND AVP in Section 7.3.53 of 
+    """Implementation of RAND AVP in Section 7.3.53 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The RAND AVP (AVP Code 1447) is of type OctetString.
@@ -831,7 +831,7 @@ class RandAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              RandAVP.code,
                              RandAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -840,7 +840,7 @@ class RandAVP(DiameterAVP, OctetStringType):
 
 
 class XresAVP(DiameterAVP, OctetStringType):
-    """Implementation of XRES AVP in Section 7.3.54 of 
+    """Implementation of XRES AVP in Section 7.3.54 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The XRES AVP (AVP Code 1448) is of type OctetString.
@@ -849,7 +849,7 @@ class XresAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              XresAVP.code,
                              XresAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -858,7 +858,7 @@ class XresAVP(DiameterAVP, OctetStringType):
 
 
 class AutnAVP(DiameterAVP, OctetStringType):
-    """Implementation of AUTN AVP in Section 7.3.55 of 
+    """Implementation of AUTN AVP in Section 7.3.55 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The AUTN AVP (AVP Code 1449) is of type OctetString.
@@ -867,7 +867,7 @@ class AutnAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              AutnAVP.code,
                              AutnAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -876,7 +876,7 @@ class AutnAVP(DiameterAVP, OctetStringType):
 
 
 class KasmeAVP(DiameterAVP, OctetStringType):
-    """Implementation of KASME AVP in Section 7.3.56 of 
+    """Implementation of KASME AVP in Section 7.3.56 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The KASME AVP (AVP Code 1450) is of type OctetString.
@@ -885,7 +885,7 @@ class KasmeAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              KasmeAVP.code,
                              KasmeAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -912,7 +912,7 @@ class EUtranVectorAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              EUtranVectorAVP.code,
                              EUtranVectorAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -937,7 +937,7 @@ class AuthenticationInfoAVP(DiameterAVP, GroupedType):
     }
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              AuthenticationInfoAVP.code,
                              AuthenticationInfoAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -946,10 +946,10 @@ class AuthenticationInfoAVP(DiameterAVP, GroupedType):
 
 
 class HomogeneousSupportOfImsVoiceOverPsSessionsAVP(DiameterAVP, EnumeratedType):
-    """Implementation of Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions AVP 
+    """Implementation of Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions AVP
     in Section 7.3.107 of ETSI TS 129 272 V15.4.0 (2018-07).
 
-    The Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions AVP (AVP Code 1493) 
+    The Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions AVP (AVP Code 1493)
     is of type Enumerated.
     """
     code = HOMOGENEOUS_SUPPORT_OF_IMS_VOICE_OVER_PS_SESSION_AVP_CODE
@@ -961,7 +961,7 @@ class HomogeneousSupportOfImsVoiceOverPsSessionsAVP(DiameterAVP, EnumeratedType)
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              HomogeneousSupportOfImsVoiceOverPsSessionsAVP.code,
                              HomogeneousSupportOfImsVoiceOverPsSessionsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -969,7 +969,7 @@ class HomogeneousSupportOfImsVoiceOverPsSessionsAVP(DiameterAVP, EnumeratedType)
 
 
 class UeSrvccCapabilityAVP(DiameterAVP, EnumeratedType):
-    """Implementation of UE-SRVCC-Capability AVP in Section 7.3.130 of 
+    """Implementation of UE-SRVCC-Capability AVP in Section 7.3.130 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The UE-SRVCC-Capability AVP (AVP Code 1615) is of type Enumerated.
@@ -983,7 +983,7 @@ class UeSrvccCapabilityAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              UeSrvccCapabilityAVP.code,
                              UeSrvccCapabilityAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -991,7 +991,7 @@ class UeSrvccCapabilityAVP(DiameterAVP, EnumeratedType):
 
 
 class SupportedServicesAVP(DiameterAVP, GroupedType):
-    """Implementation of Supported-Services AVP in Section 7.3.199 of 
+    """Implementation of Supported-Services AVP in Section 7.3.199 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Supported-Services AVP (AVP Code 3143) is of type Grouped.
@@ -1000,7 +1000,7 @@ class SupportedServicesAVP(DiameterAVP, GroupedType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              SupportedServicesAVP.code,
                              SupportedServicesAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -1008,7 +1008,7 @@ class SupportedServicesAVP(DiameterAVP, GroupedType):
 
 
 class SupportedMonitoringEventsAVP(DiameterAVP, Unsigned64Type):
-    """Implementation of Supported-Monitoring-Events AVP in Section 7.3.200 of 
+    """Implementation of Supported-Monitoring-Events AVP in Section 7.3.200 of
     ETSI TS 129 272 V15.10.0 (2020-01).
 
     The Supported-Monitoring-Events AVP (AVP Code 3144) is of type Unsigned64.
@@ -1017,7 +1017,7 @@ class SupportedMonitoringEventsAVP(DiameterAVP, Unsigned64Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              SupportedMonitoringEventsAVP.code,
                              SupportedMonitoringEventsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)
@@ -1025,7 +1025,7 @@ class SupportedMonitoringEventsAVP(DiameterAVP, Unsigned64Type):
 
 
 class CancellationTypeAVP(DiameterAVP, EnumeratedType):
-    """Implementation of Cancellation-Type AVP in Section 7.3.24 of 
+    """Implementation of Cancellation-Type AVP in Section 7.3.24 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The Cancellation-Type AVP (AVP Code 1420) is of type Enumerated.
@@ -1042,7 +1042,7 @@ class CancellationTypeAVP(DiameterAVP, EnumeratedType):
     ]
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              CancellationTypeAVP.code,
                              CancellationTypeAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -1051,7 +1051,7 @@ class CancellationTypeAVP(DiameterAVP, EnumeratedType):
 
 
 class ClrFlagsAVP(DiameterAVP, Unsigned32Type):
-    """Implementation of CLR-Flags AVP in Section 7.3.152 of 
+    """Implementation of CLR-Flags AVP in Section 7.3.152 of
     ETSI TS 129 272 V15.4.0 (2018-07).
 
     The CLR-Flags AVP (AVP Code 1638) is of type Unsigned32.
@@ -1060,7 +1060,7 @@ class ClrFlagsAVP(DiameterAVP, Unsigned32Type):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              ClrFlagsAVP.code,
                              ClrFlagsAVP.vendor_id)
         DiameterAVP.set_vendor_id_bit(self, True)

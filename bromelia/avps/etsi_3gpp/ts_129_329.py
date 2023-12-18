@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module contains Diameter AVP classes defined in ETSI TS 129 329.
-    
+
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
@@ -16,7 +16,7 @@ from ...utils import decode_from_tbcd, encode_to_tbcd
 
 
 class MsisdnAVP(DiameterAVP, OctetStringType):
-    """Implementation of MSISDN AVP in Section 6.3.2 of 
+    """Implementation of MSISDN AVP in Section 6.3.2 of
     ETSI TS 129 329 V15.1.0 (2018-07).
 
     The MSISDN AVP (AVP Code 701) is of type OctetString.
@@ -25,7 +25,7 @@ class MsisdnAVP(DiameterAVP, OctetStringType):
     vendor_id = VENDOR_ID_3GPP
 
     def __init__(self, data):
-        DiameterAVP.__init__(self, 
+        DiameterAVP.__init__(self,
                              MsisdnAVP.code,
                              MsisdnAVP.vendor_id)
         DiameterAVP.set_mandatory_bit(self, True)
@@ -36,7 +36,7 @@ class MsisdnAVP(DiameterAVP, OctetStringType):
     def encode(self, data):
         if isinstance(data, int):
             return bytes.fromhex(encode_to_tbcd(data))
-        
+
         elif isinstance(data, str):
             return bytes.fromhex(encode_to_tbcd(int(data)))
 
@@ -45,4 +45,4 @@ class MsisdnAVP(DiameterAVP, OctetStringType):
 
 
     def decode(self):
-        return decode_from_tbcd(self.data)
+        return decode_from_tbcd(self.data.hex())
