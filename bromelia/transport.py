@@ -2,7 +2,7 @@
 """
     bromelia.transport
     ~~~~~~~~~~~~~~~~~~
-    
+
     This module defines the TCP transport layer connections that are used
     by the Diameter application protocol underlying.
 
@@ -26,7 +26,7 @@ tcp_server = logging.getLogger("TcpServer")
 
 
 class TcpConnection():
-    def __init__(self, ip_address: str, port: str) -> None:
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0) -> None:
         self._recv_buffer = b""
         self._send_buffer = b""
         self.send_data_stream_queued = False
@@ -40,9 +40,11 @@ class TcpConnection():
         self.lock = threading.Lock()
 
         self.recv_data_consumed = False
-        
-        self.ip_address = ip_address
-        self.port = port
+
+        self.local_ip_address = local_ip_address
+        self.local_port = local_port
+        self.peer_ip_address = peer_ip_address
+        self.peer_port = peer_port
 
         self.sock = None
         self.is_connected = False
@@ -57,14 +59,14 @@ class TcpConnection():
         self.connection_attempts = 3
 
         self.events_mask = selectors.EVENT_READ
-        
+
 
     def is_write_mode(self) -> bool:
         if self.events_mask & selectors.EVENT_WRITE:
             return True
         return False
 
-    
+
     def is_read_mode(self) -> bool:
         if self.events_mask & selectors.EVENT_READ:
             return True
@@ -74,7 +76,7 @@ class TcpConnection():
         if self.events_mask & (selectors.EVENT_READ | selectors.EVENT_WRITE):
             return True
         return False
-   
+
 
     def close(self) -> None:
         if not self.is_connected:
@@ -87,7 +89,7 @@ class TcpConnection():
             tcp_connection.debug(f"[Socket-{self.sock_id}] De-registering "\
                                  f"Socket from Selector address: "\
                                  f"{self.selector.get_map()}")
-    
+
             self.sock.close()
             tcp_connection.debug(f"[Socket-{self.sock_id}] Shutting "\
                                  f"down Socket")
@@ -103,7 +105,7 @@ class TcpConnection():
         if not self.is_connected:
             raise ConnectionError(f"[Socket-{self.sock_id}] There is no "\
                                   f"transport connection up for this Peer")
-        threading.Thread(name="transport_layer_thread", 
+        threading.Thread(name="transport_layer_thread",
                          target=self._run).start()
 
 
@@ -135,7 +137,7 @@ class TcpConnection():
             self.selector.modify(self.sock, self.events_mask)
             self.write_mode_on.clear()
             self.read_mode_on.set()
-            
+
         elif mode == "w":
             tcp_connection.debug(f"[Socket-{self.sock_id}] Updating "\
                                  f"selector events mask [WRITE]")
@@ -167,13 +169,13 @@ class TcpConnection():
                 sent = self.sock.send(self._send_buffer)
                 tcp_connection.debug(f"[Socket-{self.sock_id}] Just sent "\
                                      f"{sent} bytes in _send_buffer")
-            
+
             except BlockingIOError:
                 tcp_connection.exception(f"[Socket-{self.sock_id}] An error "\
                                          f"has occurred")
 
                 self._stop_threads = True
-                
+
             else:
                 self._send_buffer = self._send_buffer[sent:]
 
@@ -252,14 +254,14 @@ class TcpConnection():
 
 import importlib
 class SctpConnection(TcpConnection):
-    def __init__(self, ip_address, port):
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0):
         try:
             self.sctp = importlib.import_module("sctp")
             self._sctp = importlib.import_module("_sctp")
         except ModuleNotFoundError as ex:
             tcp_connection.error(f"Python 'pysctp' module is required. Cannot initialize SctpConnection.")
             raise ex
-        super().__init__(ip_address, port)
+        super().__init__(local_ip_address, local_port, peer_ip_address, peer_port)
 
     def _write(self):
         if self._send_buffer:
@@ -312,8 +314,8 @@ class SctpConnection(TcpConnection):
 
 
 class TcpClient(TcpConnection):
-    def __init__(self, ip_address: str, port: str) -> None:
-        super().__init__(ip_address, port)
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0) -> None:
+        super().__init__(local_ip_address, local_port, peer_ip_address, peer_port)
 
 
     def start(self) -> None:
@@ -326,7 +328,11 @@ class TcpClient(TcpConnection):
             tcp_client.debug(f"[Socket-{self.sock_id}] Setting as "\
                              f"Non-Blocking")
 
-            self.sock.connect_ex((self.ip_address, self.port))
+            tcp_client.debug(f"[Socket-{self.sock_id}] Binding to the "\
+                             f"Local Endpoint")
+            self.sock.bind((self.local_ip_address, self.local_port))
+
+            self.sock.connect_ex((self.peer_ip_address, self.peer_port))
             tcp_client.debug(f"[Socket-{self.sock_id}] Connecting to the "\
                              f"Remote Peer")
             self.is_connected = True
@@ -340,8 +346,8 @@ class TcpClient(TcpConnection):
 
 
 class SctpClient(TcpClient,SctpConnection):
-    def __init__(self, ip_address, port):
-        SctpConnection.__init__(self, ip_address, port)
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0):
+        SctpConnection.__init__(self, local_ip_address, local_port, peer_ip_address, peer_port)
 
     def test_connection(self):
         return SctpConnection.test_connection(self)
@@ -358,10 +364,13 @@ class SctpClient(TcpClient,SctpConnection):
             tcp_client.debug(f"[Socket-{self.sock_id}] Client-side Socket: "\
                              f"{self.sock}")
 
+            tcp_client.debug(f"[Socket-{self.sock_id}] Binding to the "\
+                             f"Local Endpoint")
+            self.sock.bind((self.local_ip_address, self.local_port))
 
             tcp_client.debug(f"[Socket-{self.sock_id}] Connecting to the "\
                              f"Remote Peer")
-            self.sock.connect((self.ip_address, self.port))
+            self.sock.connect((self.peer_ip_address, self.peer_port))
             self.is_connected = True
 
             tcp_client.debug(f"[Socket-{self.sock_id}] Setting as "\
@@ -377,9 +386,9 @@ class SctpClient(TcpClient,SctpConnection):
 
 
 class TcpServer(TcpConnection):
-    def __init__(self, ip_address: str, port: str) -> None:
-        super().__init__(ip_address, port)
-        
+    def __init__(self, local_ip_address: str, local_port: str) -> None:
+        super().__init__(local_ip_address, local_port)
+
 
     def start(self) -> None:
         try:
@@ -390,10 +399,10 @@ class TcpServer(TcpConnection):
             self.server_selector = selectors.DefaultSelector()
 
             self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 4096*64)
-            self.server_sock.bind((self.ip_address, self.port))
+            self.server_sock.bind((self.local_ip_address, self.local_port))
             self.server_sock.listen()
             tcp_server.debug(f"[Socket-{self.sock_id}] Listening on "\
-                             f"{self.ip_address}:{self.port}")
+                             f"{self.local_ip_address}:{self.local_port}")
 
             self.server_sock.setblocking(False)
             tcp_server.debug(f"[Socket-{self.sock_id}] Setting as "\
@@ -426,7 +435,7 @@ class TcpServer(TcpConnection):
                 tcp_server.debug(f"[Socket-{self.sock_id}] Registering "\
                                  f"New Socket into Selector address: "\
                                  f"{self.selector.get_map()}")
-           
+
         super().run()
 
 
@@ -437,7 +446,7 @@ class TcpServer(TcpConnection):
             self.server_selector.unregister(self.server_sock)
             tcp_server.debug(f"De-registering Main Socket from Selector "\
                              f"address: {self.server_selector.get_map()}")
-    
+
             self.server_sock.close()
             tcp_server.debug("Shutting down Main Socket")
 
@@ -446,8 +455,8 @@ class TcpServer(TcpConnection):
 
 
 class SctpServer(TcpServer,SctpConnection):
-    def __init__(self, ip_address, port):
-        SctpConnection.__init__(self, ip_address, port)
+    def __init__(self, local_ip_address: str, local_port: str):
+        SctpConnection.__init__(self, local_ip_address, local_port)
 
     def test_connection(self):
         return SctpConnection.test_connection(self)
@@ -474,10 +483,10 @@ class SctpServer(TcpServer,SctpConnection):
             self.server_selector = selectors.DefaultSelector()
 
             self.server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 4096*64)
-            self.server_sock.bind((self.ip_address, self.port))
+            self.server_sock.bind((self.local_ip_address, self.local_port))
             self.server_sock.listen()
             tcp_server.debug(f"[Socket-{self.sock_id}] Listening on "\
-                             f"{self.ip_address}:{self.port}")
+                             f"{self.local_ip_address}:{self.local_port}")
 
             self.server_sock.setblocking(False)
             tcp_server.debug(f"[Socket-{self.sock_id}] Setting as "\

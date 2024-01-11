@@ -2,9 +2,9 @@
 """
     bromelia.setup
     ~~~~~~~~~~~~~~
-    
+
     This module implements the central Diameter application object. It works
-    as per Peer State Machine defined in RFC 6733 in order to establish a 
+    as per Peer State Machine defined in RFC 6733 in order to establish a
     Diameter association with another Peer Node.
 
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
@@ -16,7 +16,7 @@ import datetime
 import logging
 import platform
 import queue
-import socket 
+import socket
 import sys
 import threading
 import time
@@ -101,7 +101,7 @@ class DiameterAssociation(object):
         self._recv_messages = queue.Queue()
         self._send_messages = queue.Queue()
 
-        self.postprocess_recv_messages = queue.Queue() 
+        self.postprocess_recv_messages = queue.Queue()
         self.postprocess_recv_messages_ready = threading.Event()
         self.postprocess_recv_messages_lock = threading.Lock()
         self.lock = threading.Lock()
@@ -110,7 +110,7 @@ class DiameterAssociation(object):
     def is_connected(self) -> bool:
         if self.transport:
            return self.transport.is_connected
-        
+
         return False
 
 
@@ -125,21 +125,25 @@ class DiameterAssociation(object):
 
         if self.connection.mode == DIAMETER_AGENT_CLIENT_MODE:
             if self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_TCP:
-                self.transport = TcpClient(self.connection.peer_node.ip_address,
+                self.transport = TcpClient(self.connection.local_node.ip_address,
+                                          self.connection.local_node.port or 0,  # will mean that any free port will be used for the client
+                                          self.connection.peer_node.ip_address,
                                           self.connection.peer_node.port)
             elif self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_SCTP:
-                self.transport = SctpClient(self.connection.peer_node.ip_address,
-                                           self.connection.peer_node.port)
+                self.transport = SctpClient(self.connection.local_node.ip_address,
+                                          self.connection.local_node.port or 0,  # will mean that any free port will be used for the client
+                                          self.connection.peer_node.ip_address,
+                                          self.connection.peer_node.port)
             else:
                 raise DiameterAssociationError("Invalid Diameter Agent transport type.")
 
         elif self.connection.mode == DIAMETER_AGENT_SERVER_MODE:
             if self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_TCP:
                 self.transport = TcpServer(self.connection.local_node.ip_address,
-                                        self.connection.local_node.port)
+                                          self.connection.local_node.port)
             elif self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_SCTP:
                 self.transport = SctpServer(self.connection.local_node.ip_address,
-                                       self.connection.local_node.port)
+                                          self.connection.local_node.port)
             else:
                 raise DiameterAssociationError("Invalid Diameter Agent transport type.")
 
@@ -183,7 +187,7 @@ class DiameterAssociation(object):
                 for msg in msgs:
                     make_logging(msg, disable_else=True)
                     self._recv_messages.put(msg)
-                
+
                 diameter_conn_logger.debug(f"Found {len(msgs)} Diameter "\
                                            f"Message(s).")
             except AVPParsingError:
@@ -228,7 +232,7 @@ class DiameterAssociation(object):
                 diameter_conn_logger.debug(f"[{hop_by_hop.hex()}] Diameter "\
                                            f"Message (Answer) have been put "\
                                            f"into _send_messages Queue.")
-                
+
         self.lock.release()
 
 
@@ -259,7 +263,7 @@ class DiameterAssociation(object):
                 diameter_conn_logger.debug(f"[{msg.header.hop_by_hop.hex()}] "\
                                            f"Diameter Request have been "\
                                            f"put into Pending Request Queue.")
-    
+
             stream += msg.dump()
 
         if self.transport:
@@ -279,9 +283,9 @@ class DiameterAssociation(object):
                         diameter_conn_logger.debug("Transport Layer is not in "\
                                                    "WRITE mode again, so we "\
                                                    "can send data stream.")
-    
+
                         self.transport._set_selector_events_mask("rw", stream)
-                        
+
                         # maybe include a verification here before the "break" if a given message has been sent from transport layer.
                         break
 
@@ -317,7 +321,7 @@ class DiameterAssociation(object):
             else:
                 diameter_conn_logger.debug("No need to wait for go ahead for "\
                                            "postprocess_recv_messages_ready")
-    
+
             return self.get_postprocess_recv_message()
 
 
@@ -328,7 +332,7 @@ class DiameterAssociation(object):
                 diameter_conn_logger.debug("Generating a DWR message.")
 
                 self.transport.tracking_events_count = 0
-        
+
         except AttributeError as e:
             if e.args[0] == "'TcpServer' object has no attribute 'events'":
                 pass
@@ -358,9 +362,9 @@ class Diameter:
                  debug: bool = False,
                  is_logging: bool = False,
                  app_name: str = None) -> None:
-        
+
         self.logging = DiameterLogging(debug, is_logging, app_name)
-        
+
         self.config = self.make_config(config)
         self._connection = _convert_config_to_connection_obj(self.config)
         self._base = self.get_base_messages()
@@ -418,7 +422,7 @@ class Diameter:
 
     def close(self) -> None:
         current_state = self.get_current_state()
-        
+
         if current_state == CLOSED:
             raise DiameterApplicationError("Cannot stop the application. "\
                                            "Peer State Machine is already "\
@@ -477,7 +481,7 @@ class Diameter:
                 if is_base_answer(msg):
                     raise DiameterApplicationError("Cannot send a Base protocol "\
                                                    "answer")
-                
+
                 self._association.put_message_into_send_queue(msg)
 
 
@@ -510,7 +514,7 @@ class Diameter:
 
                 if self.is_open():
                     break
-                
+
                 if self.is_closed() and (stop - start).seconds >= 5:
                     start = datetime.datetime.utcnow()
                     self.start()

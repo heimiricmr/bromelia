@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~
 
     This module contains the Bromelia proxy unittests.
-    
+
     :copyright: (c) 2021 Henrique Marques Ribeiro.
     :license: MIT, see LICENSE for more details.
 """
@@ -35,6 +35,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
     def setUp(self):
         config = {
                 "MODE": "CLIENT",
+                "TRANSPORT_TYPE": "TCP",
                 "APPLICATIONS": [],
                 "LOCAL_NODE_HOSTNAME": "client.network",
                 "LOCAL_NODE_REALM": "network",
@@ -47,7 +48,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
                 "WATCHDOG_TIMEOUT": 30
             }
         self.connection = _convert_config_to_connection_obj(config)
-        
+
     def test__load_cea(self):
         cea = DiameterBaseProxy.load_cea(self.connection)
 
@@ -389,7 +390,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -478,7 +479,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -728,7 +729,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -817,7 +818,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -1073,7 +1074,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -1195,7 +1196,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -1451,7 +1452,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -1540,7 +1541,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -1830,7 +1831,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -1919,7 +1920,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -2209,7 +2210,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -2298,7 +2299,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -2588,7 +2589,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -2677,7 +2678,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -2967,7 +2968,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
         self.assertTrue(isinstance(base.dpr, DisconnectPeerRequest))
 
         ##: Check Capabilities-Exchange-Answer
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cea.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cea.header.flags, FLAG_RESPONSE)
@@ -3056,7 +3057,7 @@ class TestDiameterBaseProxy(unittest.TestCase):
 
 
         ##: Check Capabilities-Exchange-Request
-        
+
         #: Check Diameter Header
         self.assertEqual(base.cer.header.version, DIAMETER_VERSION)
         self.assertEqual(base.cer.header.flags, FLAG_REQUEST)
@@ -3331,8 +3332,9 @@ class TestDiameterBaseProxyWithOneApplicationId(unittest.TestCase):
     def setUp(self):
         config = {
                 "MODE": "CLIENT",
+                "TRANSPORT_TYPE": "TCP",
                 "APPLICATIONS": [{
-                                    "vendor_id": VENDOR_ID_3GPP, 
+                                    "vendor_id": VENDOR_ID_3GPP,
                                     "app_id": DIAMETER_APPLICATION_Cx
                 }],
                 "LOCAL_NODE_HOSTNAME": "client.network",
@@ -3588,9 +3590,10 @@ class TestDiameterBaseProxyWithTwoApplicationsId(unittest.TestCase):
     def setUp(self):
         config = {
                 "MODE": "CLIENT",
+                "TRANSPORT_TYPE": "TCP",
                 "APPLICATIONS": [
                                     {
-                                        "vendor_id": VENDOR_ID_3GPP, 
+                                        "vendor_id": VENDOR_ID_3GPP,
                                         "app_id": DIAMETER_APPLICATION_Cx
                                     },
                                     {
