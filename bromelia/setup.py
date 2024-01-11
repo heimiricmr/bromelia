@@ -126,12 +126,12 @@ class DiameterAssociation(object):
         if self.connection.mode == DIAMETER_AGENT_CLIENT_MODE:
             if self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_TCP:
                 self.transport = TcpClient(self.connection.local_node.ip_address,
-                                          self.connection.local_node.port,
+                                          self.connection.local_node.port or 0,  # will mean that any free port will be used for the client
                                           self.connection.peer_node.ip_address,
                                           self.connection.peer_node.port)
             elif self.connection.transport_type == DIAMETER_AGENT_TRANSPORT_TYPE_SCTP:
                 self.transport = SctpClient(self.connection.local_node.ip_address,
-                                          self.connection.local_node.port,
+                                          self.connection.local_node.port or 0,  # will mean that any free port will be used for the client
                                           self.connection.peer_node.ip_address,
                                           self.connection.peer_node.port)
             else:

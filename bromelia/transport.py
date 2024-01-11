@@ -26,7 +26,7 @@ tcp_server = logging.getLogger("TcpServer")
 
 
 class TcpConnection():
-    def __init__(self, local_ip_address: str, local_port: str, peer_ip_address: str = '', peer_port: str = 0) -> None:
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0) -> None:
         self._recv_buffer = b""
         self._send_buffer = b""
         self.send_data_stream_queued = False
@@ -254,7 +254,7 @@ class TcpConnection():
 
 import importlib
 class SctpConnection(TcpConnection):
-    def __init__(self, local_ip_address: str, local_port: str, peer_ip_address: str = '', peer_port: str = 0):
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0):
         try:
             self.sctp = importlib.import_module("sctp")
             self._sctp = importlib.import_module("_sctp")
@@ -314,7 +314,7 @@ class SctpConnection(TcpConnection):
 
 
 class TcpClient(TcpConnection):
-    def __init__(self, local_ip_address, local_port, peer_ip_address, peer_port) -> None:
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0) -> None:
         super().__init__(local_ip_address, local_port, peer_ip_address, peer_port)
 
 
@@ -330,7 +330,7 @@ class TcpClient(TcpConnection):
 
             tcp_client.debug(f"[Socket-{self.sock_id}] Binding to the "\
                              f"Local Endpoint")
-            # self.sock.bind((self.local_ip_address, self.local_port))
+            self.sock.bind((self.local_ip_address, self.local_port))
 
             self.sock.connect_ex((self.peer_ip_address, self.peer_port))
             tcp_client.debug(f"[Socket-{self.sock_id}] Connecting to the "\
@@ -346,7 +346,7 @@ class TcpClient(TcpConnection):
 
 
 class SctpClient(TcpClient,SctpConnection):
-    def __init__(self, local_ip_address, local_port, peer_ip_address, peer_port):
+    def __init__(self, local_ip_address: str, local_port: str = 0, peer_ip_address: str = '', peer_port: str = 0):
         SctpConnection.__init__(self, local_ip_address, local_port, peer_ip_address, peer_port)
 
     def test_connection(self):
@@ -366,7 +366,7 @@ class SctpClient(TcpClient,SctpConnection):
 
             tcp_client.debug(f"[Socket-{self.sock_id}] Binding to the "\
                              f"Local Endpoint")
-            # self.sock.bind((self.local_ip_address, self.local_port))
+            self.sock.bind((self.local_ip_address, self.local_port))
 
             tcp_client.debug(f"[Socket-{self.sock_id}] Connecting to the "\
                              f"Remote Peer")
@@ -386,8 +386,8 @@ class SctpClient(TcpClient,SctpConnection):
 
 
 class TcpServer(TcpConnection):
-    def __init__(self, local_ip_address: str, port: str) -> None:
-        super().__init__(local_ip_address, port)
+    def __init__(self, local_ip_address: str, local_port: str) -> None:
+        super().__init__(local_ip_address, local_port)
 
 
     def start(self) -> None:
@@ -455,8 +455,8 @@ class TcpServer(TcpConnection):
 
 
 class SctpServer(TcpServer,SctpConnection):
-    def __init__(self, ip_address, port):
-        SctpConnection.__init__(self, ip_address, port)
+    def __init__(self, local_ip_address: str, local_port: str):
+        SctpConnection.__init__(self, local_ip_address, local_port)
 
     def test_connection(self):
         return SctpConnection.test_connection(self)
