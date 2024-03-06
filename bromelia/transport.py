@@ -2,7 +2,7 @@
 """
     bromelia.transport
     ~~~~~~~~~~~~~~~~~~
-    
+
     This module defines the TCP transport layer connections that are used
     by the Diameter application protocol underlying.
 
@@ -40,7 +40,7 @@ class TcpConnection():
         self.lock = threading.Lock()
 
         self.recv_data_consumed = False
-        
+
         self.ip_address = ip_address
         self.port = port
 
@@ -57,14 +57,14 @@ class TcpConnection():
         self.connection_attempts = 3
 
         self.events_mask = selectors.EVENT_READ
-        
+
 
     def is_write_mode(self) -> bool:
         if self.events_mask & selectors.EVENT_WRITE:
             return True
         return False
 
-    
+
     def is_read_mode(self) -> bool:
         if self.events_mask & selectors.EVENT_READ:
             return True
@@ -74,7 +74,7 @@ class TcpConnection():
         if self.events_mask & (selectors.EVENT_READ | selectors.EVENT_WRITE):
             return True
         return False
-   
+
 
     def close(self) -> None:
         if not self.is_connected:
@@ -87,7 +87,7 @@ class TcpConnection():
             tcp_connection.debug(f"[Socket-{self.sock_id}] De-registering "\
                                  f"Socket from Selector address: "\
                                  f"{self.selector.get_map()}")
-    
+
             self.sock.close()
             tcp_connection.debug(f"[Socket-{self.sock_id}] Shutting "\
                                  f"down Socket")
@@ -103,9 +103,8 @@ class TcpConnection():
         if not self.is_connected:
             raise ConnectionError(f"[Socket-{self.sock_id}] There is no "\
                                   f"transport connection up for this Peer")
-        threading.Thread(name="transport_layer_thread", 
-                         target=self._run).start()
-
+        threading.Thread(name="transport_layer_thread",
+                         target=self._run, daemon=True).start()
 
     def _run(self) -> None:
         while self.is_connected and not self._stop_threads:
@@ -135,7 +134,7 @@ class TcpConnection():
             self.selector.modify(self.sock, self.events_mask)
             self.write_mode_on.clear()
             self.read_mode_on.set()
-            
+
         elif mode == "w":
             tcp_connection.debug(f"[Socket-{self.sock_id}] Updating "\
                                  f"selector events mask [WRITE]")
@@ -167,13 +166,13 @@ class TcpConnection():
                 sent = self.sock.send(self._send_buffer)
                 tcp_connection.debug(f"[Socket-{self.sock_id}] Just sent "\
                                      f"{sent} bytes in _send_buffer")
-            
+
             except BlockingIOError:
                 tcp_connection.exception(f"[Socket-{self.sock_id}] An error "\
                                          f"has occurred")
 
                 self._stop_threads = True
-                
+
             else:
                 self._send_buffer = self._send_buffer[sent:]
 
@@ -379,7 +378,7 @@ class SctpClient(TcpClient,SctpConnection):
 class TcpServer(TcpConnection):
     def __init__(self, ip_address: str, port: str) -> None:
         super().__init__(ip_address, port)
-        
+
 
     def start(self) -> None:
         try:
@@ -426,7 +425,7 @@ class TcpServer(TcpConnection):
                 tcp_server.debug(f"[Socket-{self.sock_id}] Registering "\
                                  f"New Socket into Selector address: "\
                                  f"{self.selector.get_map()}")
-           
+
         super().run()
 
 
@@ -437,7 +436,7 @@ class TcpServer(TcpConnection):
             self.server_selector.unregister(self.server_sock)
             tcp_server.debug(f"De-registering Main Socket from Selector "\
                              f"address: {self.server_selector.get_map()}")
-    
+
             self.server_sock.close()
             tcp_server.debug("Shutting down Main Socket")
 
