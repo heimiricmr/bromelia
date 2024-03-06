@@ -150,7 +150,7 @@ class DiameterAssociation(object):
         self.transport.run()
 
         threading.Thread(name="recv_message_monitor",
-                         target=self.recv_message_from_queuem, daemon=True).start()
+                         target=self.recv_message_from_queue, daemon=True).start()
 
     def close(self) -> None:
         self.__is_connected()
