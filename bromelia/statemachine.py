@@ -30,36 +30,36 @@ from .utils import is_cea_message as has_recv_cea
 from .utils import is_cer_message as has_recv_cer
 
 
-""" 
+"""
     @ `state` column:
     -> It relies on state classes that SHOULD BE implemented.
 
-    -> State classes have the `run` method and another methods with the 
+    -> State classes have the `run` method and another methods with the
     `event_` prefixed.
-    
-    -> `run` method in the entrypoint tracking diameter_connection object. 
-    Depeding on the object's state, it triggers its `event_` prefixed methods 
+
+    -> `run` method in the entrypoint tracking diameter_connection object.
+    Depeding on the object's state, it triggers its `event_` prefixed methods
     in order to execute a series of actions.
 
 
     @ `event` column:
-    -> It relies on state classes methods which begins with `event_` preffix. 
-    Each method is triggered by the `run` method whenever the 
-    diameter_connection object state changes. Inside the methods a series 
+    -> It relies on state classes methods which begins with `event_` preffix.
+    Each method is triggered by the `run` method whenever the
+    diameter_connection object state changes. Inside the methods a series
     of actions is implemented.
 
 
     @ `action` column:
-    -> It relies on actions that SHOULD be taken when a given `event_` prefixed 
-    method is called by `run` method. The last step of the actions is define 
+    -> It relies on actions that SHOULD be taken when a given `event_` prefixed
+    method is called by `run` method. The last step of the actions is define
     the next state by calling a self.next_state with the updated value.
 
 
     @ `next state` column:
-    -> It represents the self.next_state value for each state class depending 
-    on the event/actions triggered (which in turn depends on 
-    diameter_connection object state). The State Machine needs to implement a 
-    central attribute which tracks all possible states plus a 
+    -> It represents the self.next_state value for each state class depending
+    on the event/actions triggered (which in turn depends on
+    diameter_connection object state). The State Machine needs to implement a
+    central attribute which tracks all possible states plus a
     `get_next_state()` method to get the next state object.
 """
 
@@ -131,7 +131,7 @@ class State():
         message = f"Got message from _{queue}_messages Queue. Now there "\
                   f"is/are {self.association._recv_messages.qsize()} "\
                   f"Diameter Message(s)."
-        
+
         if isinstance(self, Closed):
             closed_logger.debug(message)
 
@@ -230,7 +230,7 @@ class Closed(State):
 
         if is_client_mode(self.association):
             self.event_start()
-        
+
         elif is_server_mode(self.association):
             if self.has_recv_queue_message():
                 self.msg = self.get_message()
@@ -262,7 +262,7 @@ class WaitConnAck(State):
 
         if self.association.is_connected():
             if self.association.transport.test_connection():
-                self.event_initiator_rcv_conn_ack()  
+                self.event_initiator_rcv_conn_ack()
             else:
                 self.event_initiator_rcv_conn_nack()
 
@@ -272,7 +272,7 @@ class WaitConnAck(State):
             self.make_default_logging()
 
             if has_recv_cer(self.msg):
-                self.event_responder_conn_cer()            
+                self.event_responder_conn_cer()
 
 
     def event_initiator_rcv_conn_ack(self) -> None:
@@ -312,7 +312,7 @@ class WaitInitiatorCEA(State):
             self.make_default_logging()
 
             if has_recv_cea(self.msg):
-                self.event_open_rcv_cea()            
+                self.event_open_rcv_cea()
 
             elif has_recv_cer(self.msg):
                 self.event_responder_conn_cer()
@@ -341,7 +341,7 @@ class WaitInitiatorCEA(State):
 
         self.set_closed_state()
 
-    
+
     def event_initiator_rcv_non_cea(self) -> None:
         wait_initiator_cea_logger.debug("Event has been triggered.")
 
@@ -362,7 +362,7 @@ class Open(State):
         self.association.tracking_events()
 
         if self.is_set_release_signal_from_peer():
-            self.event_open_peer_disc()      
+            self.event_open_peer_disc()
 
         if self.is_set_release_signal_from_local():
             self.event_stop()
@@ -379,13 +379,13 @@ class Open(State):
 
             if has_recv_dwr(self.msg):
                 self.event_open_rcv_dwr()
-            
+
             elif has_recv_dwa(self.msg):
                 self.event_open_rcv_dwa()
 
             elif has_recv_dpr(self.msg):
                 self.event_open_rcv_dpr()
-           
+
             elif has_recv_cer(self.msg):
                 self.event_open_rcv_cer()
 
@@ -394,7 +394,7 @@ class Open(State):
 
             else:
                 self.event_open_rcv_message()
-            
+
             self.msg = None
 
 
@@ -427,7 +427,7 @@ class Open(State):
             self.send_message(msg=dwa)
             self.set_open_state()
 
-    
+
     def event_open_rcv_dwa(self) -> None:
         open_logger.debug("Event has been triggered.")
 
@@ -436,7 +436,7 @@ class Open(State):
         else:
             self.set_closing_state()
 
-    
+
     def event_responder_conn_cer(self) -> None:
         open_logger.debug("Event has been triggered.")
 
@@ -486,7 +486,7 @@ class Open(State):
 class WaitReturns(State):
     def run(self) -> None:
         self.set_wait_returns_state(set_name=True)
-    
+
 
 class WaitConnAckElect(State):
     def run(self) -> None:
@@ -552,15 +552,14 @@ class PeerStateMachine():
             return self.states[next_state]
 
         else:
-            raise TypeError("Input not supported for current state.")        
+            raise TypeError("Input not supported for current state.")
 
 
     def start(self) -> None:
         statemachine_logger.debug("Starting PeerStateMachine's thread.")
 
-        threading.Thread(name=f"{self.association.connection.mode.lower()}_psm_thread", 
-                         target=self.__start).start()
-
+        threading.Thread(name=f"{self.association.connection.mode.lower()}_psm_thread",
+                         target=self.__start, daemon=True).start()
 
     def __start(self) -> None:
         if not self.is_running:
