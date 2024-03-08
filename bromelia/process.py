@@ -3,8 +3,8 @@
     bromelia.process
     ~~~~~~~~~~~~~~~~
 
-    This module contains all implementations for handling the Diameter 
-    messages processing step. It contains classes for creating and 
+    This module contains all implementations for handling the Diameter
+    messages processing step. It contains classes for creating and
     parsing Diameter Requests and Answers.
 
     :copyright: (c) 2020-present Henrique Marques Ribeiro.
@@ -34,7 +34,7 @@ def process_request(association, message):
             logging.debug(f"[{message.header.hop_by_hop.hex()}] Diameter "\
                           f"Request has Destination-Host AVP, however it was "\
                           f"addressed to another node.")
-            
+
             raise ProcessRequestException("Request does not comply with "\
                                           "local consumption rules.")
 
@@ -42,7 +42,7 @@ def process_request(association, message):
                       f"has Destination-Host AVP and contains the hostname of "\
                       f"local node.")
 
-    elif (DESTINATION_HOST_AVP_CODE not in list_of_avps_by_code and 
+    elif (DESTINATION_HOST_AVP_CODE not in list_of_avps_by_code and
           DESTINATION_REALM_AVP_CODE in list_of_avps_by_code):
 
         if not list(filter(lambda avp: avp.data == local_node_realm, message.avps)):
@@ -58,8 +58,8 @@ def process_request(association, message):
                       f"does not include Destination-Host AVP, but it does "\
                       f"include a valid Destination-Realm AVP which contains "\
                       f"realm of local node.")
-        
-    elif (DESTINATION_HOST_AVP_CODE not in list_of_avps_by_code and 
+
+    elif (DESTINATION_HOST_AVP_CODE not in list_of_avps_by_code and
           DESTINATION_REALM_AVP_CODE not in list_of_avps_by_code):
 
         logging.debug(f"[{message.header.hop_by_hop.hex()}] Diameter Request "\
@@ -83,7 +83,7 @@ def process_answer(association, message):
             if message.header.end_to_end == association.pending_requests[hop_by_hop_key].header.end_to_end:
                 association.pending_requests.pop(hop_by_hop_key)
                 association.num_answers += 1
-    
+
     logging.debug(f"[{message.header.hop_by_hop.hex()}] Processed Diameter Answer.")
 
 
@@ -100,19 +100,19 @@ class ProcessDiameterMessage:
                 if message.header.end_to_end == association.pending_requests[hop_by_hop_key].header.end_to_end:
                     association.pending_requests.pop(hop_by_hop_key)
 
-    
+
     @staticmethod
     def is_valid_origin_host_avp(avp, connection):
         if avp.code == ORIGIN_HOST_AVP_CODE:
-            
+
             process_message_logging.debug(f"Origin-Host AVP validation.")
 
             checklist_mandatory_info = 0
-        
+
             process_message_logging.debug(f"flags: {avp.get_flags()}.")
             if avp.flags == FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED:
                 checklist_mandatory_info += 1
-            
+
             process_message_logging.debug(f"length: {avp.get_length()}.")
             if avp.get_length() == AVP_HEADER_LENGTH + len(avp.data):
                 checklist_mandatory_info += 1
@@ -136,11 +136,11 @@ class ProcessDiameterMessage:
             process_message_logging.debug(f"Origin-Realm AVP validation.")
 
             checklist_mandatory_info = 0
-        
+
             process_message_logging.debug(f"flags: {avp.get_flags()}.")
             if avp.flags == FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED:
                 checklist_mandatory_info += 1
-            
+
             process_message_logging.debug(f"length: {avp.get_length()}.")
             if avp.get_length() == AVP_HEADER_LENGTH + len(avp.data):
                 checklist_mandatory_info += 1
@@ -168,15 +168,15 @@ class ProcessDiameterMessage:
     @staticmethod
     def is_valid_result_code_avp(avp):
         if avp.code == RESULT_CODE_AVP_CODE:
-            
+
             process_message_logging.debug(f"Result-Code AVP validation.")
 
             checklist_mandatory_info = 0
-        
+
             process_message_logging.debug(f"flags: {avp.get_flags()}.")
             if avp.flags == FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED:
                 checklist_mandatory_info += 1
-            
+
             process_message_logging.debug(f"length: {avp.get_length()}.")
             if avp.get_length() == AVP_LENGTH_UNSIGNED32:
                 checklist_mandatory_info += 1
@@ -202,6 +202,7 @@ class ProcessDiameterMessage:
     def is_valid_host_ip_address_avp(avp, connection):
         if (avp.code == HOST_IP_ADDRESS_AVP_CODE):
             host_ip_address = "{}.{}.{}.{}".format(int(avp.data[2]),int(avp.data[3]),int(avp.data[4]),int(avp.data[5]))
+            process_message_logging.debug(f"Result: PASS.")
             return True
             # if connection.peer_node.ip_address == host_ip_address:
             #     return True
@@ -212,6 +213,7 @@ class ProcessDiameterMessage:
     @staticmethod
     def is_valid_product_name_avp(avp, connection):
         if (avp.code == PRODUCT_NAME_AVP_CODE):
+            process_message_logging.debug(f"Result: PASS.")
             return True
         return False
 
@@ -219,6 +221,7 @@ class ProcessDiameterMessage:
     @staticmethod
     def is_valid_vendor_id_avp(avp, connection):
         if (avp.code == VENDOR_ID_AVP_CODE):
+            process_message_logging.debug(f"Result: PASS.")
             return True
         return False
 
@@ -229,11 +232,11 @@ class ProcessDiameterMessage:
             process_message_logging.debug(f"Session-Id AVP validation.")
 
             checklist_mandatory_info = 0
-        
+
             process_message_logging.debug(f"flags: {avp.get_flags()}.")
             if avp.flags == FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED:
                 checklist_mandatory_info += 1
-            
+
             process_message_logging.debug(f"length: {avp.get_length()}.")
             if avp.get_length() == (AVP_HEADER_LENGTH + len(avp.data)):
                 checklist_mandatory_info += 1
@@ -254,7 +257,7 @@ class ProcessDiameterMessage:
             process_message_logging.debug(f"Auth-Application-Id AVP validation.")
 
             checklist_mandatory_info = 0
-        
+
             process_message_logging.debug(f"flags: {avp.get_flags()}.")
             if avp.flags == FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED:
                 checklist_mandatory_info += 1
@@ -262,7 +265,7 @@ class ProcessDiameterMessage:
             process_message_logging.debug(f"length: {avp.get_length()}.")
             if avp.get_length() == AVP_LENGTH_UNSIGNED32:
                 checklist_mandatory_info += 1
-        
+
 
             if checklist_mandatory_info == 2: # == 3
                 process_message_logging.debug(f"Result: PASS.")
@@ -277,11 +280,11 @@ class ProcessDiameterMessage:
             process_message_logging.debug(f"Auth-Request-Type AVP validation.")
 
             checklist_mandatory_info = 0
-        
+
             process_message_logging.debug(f"flags: {avp.get_flags()}.")
             if avp.flags == FLAG_NOT_VENDOR_SPECIFIC_AND_MANDATORY_AND_NOT_PROTECTED:
                 checklist_mandatory_info += 1
-            
+
             process_message_logging.debug(f"length: {avp.get_length()}.")
             if avp.get_length() == AVP_LENGTH_INTEGER32:
                 checklist_mandatory_info += 1
@@ -319,6 +322,7 @@ class ProcessCapabilityExchange():
 
 
     def process_request(self):
+        host_ip_validated = 0
         for avp in self.message.avps:
             if ProcessDiameterMessage.is_valid_origin_host_avp(avp, self.connection):
                 self.checklist_mandatory_avps += 1
@@ -327,7 +331,8 @@ class ProcessCapabilityExchange():
                 self.checklist_mandatory_avps += 1
 
             elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
+                # multihoming may return multiple ip addresses
+                host_ip_validated = 1
 
             elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
                 self.checklist_mandatory_avps += 1
@@ -338,6 +343,7 @@ class ProcessCapabilityExchange():
             elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
                 self.checklist_optional_avps += 1
 
+        self.checklist_mandatory_avps += host_ip_validated
 
         if (self.checklist_mandatory_avps == 5) and (self.checklist_optional_avps >= 0 and self.checklist_optional_avps <= 7):
             self.is_valid = True
@@ -347,6 +353,7 @@ class ProcessCapabilityExchange():
 
     def process_answer(self):
         ProcessDiameterMessage.process_answer_from_existing_pending_request(self.association, self.message)
+        host_ip_validated = 0
         for avp in self.message.avps:
             if ProcessDiameterMessage.is_valid_result_code_avp(avp):
                 self.checklist_mandatory_avps += 1
@@ -358,7 +365,8 @@ class ProcessCapabilityExchange():
                 self.checklist_mandatory_avps += 1
 
             elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
+                # multihoming may return multiple ip addresses
+                host_ip_validated = 1
 
             elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
                 self.checklist_mandatory_avps += 1
@@ -369,6 +377,7 @@ class ProcessCapabilityExchange():
             elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
                 self.checklist_optional_avps += 1
 
+        self.checklist_mandatory_avps += host_ip_validated
 
         if (self.checklist_mandatory_avps == 6) and (self.checklist_optional_avps >= 0 or self.checklist_optional_avps <= 7):
             self.is_valid = True
@@ -518,7 +527,7 @@ class BaseMessageProcessor:
     def create_answer(self, msg):
         if msg.header.command_code == CAPABILITIES_EXCHANGE_MESSAGE:
             answer = self.association.base.cea
-    
+
         elif msg.header.command_code == DEVICE_WATCHDOG_MESSAGE:
             answer = self.association.base.dwa
 
@@ -534,6 +543,6 @@ class BaseMessageProcessor:
     def check_message(self, msg):
         if is_answer_message(msg):
             process_answer(self.association, msg)
-            
+
         elif is_request_message(msg):
             process_request(self.association, msg)

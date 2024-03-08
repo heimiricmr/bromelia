@@ -48,7 +48,7 @@ setuptools.setup(
                 "VoWiFi"
     ],
     install_requires=[
-        "pyyaml"
+        "pyyaml",
         "pysctp"
     ],
     classifiers=[
