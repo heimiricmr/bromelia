@@ -202,11 +202,12 @@ class ProcessDiameterMessage:
     def is_valid_host_ip_address_avp(avp, connection):
         if (avp.code == HOST_IP_ADDRESS_AVP_CODE):
             host_ip_address = "{}.{}.{}.{}".format(int(avp.data[2]),int(avp.data[3]),int(avp.data[4]),int(avp.data[5]))
-            if connection.peer_node.ip_address == host_ip_address:
-                process_message_logging.debug(f"Result: PASS.")
-                return True
-            process_message_logging.debug("Result: FAIL.")
-            return False
+            process_message_logging.debug(f"Result: PASS.")
+            return True
+            # if connection.peer_node.ip_address == host_ip_address:
+            #     return True
+            # process_message_logging.debug("Host IP Address from Peer Node not valid!")
+            # return False
 
 
     @staticmethod
@@ -321,6 +322,7 @@ class ProcessCapabilityExchange():
 
 
     def process_request(self):
+        host_ip_validated = 0
         for avp in self.message.avps:
             if ProcessDiameterMessage.is_valid_origin_host_avp(avp, self.connection):
                 self.checklist_mandatory_avps += 1
@@ -329,7 +331,8 @@ class ProcessCapabilityExchange():
                 self.checklist_mandatory_avps += 1
 
             elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
+                # multihoming may return multiple ip addresses
+                host_ip_validated = 1
 
             elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
                 self.checklist_mandatory_avps += 1
@@ -340,6 +343,7 @@ class ProcessCapabilityExchange():
             elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
                 self.checklist_optional_avps += 1
 
+        self.checklist_mandatory_avps += host_ip_validated
 
         if (self.checklist_mandatory_avps == 5) and (self.checklist_optional_avps >= 0 and self.checklist_optional_avps <= 7):
             self.is_valid = True
@@ -349,6 +353,7 @@ class ProcessCapabilityExchange():
 
     def process_answer(self):
         ProcessDiameterMessage.process_answer_from_existing_pending_request(self.association, self.message)
+        host_ip_validated = 0
         for avp in self.message.avps:
             if ProcessDiameterMessage.is_valid_result_code_avp(avp):
                 self.checklist_mandatory_avps += 1
@@ -360,7 +365,8 @@ class ProcessCapabilityExchange():
                 self.checklist_mandatory_avps += 1
 
             elif ProcessDiameterMessage.is_valid_host_ip_address_avp(avp, self.connection):
-                self.checklist_mandatory_avps += 1
+                # multihoming may return multiple ip addresses
+                host_ip_validated = 1
 
             elif ProcessDiameterMessage.is_valid_vendor_id_avp(avp, self.connection):
                 self.checklist_mandatory_avps += 1
@@ -371,6 +377,7 @@ class ProcessCapabilityExchange():
             elif ProcessDiameterMessage.is_valid_origin_state_id_avp(avp, self.connection):
                 self.checklist_optional_avps += 1
 
+        self.checklist_mandatory_avps += host_ip_validated
 
         if (self.checklist_mandatory_avps == 6) and (self.checklist_optional_avps >= 0 or self.checklist_optional_avps <= 7):
             self.is_valid = True
